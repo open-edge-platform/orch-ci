@@ -1,0 +1,313 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# yamllint disable rule:line-length
+
+name: Post-Merge CI Pipeline
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      run_security_scans:
+        description: "Run security scans"
+        required: false
+        default: false
+        type: boolean
+      run_version_check:
+        description: "Run version check"
+        required: false
+        default: false
+        type: boolean
+      run_dep_version_check:
+        description: "Run dependency version check"
+        required: false
+        default: false
+        type: boolean
+      run_build:
+        description: "Run build"
+        required: false
+        default: true
+        type: boolean
+      run_lint:
+        description: "Run lint"
+        required: false
+        default: false
+        type: boolean
+      run_test:
+        description: "Run test"
+        required: false
+        default: false
+        type: boolean
+      run_version_tag:
+        description: "Run version tag"
+        required: false
+        default: true
+        type: boolean
+      run_docker_build:
+        description: "Run docker build"
+        required: false
+        default: false
+        type: boolean
+      run_docker_push:
+        description: "Run docker push"
+        required: false
+        default: false
+        type: boolean
+      run_helm_build:
+        description: "Run helm build"
+        required: false
+        default: false
+        type: boolean
+      run_helm_push:
+        description: "Run helm push"
+        required: false
+        default: false
+        type: boolean
+      run_artifact:
+        description: "Run artifact"
+        required: false
+        default: false
+        type: boolean
+      run_version_dev:
+        description: "Run version dev"
+        required: false
+        default: false
+        type: boolean
+      prefix_tag_separator:
+        description: >-
+          If provided, the tag will be prefixed input.project_folder with this separator
+        required: false
+        default: ""
+        type: string
+      project_folder:
+        description: >-
+          Project subfolder where the job will run, defaults to '.'
+        required: false
+        default: "."
+        type: string
+      orch_ci_repo_ref:
+        description: >-
+          The ref of the orch-ci repo, including bootstrap action and scripts, defaults to 'main'
+        required: false
+        default: "main"
+        type: string
+      bootstrap_tools:
+        description: >-
+          "Comma-separated list of tools to install (e.g., 'go,docker') or 'all' for all tools"
+        required: false
+        default: "all"
+        type: string
+      cache_go:
+        description: >-
+          "Should Go-related cache for project be saved/restored."
+        required: false
+        default: false
+        type: boolean
+      persist_creds:
+        description: "Keep checkout creds"
+        required: false
+        default: false
+        type: boolean
+permissions:
+  contents: write
+jobs:
+  run-repo-pipelines:
+    runs-on: ubuntu-latest
+    env:
+      GIT_SHORT_URL: ${{ github.repository }}
+      PROJECT_NAME: ${{ github.repository }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Do not persist credentials by default, otherwise they
+          # will clash with credentials set by bootstrap action
+          persist-credentials: ${{ inputs.persist_creds }}
+          # Fetch all history, otherwise sporadic issue with missing tags
+          fetch-depth: 0
+          # Fetch tags
+          fetch-tags: true
+          # Checkout the branch that triggered the workflow to avoid detached HEAD
+          ref: ${{ github.head_ref }}
+
+      - name: Checkout action repository
+        uses: actions/checkout@v4
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: ${{ inputs.orch_ci_repo_ref }}
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Version Check
+        if: ${{ inputs.run_version_check }}
+        env:
+          BASEDIR: ${{ inputs.project_folder }}
+        run: |
+          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+            ./ci/scripts/version-check.sh \
+              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+          else
+            ./ci/scripts/version-check.sh
+          fi
+
+      - name: Sanitize project folder
+        id: sanitize
+        run: |
+          SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+
+          # Only repository, without owner, with project_folder added
+          REPO_PROJECT="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}${SANITIZED_PROJECT_FOLDER}"
+          echo "REPO_PROJECT=$REPO_PROJECT" >> "$GITHUB_ENV"
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          bootstrap_tools: ${{ inputs.bootstrap_tools }}
+
+      - name: Security Scans
+        if: ${{ inputs.run_security_scans }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          echo 'Call scanners from a different yml'
+
+      - name: Dep Version Check
+        if: ${{ inputs.run_dep_version_check }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          echo "Verifying dependencies version"
+          make dependency-check
+
+      - name: Make sure directories where the cache will be restored exist and are empty
+        if: ${{ inputs.cache_go }}
+        run: |
+          # Some caches from previous steps/jobs might be left, clean them up to avoid
+          # "Cannot open: File exists" errors
+
+          GOCACHE="$(go env GOCACHE)"
+          GOMODCACHE="$(go env GOMODCACHE)"
+
+          mkdir -p "${GOCACHE}" "${GOMODCACHE}" ~/.cache/golangci-lint
+
+          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
+          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
+          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+
+          rm -rf "${GOCACHE:?}"/{*,.*}
+          rm -rf "${GOMODCACHE:?}"/{*,.*}
+          rm -rf ~/.cache/golangci-lint/{*,.*}
+
+          echo "GOCACHE=$GOCACHE" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=$GOMODCACHE" >> "$GITHUB_ENV"
+
+      - name: Restore Go cache
+        if: ${{ inputs.cache_go }}
+        id: restored-project-go-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.GOCACHE }}
+            ${{ env.GOMODCACHE }}
+            ~/.cache/golangci-lint
+          key: ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          restore-keys: |
+            ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
+            ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-
+
+      - name: Build Code
+        if: ${{ inputs.run_build }}
+        working-directory: ${{ inputs.project_folder }}
+        shell: bash
+        run: |
+          echo "Building the code"
+          make build
+
+      - name: Lint Code
+        if: ${{ inputs.run_lint }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make lint
+
+      - name: Test Code
+        if: ${{ inputs.run_test }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make test
+          # TO DO find a replacement for cobertura
+
+      - name: Save Go cache
+        if: ${{ inputs.cache_go }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.GOCACHE }}
+            ${{ env.GOMODCACHE }}
+            ~/.cache/golangci-lint
+          key: ${{ steps.restored-project-go-cache.outputs.cache-primary-key }}
+
+      - name: Configure AWS credentials
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registries: "080137407410"
+
+      - name: Build Docker image
+        if: ${{ inputs.run_docker_build }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make docker-build
+
+      - name: Push Docker image
+        if: ${{ inputs.run_docker_push }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make docker-push
+
+      - name: Build Helm chart
+        if: ${{ inputs.run_helm_build }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make helm-build
+
+      - name: Push Helm chart
+        if: ${{ inputs.run_helm_push }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make helm-push
+
+      - name: Artifact
+        if: ${{ inputs.run_artifact }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make artifact-publish
+
+      - name: Version Tag
+        if: ${{ inputs.run_version_tag }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
+              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+          else
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
+          fi
+
+      - name: Version dev
+        if: ${{ inputs.run_version_dev }}
+        run: |
+          # Add your version dev commands here
+          echo "Versioning dev..."
+
+      - name: Send failure email
+        if: ${{ failure() }}
+        run: |
+          echo "Sending failure email..."

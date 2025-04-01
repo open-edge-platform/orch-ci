@@ -1,0 +1,77 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: 'Discover Changed Subfolder'
+inputs:
+  project_folder:
+    description: "Project subfolder where the job will run, defaults to ."
+    required: false
+    default: "."
+    type: string
+outputs:
+  changed_projects:
+    description: "The list of subfolder that has changed"
+    value: ${{ steps.discover-changes.outputs.changed_projects }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      # Fetches the last two commits for push events
+      # and the entire history for pull request events.
+      with:
+        fetch-depth: ${{ github.base_ref == '' && 2 || 0 }}
+
+    - name: Discover Changed Subfolders
+      shell: bash
+      id: discover-changes
+      working-directory: ${{ inputs.project_folder }}
+      run: |
+        # Fetch the base branch or the current branch
+        if [ -n "${{ github.base_ref }}" ]; then
+          # Logic for PR build
+          git fetch origin ${{ github.base_ref }}
+        else
+          # For push events
+          git fetch origin ${{ github.ref_name }}
+        fi
+
+        # List all subfolders
+        projects=$(find . -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | tr '\n' ' ')
+        changed_projects=()
+
+        # Check for changes in each subfolder
+        if [ -n "${{ github.base_ref }}" ]; then
+          # Logic for PR build
+          for project in $projects; do
+            if ! git diff --quiet origin/${{ github.base_ref }} HEAD -- $project; then
+              changed_projects+=("${project%/}")
+            fi
+          done
+        else
+          # Diff in case of post-merge is done with respect to last-1 commit in the current branch
+          # This assumes that PRs are merged with squash and merge.
+          for project in $projects; do
+            if ! git diff --quiet HEAD~1 HEAD -- $project; then
+              changed_projects+=("${project%/}")
+            fi
+          done
+        fi
+
+        # Debugging: Print the changed projects array
+        echo "Changed Projects Array: ${changed_projects[@]}"
+
+        # Convert the array to a JSON
+        changed_projects_list=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s -c .)
+
+        # Debugging: Print the changed projects list
+        echo "Changed Projects List: $changed_projects_list"
+
+        # Set the changed projects as an output using environment files
+        echo "changed_projects=$changed_projects_list" >> $GITHUB_OUTPUT
+
+    - name: Debug Changed Projects
+      shell: bash
+      run: |
+        echo "Changed Projects: ${{ steps.discover-changes.outputs.changed_projects }}"

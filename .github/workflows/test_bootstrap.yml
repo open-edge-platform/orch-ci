@@ -1,0 +1,32 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: Test bootstrap action
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - '.github/actions/bootstrap/*'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test bootstrap action
+        uses: ./.github/actions/bootstrap
+        with:
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          bootstrap_tools: "all"
+      - name: Test golang
+        run: |
+          echo "Test that go works and we can go-get modules"
+          go version
+          go mod init test_mod
+          go get github.com/open-edge-platform/infra-core/inventory/v2@main
+
+        # TODO: add more test to validate that bootstrap is working

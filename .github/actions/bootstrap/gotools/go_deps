@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Will be used in go_install.sh                                    # In go_install.sh          # Original binary name (optional)  # New binary name (optional)
+
+entgo.io/contrib/entproto/cmd/protoc-gen-ent                       ${PROTOC_GEN_ENT_VER}
+entgo.io/ent/cmd/ent                                               ${ENT_VER}
+github.com/boumenot/gocover-cobertura                              ${GOCOVER_COBERTURA_VER}
+github.com/envoyproxy/protoc-gen-validate                          ${PROTOC_GEN_VALIDATE_VER}
+github.com/github-release/github-release                           ${GITHUB_RELEASE_VER}
+github.com/go-swagger/go-swagger/cmd/swagger                       ${SWAGGER_VER}
+github.com/golang/mock/mockgen                                     ${MOCKGEN_VER}
+github.com/google/gnostic                                          ${GNOSTIC_VER}
+github.com/google/gnostic/cmd/protoc-gen-openapi                   ${GNOSTIC_PROTOC_GEN_OPENAPI_VER}
+github.com/googleapis/gnostic-grpc                                 ${GNOSTIC_GRPC_VER}
+github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway  ${PROTOC_GEN_GRPC_GATEWAY_VER}
+github.com/jstemmer/go-junit-report/v2                             ${GO_JUNIT_REPORT_VER}
+github.com/kollalabs/protoc-gen-openapi                            ${KOLLALABS_PROTOC_GEN_OPENAPI_VER}        protoc-gen-openapi                 protoc-gen-openapi-kollalabs
+github.com/magefile/mage                                           ${MAGE_VER}
+github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen           ${OAPI_CODEGEN_VER}
+github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc            ${PROTO_GEN_DOC_VER}
+github.com/santhosh-tekuri/jsonschema/cmd/jv                       ${JV_VER}
+github.com/yannh/kubeconform/cmd/kubeconform                       ${KUBECONFORM_VER}
+golang.org/x/vuln/cmd/govulncheck                                  ${GOVULNCHECK_VER}
+google.golang.org/grpc/cmd/protoc-gen-go-grpc                      ${PROTOC_GEN_GO_GRPC_VER}
+google.golang.org/protobuf/cmd/protoc-gen-go                       ${PROTOC_GEN_GO_VER}
+mvdan.cc/sh/v3/cmd/shfmt                                           ${SHFMT_VER}
+sigs.k8s.io/kind                                                   ${KIND_VER}

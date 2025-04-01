@@ -1,0 +1,17 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: 'Verify Branch Name'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Verify branch name
+      shell: bash
+      run: |
+        if [[ "${{ github.head_ref }}" =~ ^(main|release-.*)$ ]]; then
+          echo "Not allowed branch name!"
+          exit 1
+        fi

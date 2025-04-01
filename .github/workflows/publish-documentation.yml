@@ -1,0 +1,152 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: 'Publish Documentation'
+
+on:  # yamllint disable-line rule:truthy rule:line-length
+  workflow_call:
+    inputs:
+      docs_directory:
+        description: >-
+          Documentation directory where the job will run, defaults to '.'
+        required: false
+        default: "."
+        type: string
+      output_directory:
+        description: >-
+          Directory where the documentation HTML build is located,
+          defaults to 'out/html'
+        required: false
+        default: "out/html"
+        type: string
+      persist_creds:
+        description: "Keep checkout creds"
+        required: false
+        default: false
+        type: boolean
+      orch_ci_repo_ref:
+        description: >-
+          The ref of the orch-ci repo, including bootstrap action and scripts,
+          defaults to 'main'
+        required: false
+        default: "main"
+        type: string
+      endpoint:
+        description: >-
+          Endpoint URL where documentation will be deployed to,
+          defaults to 's3://intel-openedgeplatform-documentation'
+        required: false
+        default: "s3://intel-openedgeplatform-documentation"
+        type: string
+      distribution_id:
+        description: >-
+          Distribution ID of documentation hosting service,
+          defaults to 'E1QN7TZJG8M0VL'
+        required: false
+        default: "E1QN7TZJG8M0VL"
+        type: string
+
+permissions:
+  contents: write
+jobs:
+  publish-documentation:
+    runs-on: ubuntu-latest
+    env:
+      DOCS_DIR: ${{ inputs.docs_directory }}
+      OUT_DIR: ${{ inputs.output_directory }}
+      REF_NAME: ${{ github.ref_name }}
+    steps:
+      - name: Verify branch is release
+        shell: bash
+        run: |
+          if [[ ! "${REF_NAME}" =~ ^(release-.*)$ ]]; then
+            echo "Git repository branch must be 'release-*'"
+            echo "to publish documentation!"
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Do not persist credentials by default, otherwise they
+          # will clash with credentials set by bootstrap action
+          persist-credentials: ${{ inputs.persist_creds }}
+          # Fetch all history, otherwise sporadic issue with missing tags
+          fetch-depth: 0
+          # Fetch tags
+          fetch-tags: true
+          # Checkout the branch that triggered the workflow
+          # to avoid detached HEAD
+          ref: ${{ github.head_ref }}
+
+      - name: Checkout action repository
+        uses: actions/checkout@v4
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: ${{ inputs.orch_ci_repo_ref }}
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          bootstrap_tools: "aws"
+
+      - name: Get Subdirectory
+        env:
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          # Convert '.' to '/'
+          rshort="${REPO//./\/}"
+          # Retrieve word after last '/'
+          rshort="${rshort##*/}"
+          # Get last name in path
+          path="$(basename "${DOCS_DIR}")"
+          # Remove any '.' characters
+          path="${path//./}"
+          # If path exists, append it
+          if [[ -n "${path}" ]]; then
+              subdir="${rshort}/${path}"
+          else
+              subdir="${rshort}"
+          fi
+          echo "SUBDIR=${subdir}" >> "$GITHUB_ENV"
+
+      - name: Build Documentation
+        working-directory: ${{ inputs.docs_directory }}
+        shell: bash
+        run: |
+          echo "Building the documentation"
+          make build
+
+      - name: Verify build directory
+        shell: bash
+        run: |
+          if [[ ! -d "${DOCS_DIR}/${OUT_DIR}" ]]; then
+              echo "Build directory does not exist!"
+              exit 1
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Publish documentation
+        env:
+          ENDPOINT: ${{ inputs.endpoint }}
+          DISTID: ${{ inputs.distribution_id }}
+          SUBDIR: ${{ env.SUBDIR }}
+        shell: bash
+        run: |
+          cd "${DOCS_DIR}/${OUT_DIR}"
+          aws s3 rm "${ENDPOINT}/${SUBDIR}" --include "*" --recursive
+          aws s3 cp --include "*" --recursive . "${ENDPOINT}/${SUBDIR}"
+          aws cloudfront create-invalidation \
+            --distribution-id "${DISTID}" --paths "/${SUBDIR}/*"
+          echo "Publishing documentation complete."

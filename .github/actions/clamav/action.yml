@@ -1,0 +1,44 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "ClamAV Scan Action"
+description: "Scans the specified directory with ClamAV and generates a report."
+inputs:
+  report-path:
+    description: "The path where the ClamAV scan report will be saved."
+    required: true
+    default: "clamav_scan_report.txt"
+  project-folder:
+    description: "The directory to scan with ClamAV."
+    required: true
+    default: "."
+runs:
+  using: "docker"
+  image: "docker://clamav/clamav:latest"
+  args:
+    - /bin/sh
+    - -c
+    - |
+      # Sanitize the report path for artifact name
+      SANITIZED_CLAMAV_REPORT_PATH=$(echo "${{ inputs.report-path }}" | tr '/' '-')
+      FULL_REPORT_PATH="/github/workspace/${SANITIZED_CLAMAV_REPORT_PATH}"
+
+      clamscan -r --bell -i /github/workspace/${{ inputs.project-folder }} > "${FULL_REPORT_PATH}"
+
+      # Check if the scan report was created
+      if [ ! -f "${FULL_REPORT_PATH}" ]; then
+        echo "Error: ClamAV scan report not found at ${FULL_REPORT_PATH}"
+        exit 1
+      fi
+
+      ARTIFACT_NAME="${SANITIZED_CLAMAV_REPORT_PATH%.txt}"
+
+      echo "SANITIZED_CLAMAV_REPORT_PATH=${SANITIZED_CLAMAV_REPORT_PATH}" >> $GITHUB_ENV
+      echo "CLAMAV_ARTIFACT_NAME=${ARTIFACT_NAME}" >> $GITHUB_ENV
+outputs:
+  report-path:
+    description: "The path to the ClamAV scan report."
+branding:
+  icon: "shield"
+  color: "blue"

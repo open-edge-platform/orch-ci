@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+---
+name: 'Discover Changed Files'
+inputs:
+  project_folder:
+    description: "Project subfolder where the job will run, defaults to ."
+    required: false
+    default: "."
+    type: string
+outputs:
+  changed_files:
+    description: "The list of files that have changed"
+    value: ${{ steps.discover-changes.outputs.changed_files }}
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: ${{ github.base_ref == '' && 2 || 0 }}
+
+    - name: Discover Changed Files
+      shell: bash
+      id: discover-changes
+      working-directory: ${{ inputs.project_folder }}
+      run: |
+        # Fetch the base branch or the current branch
+        if [ -n "${{ github.base_ref }}" ]; then
+          # Logic for PR build
+          git fetch origin ${{ github.base_ref }}
+        else
+          # For push events
+          git fetch origin ${{ github.ref_name }}
+        fi
+
+        changed_files=()
+
+        # Check for changes in each file
+        if [ -n "${{ github.base_ref }}" ]; then
+          # Logic for PR build
+          changed_files=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+        else
+          # Diff in case of post-merge is done with respect to last-1 commit in the current branch
+          changed_files=$(git diff --name-only HEAD~1 HEAD)
+        fi
+
+        # Debugging: Print the changed files
+        echo "Changed Files: $changed_files"
+
+        # Convert the list to a JSON array
+        changed_files_list=$(echo "$changed_files" | jq -R . | jq -s -c .)
+
+        # Debugging: Print the changed files list
+        echo "Changed Files List: $changed_files_list"
+
+        # Set the changed files as an output using environment files
+        echo "changed_files=$changed_files_list" >> $GITHUB_OUTPUT
+
+    - name: Debug Changed Files
+      shell: bash
+      run: |
+        echo "Changed Files: ${{ steps.discover-changes.outputs.changed_files }}"
