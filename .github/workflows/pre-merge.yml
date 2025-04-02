@@ -132,7 +132,7 @@ jobs:
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report
+          name: gitleaks-report-${{ github.run_id }}-${{ github.sha }}
           path: gitleaks.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
