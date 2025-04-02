@@ -429,3 +429,11 @@ runs:
           unzip awscliv2.zip
           sudo ./aws/install --update
           rm -rf awscliv2.zip aws
+
+    - name: Instal Cosign
+      if: contains(inputs.bootstrap_tools, 'cosign') || contains(inputs.bootstrap_tools, 'all')
+      shell: bash
+      run: |
+        wget https://github.com/sigstore/cosign/releases/download/${{ env.COSIGN_VER }}/cosign-linux-amd64
+        chmod +x cosign-linux-amd64
+        sudo mv cosign-linux-amd64 /usr/local/bin/cosign

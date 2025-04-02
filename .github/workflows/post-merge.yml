@@ -109,11 +109,16 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      runs_on:
+        description: "Label for runner"
+        required: false
+        default: "ubuntu-latest"
+        type: string
 permissions:
   contents: write
 jobs:
   run-repo-pipelines:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
@@ -265,6 +270,19 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make docker-build
+      
+      - name: Sign Docker image
+        if: ${{ inputs.run_docker_push }}
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
+    
+          for image in $(echo $images | jq -r '.[]'); do
+            echo "Signing $image"
+            cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} "$image" -y
+          done
+          
 
       - name: Push Docker image
         if: ${{ inputs.run_docker_push }}
