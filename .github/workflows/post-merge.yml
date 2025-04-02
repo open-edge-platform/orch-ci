@@ -275,13 +275,17 @@ jobs:
         if: ${{ inputs.run_docker_push }}
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-        run: |
-          images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
-    
-          for image in $(echo $images | jq -r '.[]'); do
-            echo "Signing $image"
-            cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} "$image" -y
-          done
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          bootstrap_tools: "cosign"
+          run: |
+            images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
+      
+            for image in $(echo $images | jq -r '.[]'); do
+              echo "Signing $image"
+              cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} "$image" -y
+            done
           
 
       - name: Push Docker image
