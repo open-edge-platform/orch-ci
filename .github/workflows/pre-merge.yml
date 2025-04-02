@@ -126,7 +126,7 @@ jobs:
           ref: ${{ github.head_ref }}
       - name: Get current timestamp
         id: timestamp
-        run: echo "time=$(date +%s)" >> $GITHUB_OUTPUT
+        run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
