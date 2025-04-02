@@ -288,9 +288,13 @@ jobs:
           images_json=$(echo "$images" | jq -R . | jq -s -c .)
           for image in $(echo $images_json | jq -r '.[]'); do
             echo "Signing $image"
-            cosign sign -y --key env://COSIGN_PRIVATE_KEY  "$image"
+            # Check if the image is not empty
+            if [ -n "$image" ]; then
+              cosign sign -y --key env://COSIGN_PRIVATE_KEY "$image" || echo "Failed to sign $image"
+            else
+              echo "No images found to sign."
+            fi
           done
-          
 
       - name: Push Docker image
         if: ${{ inputs.run_docker_push }}
