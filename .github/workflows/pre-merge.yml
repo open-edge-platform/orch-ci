@@ -130,9 +130,11 @@ jobs:
           sudo tar xf gitleaks.tar.gz -C /usr/local/bin gitleaks
           gitleaks dir . -v -f csv -r gitleaks.csv --exit-code 0
       - name: Upload Gitleaks Report
+        env:
+          TIMESTAMP: ${{ steps.timestamp.outputs.time }}
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report-${{ github.run_id }}-${{ github.sha }}
+          name: gitleaks-report-${{ github.run_id }}-${{ github.sha }}-${{ env.TIMESTAMP }}
           path: gitleaks.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
