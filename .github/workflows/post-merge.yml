@@ -288,6 +288,7 @@ jobs:
         if: ${{ inputs.run_docker_push }}
         working-directory: ${{ inputs.project_folder }}
         run: |
+          exit 1
           make docker-push
 
       - name: Build Helm chart
