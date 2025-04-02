@@ -117,6 +117,23 @@ jobs:
           ref: ${{ github.head_ref }}
       - name: REUSE Compliance Check
         uses: fsfe/reuse-action@v5
+  secrets-gitleaks-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Scan for secrets
+        run: |
+          wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_8.24.2_linux_x64.tar.gz
+          sudo tar xf gitleaks.tar.gz -C /usr/local/bin gitleaks
+          gitleaks dir . -v -f csv -r gitleaks.csv --exit-code
+      - name: Upload Gitleaks Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
     outputs:
