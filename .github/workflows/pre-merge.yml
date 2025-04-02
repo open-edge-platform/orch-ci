@@ -124,6 +124,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "time=$(date +%s)" >> $GITHUB_OUTPUT
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
@@ -134,7 +137,7 @@ jobs:
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report-${{ inputs.project_folder }}-${{ github.run_id }}-${{ github.sha }}
+          name: gitleaks-report-${{ inputs.project_folder }}-${{ github.run_id }}-${{ github.sha }}-${{ steps.timestamp.outputs.time }}
           path: ${{ inputs.project_folder }}/gitleaks.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
