@@ -292,7 +292,7 @@ jobs:
         run: |
           images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com')
           images_json=$(echo "$images" | jq -R . | jq -s -c .)
-          for image in $(echo $images_json | jq -r '.[]'); do
+          for image in $(echo "$images_json" | jq -r '.[]'); do
             echo "Signing $image"
             # Check if the image is not empty
             if [ -n "$image" ]; then
