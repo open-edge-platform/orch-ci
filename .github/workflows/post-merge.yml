@@ -283,7 +283,7 @@ jobs:
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "cosign"
-        
+
       - name: Sign Docker images
         if: ${{ inputs.run_docker_push }}
         env:
