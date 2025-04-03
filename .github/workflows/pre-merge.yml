@@ -115,7 +115,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
       - name: Install npm
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@main
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@commit
         with:
           bootstrap_tools: "nodejs"
       - name: Validate PR commits with commitlint
