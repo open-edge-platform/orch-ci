@@ -125,9 +125,8 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
       - name: Install gitleaks
-        uses: ./ci/.github/actions/bootstrap
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@main
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "gitleaks"
       - name: Get current timestamp
         id: timestamp
