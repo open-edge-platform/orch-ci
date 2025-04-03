@@ -125,7 +125,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
       - name: Install gitleaks
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@main
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@cosign
         with:
           bootstrap_tools: "gitleaks"
       - name: Get current timestamp
@@ -139,7 +139,7 @@ jobs:
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report-${{ inputs.project_folder }}-${{ github.run_id }}-${{ github.sha }}-${{ steps.timestamp.outputs.time }}
+          name: gitleaks-report-${{ replace(inputs.project_folder, '/', '-') }}-${{ github.run_id }}-${{ github.sha }}-${{ steps.timestamp.outputs.time }}
           path: ${{ inputs.project_folder }}/gitleaks.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
