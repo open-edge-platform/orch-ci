@@ -202,8 +202,8 @@ jobs:
           mkdir -p "${GOCACHE}" "${GOMODCACHE}" ~/.cache/golangci-lint
 
           echo "Cache sizes before removal:"
-          sudo du -sh ${GOCACHE}
-          sudo du -sh ${GOMODCACHE}
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
           sudo du -sh ~/.cache/golangci-lint
 
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
@@ -211,8 +211,8 @@ jobs:
           sudo rm -rf ~/.cache/golangci-lint/{*,.*}
 
           echo "Cache sizes after removal:"
-          sudo du -sh ${GOCACHE}
-          sudo du -sh ${GOMODCACHE}
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
           sudo du -sh ~/.cache/golangci-lint
 
           echo "GOCACHE=$GOCACHE" >> "$GITHUB_ENV"
@@ -312,8 +312,8 @@ jobs:
           GOMODCACHE="$(go env GOMODCACHE)"
 
           echo "Cache sizes before removal:"
-          sudo du -sh ${GOCACHE}
-          sudo du -sh ${GOMODCACHE}
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
           sudo du -sh ~/.cache/golangci-lint
 
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
@@ -321,8 +321,8 @@ jobs:
           sudo rm -rf ~/.cache/golangci-lint/{*,.*}
 
           echo "Cache sizes after removal:"
-          sudo du -sh ${GOCACHE}
-          sudo du -sh ${GOMODCACHE}
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
           sudo du -sh ~/.cache/golangci-lint
 
       - name: Build Docker image
