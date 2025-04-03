@@ -71,7 +71,8 @@ jobs:
         shell: bash
         run: |
           # Get list of all branches on remote to build
-          mapfile -t branches < <(git ls-remote --heads "${REPO}"|cut -f3- -d/)
+          mapfile -t branches < <(git ls-remote --heads \
+              "https://github.com/${REPO}" | cut -f3- -d/)
           for index in "${!branches[@]}"; do
             if echo "${branches[$index]}" | grep -qEv "${PATTERN}"; then
               unset -v 'branches[$index]'
