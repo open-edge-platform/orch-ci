@@ -318,10 +318,20 @@ jobs:
         run: |
           GOCACHE="$(go env GOCACHE)"
           GOMODCACHE="$(go env GOMODCACHE)"
+          
+          ll -a /home/runner/.cache
+          ll -a /home/runner/.cache/go-build
+          
+          ll -a /home/runner/go/pkg
+          ll -a /home/runner/go/pkg/mod
 
-          echo "Current GOCACHE: ${GOCACHE}, size: $("sudo du -sh ${GOCACHE} | cut -f1")"
-          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("sudo du -sh ${GOMODCACHE} | cut -f1")"
-          echo "Current golangci-lint cache size: $(sudo du -sh ~/.cache/golangci-lint | cut -f1)"
+          echo "Current GOCACHE: ${GOCACHE}"
+          sudo du -sh ${GOCACHE}
+          
+          echo "Current GOMODCACHE: ${GOMODCACHE}"
+          sudo du -sh ${GOMODCACHE}
+          
+          sudo du -sh ~/.cache/golangci-lint
 
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
           sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
