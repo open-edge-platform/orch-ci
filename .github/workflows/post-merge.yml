@@ -247,6 +247,7 @@ jobs:
           binaries=""
       
           for dir in "${directories[@]}"; do
+            echo "path is: $GITHUB_WORKSPACE/$dir"
             if [ -d "$GITHUB_WORKSPACE/$dir" ]; then
               binaries+=$(find "$GITHUB_WORKSPACE/$dir" -type f -executable)
             fi
