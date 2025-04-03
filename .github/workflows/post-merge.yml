@@ -104,6 +104,12 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      remove_cache_go:
+        description: >-
+          "Should Go-related cache for project be removed when not needed anymore."
+        required: false
+        default: false
+        type: boolean
       persist_creds:
         description: "Keep checkout creds"
         required: false
@@ -292,6 +298,20 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registries: "080137407410"
+
+      - name: Remove Go-related cache when not needed anymore to free up space
+        if: ${{ inputs.remove_cache_go }}
+        run: |
+          GOCACHE="$(go env GOCACHE)"
+          GOMODCACHE="$(go env GOMODCACHE)"
+
+          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
+          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
+          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+
+          rm -rf "${GOCACHE:?}"/{*,.*}
+          rm -rf "${GOMODCACHE:?}"/{*,.*}
+          rm -rf ~/.cache/golangci-lint/{*,.*}
 
       - name: Build Docker image
         if: ${{ inputs.run_docker_build }}

@@ -99,6 +99,12 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      remove_cache_go:
+        description: >-
+          "Should Go-related cache for project be removed when not needed anymore."
+        required: false
+        default: false
+        type: boolean
       runs_on:
         description: "Label for runner"
         required: false
@@ -306,6 +312,20 @@ jobs:
             ${{ env.GOMODCACHE }}
             ~/.cache/golangci-lint
           key: ${{ steps.restored-project-go-cache.outputs.cache-primary-key }}
+
+      - name: Remove Go-related cache when not needed anymore to free up space
+        if: ${{ inputs.remove_cache_go }}
+        run: |
+          GOCACHE="$(go env GOCACHE)"
+          GOMODCACHE="$(go env GOMODCACHE)"
+
+          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
+          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
+          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+
+          rm -rf "${GOCACHE:?}"/{*,.*}
+          rm -rf "${GOMODCACHE:?}"/{*,.*}
+          rm -rf ~/.cache/golangci-lint/{*,.*}
 
       - name: Validate clean folder
         if: ${{ inputs.run_validate_clean_folder == true }}
