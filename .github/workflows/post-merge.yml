@@ -209,7 +209,7 @@ jobs:
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
           sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
           sudo rm -rf ~/.cache/golangci-lint/{*,.*}
-          
+
           echo "Cache sizes after removal:"
           sudo du -sh ${GOCACHE}
           sudo du -sh ${GOMODCACHE}
@@ -319,7 +319,7 @@ jobs:
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
           sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
           sudo rm -rf ~/.cache/golangci-lint/{*,.*}
-          
+
           echo "Cache sizes after removal:"
           sudo du -sh ${GOCACHE}
           sudo du -sh ${GOMODCACHE}
