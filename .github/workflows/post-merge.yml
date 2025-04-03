@@ -244,18 +244,16 @@ jobs:
         run: |
           # common dirs to search for binaries
           directories=("out" "build" "bin")
-          binaries=""
       
           for dir in "${directories[@]}"; do
-            echo "path is: $GITHUB_WORKSPACE/$dir"
-            if [ -d "$GITHUB_WORKSPACE/$dir" ]; then
-              binaries+=$(find "$GITHUB_WORKSPACE/$dir" -type f -executable)
+            full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
+            echo "Checking path: $full_path"
+            if [ -d "$full_path" ]; then
+              find "$full_path" -type f -executable | while read -r binary; do
+                echo "Signing $binary"
+                cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
+              done
             fi
-          done
-
-          for binary in $binaries; do
-            echo "Signing $binary"
-            cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
           done
 
       - name: Lint Code
