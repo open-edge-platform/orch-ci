@@ -135,7 +135,7 @@ jobs:
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir . -v -f csv -r gitleaks.csv --exit-code 0
+          gitleaks dir ${{ inputs.project_folder }} -v -f csv -r gitleaks.csv --exit-code 0
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
