@@ -235,17 +235,27 @@ jobs:
           echo "Building the code"
           make build
 
-      - name: Find and Sign Binaries
+      - name: Find and Sign Go Binaries
+        if: ${{ inputs.run_build }}
+        working-directory: ${{ inputs.project_folder }}
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         run: |
-          # Find executable
-          binaries=$(find ${{ inputs.project_folder }} -type f -executable)
+          # common dirs to search for binaries
+          directories=("out" "build" "bin")
+          binaries=""
       
+          for dir in "${directories[@]}"; do
+            if [ -d "$dir" ]; then
+              binaries+=$(find "$GITHUB_WORKSPACE/$dir" -type f -executable)
+            fi
+          done
+      
+          # Iterate over each binary and sign it
           for binary in $binaries; do
             echo "Signing $binary"
-            cosign sign-blob --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
+            cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
           done
 
       - name: Lint Code
