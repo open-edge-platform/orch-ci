@@ -10,7 +10,7 @@ on:  # yamllint disable-line rule:truthy
     inputs:
       runner_version:
         description: "Runner verison to use"
-        required: true
+        required: false
         default: "ubuntu-24.04"
         type: string
       run_security_scans:
@@ -20,7 +20,7 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       run_build:
         description: "Run build"
-        required: true
+        required: false
         default: true
         type: boolean
       run_lint:
@@ -45,7 +45,7 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       run_package_build:
         description: "Build agent package"
-        required: true
+        required: false
         default: true
         type: boolean
       run_package_test:
@@ -55,7 +55,7 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       run_scan_package:
         description: "Run scan package"
-        required: true
+        required: false
         default: true
         type: boolean
       run_artifact:
@@ -231,8 +231,9 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           REGISTRY='080137407410.dkr.ecr.us-west-2.amazonaws.com'
+          devVersion=$(grep 'dev' VERSION)
 
-          if [ -z "$(cat VERSION | grep 'dev')" ]; then
+          if [ -z "${devVersion}" ]; then
             echo "Uploading artifacts..."
             cd build/artifacts
 
@@ -242,9 +243,9 @@ jobs:
               #REPOSITORY=en/deb/${{ inputs.runner_version }}/${PKG_NAME}
               REPOSITORY=en/deb/${PKG_NAME}
 
-              aws ecr create-repository --region us-west-2 --repository-name edge-orch/${REPOSITORY} || true
-              oras push ${REGISTRY}/edge-orch/${REPOSITORY}:${PKG_VER} \
-              --artifact-type application/vnd.intel.orch.deb ./${DEB_PKG}
+              aws ecr create-repository --region us-west-2 --repository-name edge-orch/"${REPOSITORY}" || true
+              oras push ${REGISTRY}/edge-orch/"${REPOSITORY}":"${PKG_VER}" \
+              --artifact-type application/vnd.intel.orch.deb ./"${DEB_PKG}"
             done
 
             cd -
@@ -255,9 +256,9 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
-            $GITHUB_WORKSPACE/ci/scripts/version-tag-param.sh "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
           else
-            $GITHUB_WORKSPACE/ci/scripts/version-tag.sh
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
           fi
 
       - name: Version dev

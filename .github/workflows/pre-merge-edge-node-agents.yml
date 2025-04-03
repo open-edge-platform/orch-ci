@@ -10,7 +10,7 @@ on:  # yamllint disable-line rule:truthy
     inputs:
       runner_version:
         description: "Runner version to use"
-        required: true
+        required: false
         default: "ubuntu-24.04"
         type: string
       run_security_scans:
@@ -30,7 +30,7 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       run_build:
         description: "Run build"
-        required: true
+        required: false
         default: true
         type: boolean
       run_lint:
@@ -55,7 +55,7 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       run_package_build:
         description: "Build agent package"
-        required: true
+        required: false
         default: true
         type: boolean
       run_package_test:
@@ -114,7 +114,7 @@ jobs:
       - name: Sanitize project folder
         run: |
           SANITIZED_REPORT_PATH=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
-          echo "SANITIZED_REPORT_PATH=${SANITIZED_REPORT_PATH}" >> $GITHUB_ENV
+          echo "SANITIZED_REPORT_PATH=${SANITIZED_REPORT_PATH}" >> "$GITHUB_ENV"
 
       - name: Run ClamAV Scan
         if: ${{ inputs.run_security_scans }}
@@ -257,14 +257,14 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         shell: bash
         run: |
-          find . -type f -name *.sh -exec "shellcheck" "-e" "SC2010,SC2086" {} +
+          find . -type f -name '*.sh' -exec "shellcheck" "-e" "SC2010,SC2086" {} +
 
       - name: Shellcheck agent scripts
         if: ${{ (inputs.run_shellcheck_agent == true) && (inputs.project_folder == 'platform-observability-agent') }}
         working-directory: ${{ inputs.project_folder }}
         shell: bash
         run: |
-          find scripts/ -type f -name *.sh -exec "shellcheck" {} +
+          find scripts/ -type f -name '*.sh' -exec "shellcheck" {} +
 
       - name: Send failure email
         if: ${{ failure() }}
