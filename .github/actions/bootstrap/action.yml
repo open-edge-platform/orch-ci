@@ -173,7 +173,8 @@ runs:
         "npm-groovy-lint@${NPM_GROOVY_LINT_VER}" \
         "swagger-cli@${SWAGGER_CLI_VER}" \
         "@eslint/js@${ESLINT_VER}" \
-        "pajv@${PAJV_VER}"
+        "pajv@${PAJV_VER}" \
+        "commitlint@${COMMITLINT_VER}
 
     - name: "Use separate cache for Go tools"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
