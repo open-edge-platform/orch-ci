@@ -125,7 +125,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
       - name: Install gitleaks
-        uses: uses: ./ci/.github/actions/bootstrap
+        uses: ./ci/.github/actions/bootstrap
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "gitleaks"
