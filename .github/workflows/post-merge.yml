@@ -247,12 +247,11 @@ jobs:
           binaries=""
       
           for dir in "${directories[@]}"; do
-            if [ -d "$dir" ]; then
+            if [ -d "$GITHUB_WORKSPACE/$dir" ]; then
               binaries+=$(find "$GITHUB_WORKSPACE/$dir" -type f -executable)
             fi
           done
-      
-          # Iterate over each binary and sign it
+
           for binary in $binaries; do
             echo "Signing $binary"
             cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
