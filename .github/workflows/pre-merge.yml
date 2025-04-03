@@ -319,11 +319,11 @@ jobs:
           GOCACHE="$(go env GOCACHE)"
           GOMODCACHE="$(go env GOMODCACHE)"
           
-          ll -a /home/runner/.cache
-          ll -a /home/runner/.cache/go-build
+          ls -al /home/runner/.cache
+          ls -al /home/runner/.cache/go-build
           
-          ll -a /home/runner/go/pkg
-          ll -a /home/runner/go/pkg/mod
+          ls -al /home/runner/go/pkg
+          ls -al /home/runner/go/pkg/mod
 
           echo "Current GOCACHE: ${GOCACHE}"
           sudo du -sh ${GOCACHE}
