@@ -257,13 +257,19 @@ jobs:
 
           mkdir -p "${GOCACHE}" "${GOMODCACHE}" ~/.cache/golangci-lint
 
-          echo "Current GOCACHE: ${GOCACHE}, size: $("sudo du -sh ${GOCACHE} | cut -f1")"
-          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("sudo du -sh ${GOMODCACHE} | cut -f1")"
-          echo "Current golangci-lint cache size: $(sudo du -sh ~/.cache/golangci-lint | cut -f1)"
+          echo "Cache sizes before removal:"
+          sudo du -sh ${GOCACHE}
+          sudo du -sh ${GOMODCACHE}
+          sudo du -sh ~/.cache/golangci-lint
 
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
           sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
           sudo rm -rf ~/.cache/golangci-lint/{*,.*}
+          
+          echo "Cache sizes after removal:"
+          sudo du -sh ${GOCACHE}
+          sudo du -sh ${GOMODCACHE}
+          sudo du -sh ~/.cache/golangci-lint
 
           echo "GOCACHE=$GOCACHE" >> "$GITHUB_ENV"
           echo "GOMODCACHE=$GOMODCACHE" >> "$GITHUB_ENV"
@@ -318,24 +324,20 @@ jobs:
         run: |
           GOCACHE="$(go env GOCACHE)"
           GOMODCACHE="$(go env GOMODCACHE)"
-          
-          ls -al /home/runner/.cache
-          ls -al /home/runner/.cache/go-build
-          
-          ls -al /home/runner/go/pkg
-          ls -al /home/runner/go/pkg/mod
 
-          echo "Current GOCACHE: ${GOCACHE}"
+          echo "Cache sizes before removal:"
           sudo du -sh ${GOCACHE}
-          
-          echo "Current GOMODCACHE: ${GOMODCACHE}"
           sudo du -sh ${GOMODCACHE}
-          
           sudo du -sh ~/.cache/golangci-lint
 
           sudo rm -rf "${GOCACHE:?}"/{*,.*}
           sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
           sudo rm -rf ~/.cache/golangci-lint/{*,.*}
+          
+          echo "Cache sizes after removal:"
+          sudo du -sh ${GOCACHE}
+          sudo du -sh ${GOMODCACHE}
+          sudo du -sh ~/.cache/golangci-lint
 
       - name: Validate clean folder
         if: ${{ inputs.run_validate_clean_folder == true }}
