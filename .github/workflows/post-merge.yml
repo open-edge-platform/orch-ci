@@ -244,7 +244,7 @@ jobs:
         run: |
           # common dirs to search for binaries
           directories=("out" "build" "bin")
-      
+
           for dir in "${directories[@]}"; do
             full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
             echo "Checking path: $full_path"
