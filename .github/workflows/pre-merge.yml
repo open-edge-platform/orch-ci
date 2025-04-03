@@ -129,15 +129,19 @@ jobs:
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "gitleaks"
-
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Scan for secrets
+        env:
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           gitleaks dir . -v -f csv -r gitleaks.csv --exit-code 0
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report
-          path: gitleaks.csv
+          name: gitleaks-report-${{ inputs.project_folder }}-${{ github.run_id }}-${{ github.sha }}-${{ steps.timestamp.outputs.time }}
+          path: ${{ inputs.project_folder }}/gitleaks.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
     outputs:
