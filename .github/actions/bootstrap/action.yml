@@ -241,19 +241,16 @@ runs:
         echo "Current GOCACHE: $(go env GOCACHE)"
         echo "Current GOMODCACHE: $(go env GOMODCACHE)"
 
+        echo "Temporary cache sizes before removal:"
         sudo du -sh $(go env GOCACHE)
         sudo du -sh $(go env GOMODCACHE)
-        
-        echo "Temporary cache sizes before removal:"
-        sudo du -sh ${GOCACHE}
-        sudo du -sh ${GOMODCACHE}
 
-        sudo rm -rf "${GOCACHE:?}"/{*,.*}
-        sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
+        sudo rm -rf "$(go env GOCACHE)"/{*,.*}
+        sudo rm -rf "$(go env GOMODCACHE)"/{*,.*}
       
         echo "Temporary cache sizes after removal:"
-        sudo du -sh ${GOCACHE}
-        sudo du -sh ${GOMODCACHE}
+        sudo du -sh $(go env GOCACHE)
+        sudo du -sh $(go env GOMODCACHE)
 
         # Restore the original GOCACHE and GOMODCACHE
         go env -u GOCACHE
