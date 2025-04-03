@@ -257,13 +257,13 @@ jobs:
 
           mkdir -p "${GOCACHE}" "${GOMODCACHE}" ~/.cache/golangci-lint
 
-          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
-          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
-          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+          echo "Current GOCACHE: ${GOCACHE}, size: $("sudo du -sh ${GOCACHE} | cut -f1")"
+          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("sudo du -sh ${GOMODCACHE} | cut -f1")"
+          echo "Current golangci-lint cache size: $(sudo du -sh ~/.cache/golangci-lint | cut -f1)"
 
-          rm -rf "${GOCACHE:?}"/{*,.*}
-          rm -rf "${GOMODCACHE:?}"/{*,.*}
-          rm -rf ~/.cache/golangci-lint/{*,.*}
+          sudo rm -rf "${GOCACHE:?}"/{*,.*}
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*}
 
           echo "GOCACHE=$GOCACHE" >> "$GITHUB_ENV"
           echo "GOMODCACHE=$GOMODCACHE" >> "$GITHUB_ENV"
@@ -319,13 +319,13 @@ jobs:
           GOCACHE="$(go env GOCACHE)"
           GOMODCACHE="$(go env GOMODCACHE)"
 
-          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
-          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
-          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+          echo "Current GOCACHE: ${GOCACHE}, size: $("sudo du -sh ${GOCACHE} | cut -f1")"
+          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("sudo du -sh ${GOMODCACHE} | cut -f1")"
+          echo "Current golangci-lint cache size: $(sudo du -sh ~/.cache/golangci-lint | cut -f1)"
 
-          rm -rf "${GOCACHE:?}"/{*,.*}
-          rm -rf "${GOMODCACHE:?}"/{*,.*}
-          rm -rf ~/.cache/golangci-lint/{*,.*}
+          sudo rm -rf "${GOCACHE:?}"/{*,.*}
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*}
 
       - name: Validate clean folder
         if: ${{ inputs.run_validate_clean_folder == true }}
