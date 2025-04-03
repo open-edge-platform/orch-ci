@@ -64,16 +64,28 @@ jobs:
       OUT_DIR: ${{ inputs.output_directory }}
       REF_NAME: ${{ github.ref_name }}
       REPO: ${{ github.repository }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # Do not persist credentials by default, otherwise they
+          # will clash with credentials set by bootstrap action
+          persist-credentials: ${{ inputs.persist_creds }}
+          # Fetch all history, otherwise sporadic issue with missing tags
+          fetch-depth: 0
+          # Fetch tags
+          fetch-tags: true
+          # Checkout the branch that triggered the workflow
+          # to avoid detached HEAD
+          ref: ${{ github.head_ref }}
+
       - name: Collect branches
         env:
           PATTERN: ${{ inputs.branch_pattern }}
         shell: bash
         run: |
           # Get list of all branches on remote to build
-          mapfile -t branches < <(git ls-remote --heads \
-              "https://${GH_TOKEN}@github.com/${REPO}" | cut -f3- -d/)
+          mapfile -t branches < <(git ls-remote --heads | cut -f3- -d/)
           for index in "${!branches[@]}"; do
             if echo "${branches[$index]}" | grep -qEv "${PATTERN}"; then
               unset -v 'branches[$index]'
@@ -84,16 +96,6 @@ jobs:
             exit 1
           fi
           echo "DOCS_BRANCHES=(${branches[*]})" >> "$GITHUB_ENV"
-
-      - name: Checkout code
-        env:
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
-        shell: bash
-        run: |
-          repoURL="https://${GH_TOKEN}@github.com/${REPO}"
-          for branch in "${DOCS_BRANCHES[@]}"; do
-            git clone -b "${branch}" --single-branch "${repoURL}" "${branch}"
-          done
 
       - name: Checkout action repository
         uses: actions/checkout@v4
@@ -130,31 +132,24 @@ jobs:
 
       - name: Build Documentation
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
         shell: bash
         run: |
-          echo "Building the documentation"
           for branch in "${DOCS_BRANCHES[@]}"; do
+            cd "${GITHUB_WORKSPACE}"
+            git checkout "${branch}"
+            cd "${DOCS_DIR}"
             echo "Building branch: ${branch}"
-            cd "${GITHUB_WORKSPACE}/${branch}/${DOCS_DIR}"
             make build
-          done
-
-      - name: Prepare upload
-        env:
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
-        shell: bash
-        run: |
-          for branch in "${DOCS_BRANCHES[@]}"; do
-            if [[ ! -d "${branch}/${DOCS_DIR}/${OUT_DIR}" ]]; then
+            if [[ ! -d "${OUT_DIR}" ]]; then
               echo "ERROR: Build directory does not exist for branch:"
               echo "${branch}"
               exit 1
-            else
-              mkdir -p "_UPLOAD/${branch}"
-              mv "${branch}/${DOCS_DIR}/${OUT_DIR}"/* "_UPLOAD/${branch}"
             fi
+            mkdir -p "${GITHUB_WORKSPACE}/_UPLOAD/${branch}"
+            mv "${OUT_DIR}"/* "${GITHUB_WORKSPACE}/_UPLOAD/${branch}"
+            make clean || :
+            rm -rf "${OUT_DIR}"
           done
 
       - name: Configure AWS credentials
@@ -171,7 +166,7 @@ jobs:
           SUBDIR: ${{ env.SUBDIR }}
         shell: bash
         run: |
-          cd "_UPLOAD"
+          cd "${GITHUB_WORKSPACE}/_UPLOAD"
           aws s3 rm "${ENDPOINT}/${SUBDIR}" --include "*" --recursive
           aws s3 cp --include "*" --recursive . "${ENDPOINT}/${SUBDIR}"
           aws cloudfront create-invalidation \
