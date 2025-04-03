@@ -133,7 +133,7 @@ jobs:
         run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Prepare artifact name
         id: prepare_name
-        run: echo "sanitized_folder_name=${{ inputs.project_folder }}/gitleaks.csv" | tr '/' '-' >> "$GITHUB_OUTPUT"
+        run: echo "sanitized_folder_name=${{ inputs.project_folder }}" | tr '/' '-' >> "$GITHUB_OUTPUT"
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
@@ -142,7 +142,7 @@ jobs:
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@v4
         with:
-          name: gitleaks-report-${{ steps.prepare_name.outputs.sanitized_folder_name }}-${{ github.run_id }}-${{ github.sha }}-${{ steps.timestamp.outputs.time }}
+          name: gitleaks-report-${{ steps.prepare_name.outputs.sanitized_folder_name }}-${{ steps.timestamp.outputs.time }}
           path: gitleaks-${{ steps.prepare_name.outputs.sanitized_folder_name }}.csv
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
