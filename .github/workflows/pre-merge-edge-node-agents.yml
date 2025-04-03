@@ -1,8 +1,11 @@
 ---
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+
+# yamllint disable rule:line-length
+
 name: Pre-Merge CI Pipeline
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       runner_version:
@@ -90,9 +93,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history, WO sporadic issue with missing tags
-          fetch-tags: true # Fetch tags
-          ref: ${{ github.head_ref }} # Checkout the branch that triggered the workflow to avoid detached HEAD
+          # Fetch all history, workaround sporadic issue with missing tags
+          fetch-depth: 0
+          # Fetch tags
+          fetch-tags: true
+          # Checkout the branch that triggered the workflow to avoid detached HEAD
+          ref: ${{ github.head_ref }}
 
       - name: REUSE Compliance Check
         if: ${{ inputs.run_reuse_check == true }}
