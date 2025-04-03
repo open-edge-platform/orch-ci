@@ -182,6 +182,8 @@ runs:
         echo "Original GOCACHE: $(go env GOCACHE)"
         echo "Original GOMODCACHE: $(go env GOMODCACHE)"
 
+        mkdir -p $(go env GOCACHE) $(go env GOMODCACHE)
+      
         sudo du -sh $(go env GOCACHE)
         sudo du -sh $(go env GOMODCACHE)
 
