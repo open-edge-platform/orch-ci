@@ -174,6 +174,7 @@ runs:
         "swagger-cli@${SWAGGER_CLI_VER}" \
         "@eslint/js@${ESLINT_VER}" \
         "pajv@${PAJV_VER}" \
+        "conventional-changelog-conventionalcommits" \
         "commitlint@${COMMITLINT_VER}"
 
     - name: "Use separate cache for Go tools"
