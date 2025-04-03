@@ -220,6 +220,13 @@ jobs:
             ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
             ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-
 
+      - name: Install cosign
+        if: ${{ inputs.run_docker_push }}
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          bootstrap_tools: "cosign"
+
       - name: Build Code
         if: ${{ inputs.run_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -227,6 +234,27 @@ jobs:
         run: |
           echo "Building the code"
           make build
+
+      - name: Find and Sign Go Binaries
+        if: ${{ inputs.run_build }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+        run: |
+          # common dirs to search for binaries
+          directories=("out" "build" "bin")
+
+          for dir in "${directories[@]}"; do
+            full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
+            echo "Checking path: $full_path"
+            if [ -d "$full_path" ]; then
+              find "$full_path" -type f -executable | while read -r binary; do
+                echo "Signing $binary"
+                cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
+              done
+            fi
+          done
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -276,13 +304,6 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make docker-push
-
-      - name: Install cosign
-        if: ${{ inputs.run_docker_push }}
-        uses: ./ci/.github/actions/bootstrap
-        with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-          bootstrap_tools: "cosign"
 
       - name: Sign Docker images
         if: ${{ inputs.run_docker_push }}
