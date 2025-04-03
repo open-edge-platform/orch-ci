@@ -13,7 +13,7 @@ inputs:
     description: "Comma-separated list of tools to install (e.g., 'go,docker') or 'all' for all tools"
     default: "all"
   gh_token:
-    required: true
+    required: false
     description: "PAT token for private repositories"
 runs:
   using: "composite"
