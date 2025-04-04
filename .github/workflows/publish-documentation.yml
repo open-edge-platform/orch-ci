@@ -152,8 +152,8 @@ jobs:
             rm -rf "${OUT_DIR}"
           done
 
-      - name: Configure AWS credentials # yamllint disable-line rule:line-length
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1
+      - name: Configure AWS credentials 
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1 # yamllint disable-line rule:line-length
         with:
           aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
