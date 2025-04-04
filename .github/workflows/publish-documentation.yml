@@ -101,7 +101,9 @@ jobs:
             echo "ERROR: No branches matched 'branch_pattern': ${PATTERN}"
             exit 1
           fi
-          echo "DOCS_BRANCHES=(${branches[*]})" >> "$GITHUB_ENV"
+          # Convert the array to a string with comma delimeters
+          branches=$(IFS=','; echo "${branches[*]}")
+          echo "DOCS_BRANCHES=${branches}" >> "$GITHUB_ENV"
 
       - name: Get Subdirectory
         shell: bash
@@ -127,7 +129,9 @@ jobs:
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
         shell: bash
         run: |
-          for branch in "${DOCS_BRANCHES[@]}"; do
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          for branch in "${branches[@]}"; do
             cd "${GITHUB_WORKSPACE}"
             git checkout "${branch}"
             cd "${DOCS_DIR}"
@@ -149,7 +153,9 @@ jobs:
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
         shell: bash
         run: |
-          for branch in "${DOCS_BRANCHES[@]}"; do
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          for branch in "${branches[@]}"; do
             # Find branches that match patterns:
             # release-#.# or release-#.#.#
             if echo "${branch}" | grep -qEv '^release-\d(\.\d){1,2}$'; then
