@@ -110,10 +110,20 @@ jobs:
       - name: Get Subdirectory
         shell: bash
         run: |
+          # Replace the strings in ["example"] with the assigned string
+          # Create associative array
+          declare -A REPLACE
+          REPLACE=(
+              ["orch-docs"]="edge-manage-docs"
+          )
           # Convert '.' to '/'
           rshort="${REPO//./\/}"
           # Retrieve word after last '/'
           rshort="${rshort##*/}"
+          # Replace matches if found
+          if [[ -v REPLACE[$rshort] ]]; then
+            rshort="${REPLACE[$rshort]}"
+          fi
           # Get last name in path
           path="$(basename "${DOCS_DIR}")"
           # Remove any '.' characters
