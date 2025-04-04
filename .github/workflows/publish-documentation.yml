@@ -160,7 +160,7 @@ jobs:
           for branch in "${branches[@]}"; do
             # Find branches that match patterns:
             # release-#.# or release-#.#.#
-            if echo "${branch}" | grep -qEv '^release-\d(\.\d){1,2}$'; then
+            if echo "${branch}" | grep -qE '^release-\d(\.\d){1,2}$'; then
               version="${branch#*-}"
               mv "${GITHUB_WORKSPACE}/_UPLOAD/${branch}" \
                 "${GITHUB_WORKSPACE}/_UPLOAD/${version}"
@@ -193,6 +193,7 @@ jobs:
       # Checkout orch-ci again so the
       # 'Post Bootstrap CI Environment' step does not fail
       - name: Checkout action repository
+        if: always()
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: open-edge-platform/orch-ci
