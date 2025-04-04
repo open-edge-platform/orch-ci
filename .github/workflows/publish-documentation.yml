@@ -90,6 +90,8 @@ jobs:
           PATTERN: ${{ inputs.branch_pattern }}
         shell: bash
         run: |
+          # Remove ci directory
+          rm -rf "${GITHUB_WORKSPACE}/ci"
           # Get list of all branches on remote to build
           mapfile -t branches < <(git ls-remote --heads | cut -f3- -d/)
           for index in "${!branches[@]}"; do
@@ -185,9 +187,11 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "${DISTID}" --paths "/${SUBDIR}/*"
           echo "Publishing documentation complete."
+          # Remove ci directory
+          rm -rf "${GITHUB_WORKSPACE}/ci"
 
-      # Checkout orch-ci again, in case it was removed during the clean step
-      # otherwise, the 'Post Bootstrap CI Environment' step will fail
+      # Checkout orch-ci again so the
+      # 'Post Bootstrap CI Environment' step does not fail
       - name: Checkout action repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
