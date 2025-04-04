@@ -174,8 +174,12 @@ runs:
         "swagger-cli@${SWAGGER_CLI_VER}" \
         "@eslint/js@${ESLINT_VER}" \
         "pajv@${PAJV_VER}" \
-        "conventional-changelog-conventionalcommits" \
-        "commitlint@${COMMITLINT_VER}"
+
+    - name: Install commitlint and config-conventional
+      if: contains(inputs.bootstrap_tools, 'nodejs') || contains(inputs.bootstrap_tools, 'all')
+      shell: bash
+      run: |
+        npm install --save-dev @commitlint/cli @commitlint/config-conventional
 
     - name: "Use separate cache for Go tools"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
