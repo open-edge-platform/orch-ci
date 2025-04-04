@@ -27,11 +27,6 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: '^(main|release-.*)$'
         type: string
-      persist_creds:
-        description: "Keep checkout creds"
-        required: false
-        default: false
-        type: boolean
       orch_ci_repo_ref:
         description: >-
           The ref of the orch-ci repo, including bootstrap action and scripts,
@@ -65,12 +60,23 @@ jobs:
       REF_NAME: ${{ github.ref_name }}
       REPO: ${{ github.repository }}
     steps:
+      - name: Checkout action repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: ${{ inputs.orch_ci_repo_ref }}
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          bootstrap_tools: "aws"
+
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
-          # Do not persist credentials by default, otherwise they
-          # will clash with credentials set by bootstrap action
-          persist-credentials: ${{ inputs.persist_creds }}
           # Fetch all history, otherwise sporadic issue with missing tags
           fetch-depth: 0
           # Fetch tags
@@ -96,20 +102,6 @@ jobs:
             exit 1
           fi
           echo "DOCS_BRANCHES=(${branches[*]})" >> "$GITHUB_ENV"
-
-      - name: Checkout action repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-        with:
-          repository: open-edge-platform/orch-ci
-          path: ci
-          ref: ${{ inputs.orch_ci_repo_ref }}
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
-
-      - name: Bootstrap CI environment
-        uses: ./ci/.github/actions/bootstrap
-        with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-          bootstrap_tools: "aws"
 
       - name: Get Subdirectory
         shell: bash
@@ -150,6 +142,21 @@ jobs:
             mv "${OUT_DIR}"/* "${GITHUB_WORKSPACE}/_UPLOAD/${branch}"
             make clean || :
             rm -rf "${OUT_DIR}"
+          done
+
+      - name: Trim release prefix
+        env:
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+        shell: bash
+        run: |
+          for branch in "${DOCS_BRANCHES[@]}"; do
+            # Find branches that match patterns:
+            # release-#.# or release-#.#.#
+            if echo "${branch}" | grep -qEv '^release-\d(\.\d){1,2}$'; then
+              version="${branch#*-}"
+              mv "${GITHUB_WORKSPACE}/_UPLOAD/${branch}" \
+                "${GITHUB_WORKSPACE}/_UPLOAD/${version}"
+            fi
           done
 
       - name: Configure AWS credentials
