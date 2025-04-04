@@ -147,7 +147,7 @@ runs:
 
     - name: "Set up Python environment"
       if: contains(inputs.bootstrap_tools, 'python') || contains(inputs.bootstrap_tools, 'all')
-      uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+      uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55  # v5.5.0
       with:
         python-version: '3.13'
         cache: 'pip'
