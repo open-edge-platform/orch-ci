@@ -185,3 +185,13 @@ jobs:
           aws cloudfront create-invalidation \
             --distribution-id "${DISTID}" --paths "/${SUBDIR}/*"
           echo "Publishing documentation complete."
+
+      # Checkout orch-ci again, in case it was removed during the clean step
+      # otherwise, the 'Post Bootstrap CI Environment' step will fail
+      - name: Checkout action repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: ${{ inputs.orch_ci_repo_ref }}
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
