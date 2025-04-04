@@ -201,13 +201,19 @@ jobs:
 
           mkdir -p "${GOCACHE}" "${GOMODCACHE}" ~/.cache/golangci-lint
 
-          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
-          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
-          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+          echo "Cache sizes before removal:"
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
+          sudo du -sh ~/.cache/golangci-lint
 
-          rm -rf "${GOCACHE:?}"/{*,.*}
-          rm -rf "${GOMODCACHE:?}"/{*,.*}
-          rm -rf ~/.cache/golangci-lint/{*,.*}
+          sudo rm -rf "${GOCACHE:?}"/{*,.*}
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*}
+
+          echo "Cache sizes after removal:"
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
+          sudo du -sh ~/.cache/golangci-lint
 
           echo "GOCACHE=$GOCACHE" >> "$GITHUB_ENV"
           echo "GOMODCACHE=$GOMODCACHE" >> "$GITHUB_ENV"
@@ -305,13 +311,19 @@ jobs:
           GOCACHE="$(go env GOCACHE)"
           GOMODCACHE="$(go env GOMODCACHE)"
 
-          echo "Current GOCACHE: ${GOCACHE}, size: $("du -sh ${GOCACHE} | cut -f1")"
-          echo "Current GOMODCACHE: ${GOMODCACHE}, size: $("du -sh ${GOMODCACHE} | cut -f1")"
-          echo "Current golangci-lint cache size: $(du -sh ~/.cache/golangci-lint | cut -f1)"
+          echo "Cache sizes before removal:"
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
+          sudo du -sh ~/.cache/golangci-lint
 
-          rm -rf "${GOCACHE:?}"/{*,.*}
-          rm -rf "${GOMODCACHE:?}"/{*,.*}
-          rm -rf ~/.cache/golangci-lint/{*,.*}
+          sudo rm -rf "${GOCACHE:?}"/{*,.*}
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*}
+
+          echo "Cache sizes after removal:"
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
+          sudo du -sh ~/.cache/golangci-lint
 
       - name: Build Docker image
         if: ${{ inputs.run_docker_build }}

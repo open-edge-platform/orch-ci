@@ -179,8 +179,13 @@ runs:
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        echo "Original GOCACHE: $(go env GOCACHE), size: $(du -sh $(go env GOCACHE) | cut -f1)"
-        echo "Original GOMODCACHE: $(go env GOMODCACHE), size: $(du -sh $(go env GOMODCACHE) | cut -f1)"
+        echo "Original GOCACHE: $(go env GOCACHE)"
+        echo "Original GOMODCACHE: $(go env GOMODCACHE)"
+
+        mkdir -p $(go env GOCACHE) $(go env GOMODCACHE)
+
+        sudo du -sh $(go env GOCACHE)
+        sudo du -sh $(go env GOMODCACHE)
 
         # Set a temporary cache location (only for tools)
         temp_go_cache="/tmp/.cache/go-build"
@@ -193,8 +198,11 @@ runs:
         echo "temp_go_cache=$(go env GOCACHE)" >> $GITHUB_ENV
         echo "temp_go_modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
 
-        echo "New GOCACHE: $(go env GOCACHE), size: $(du -sh $(go env GOCACHE) | cut -f1)"
-        echo "New GOMODCACHE: $(go env GOMODCACHE), size: $(du -sh $(go env GOMODCACHE) | cut -f1)"
+        echo "New GOCACHE: $(go env GOCACHE)"
+        echo "New GOMODCACHE: $(go env GOMODCACHE)"
+
+        sudo du -sh $(go env GOCACHE)
+        sudo du -sh $(go env GOMODCACHE)
 
     - name: "Restore Go tools from cache"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
@@ -230,15 +238,29 @@ runs:
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        echo "Current GOCACHE: $(go env GOCACHE), size: $(du -sh $(go env GOCACHE) | cut -f1)"
-        echo "Current GOMODCACHE: $(go env GOMODCACHE), size: $(du -sh $(go env GOMODCACHE) | cut -f1)"
+        echo "Current GOCACHE: $(go env GOCACHE)"
+        echo "Current GOMODCACHE: $(go env GOMODCACHE)"
+
+        echo "Temporary cache sizes before removal:"
+        sudo du -sh $(go env GOCACHE)
+        sudo du -sh $(go env GOMODCACHE)
+
+        sudo rm -rf "$(go env GOCACHE)"/{*,.*}
+        sudo rm -rf "$(go env GOMODCACHE)"/{*,.*}
+
+        echo "Temporary cache sizes after removal:"
+        sudo du -sh $(go env GOCACHE)
+        sudo du -sh $(go env GOMODCACHE)
 
         # Restore the original GOCACHE and GOMODCACHE
         go env -u GOCACHE
         go env -u GOMODCACHE
 
-        echo "Restored GOCACHE: $(go env GOCACHE), size: $(du -sh $(go env GOCACHE) | cut -f1)"
-        echo "Restored GOMODCACHE: $(go env GOMODCACHE), size: $(du -sh $(go env GOMODCACHE) | cut -f1)"
+        echo "Restored GOCACHE: $(go env GOCACHE)"
+        echo "Restored GOMODCACHE: $(go env GOMODCACHE)"
+
+        sudo du -sh $(go env GOCACHE)
+        sudo du -sh $(go env GOMODCACHE)
 
     - name: Install golangci-lint
       if: contains(inputs.bootstrap_tools, 'golang-lint') || contains(inputs.bootstrap_tools, 'all')
