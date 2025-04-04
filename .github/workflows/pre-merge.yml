@@ -120,6 +120,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "ubuntu-latest"
         type: string
+      version_suffix:
+        description: "Set a VERSION_SUFFIX for usage in Makefiles to tag dev images"
+        required: false
+        default: ""
+        type: string
 permissions:
   contents: write
 jobs:
@@ -372,24 +377,32 @@ jobs:
       - name: Build Docker image
         if: ${{ inputs.run_docker_build }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
         run: |
           make docker-build
 
       - name: Push Docker image
         if: ${{ inputs.run_docker_push }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
         run: |
           make docker-push
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
         run: |
           make helm-build
 
       - name: Push Helm chart
         if: ${{ inputs.run_helm_push }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
         run: |
           make helm-push
 
