@@ -152,7 +152,7 @@ jobs:
             rm -rf "${OUT_DIR}"
           done
 
-      - name: Configure AWS credentials 
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1
         with:
           aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
