@@ -372,7 +372,7 @@ jobs:
 
       - name: List Docker Images
         id: list-images
-        if: ${{ inputs.run_scan_containers }}
+        if: ${{ inputs.run_docker_build }}
         run: |
           images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
           echo "images=$images"
