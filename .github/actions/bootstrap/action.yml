@@ -361,7 +361,7 @@ runs:
       if: contains(inputs.bootstrap_tools, 'atlas') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        curl -Lo /tmp/atlas "https://release.ariga.io/atlas/atlas-community-linux-amd64-v${ATLAS_VER}"
+        curl -Lo /tmp/atlas "https://release.ariga.io/atlas/atlas-linux-amd64-v${ATLAS_VERSION}"
         sha256sum -c --ignore-missing ${{ github.action_path }}/SHA256SUM
         chmod +x /tmp/atlas
         mv /tmp/atlas /usr/local/bin
