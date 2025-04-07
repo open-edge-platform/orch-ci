@@ -50,7 +50,7 @@ jobs:
       with:
         repository: open-edge-platform/orch-ci
         path: ci
-        ref: ${{ inputs.orch_ci_repo_ref }}
+        ref: main
         token: ${{ env.gh_token }}
 
     - name: Bootstrap CI environment
@@ -74,7 +74,7 @@ jobs:
                 if [ -f "$file" ]; then
                     echo "========================="
                     echo "Test failed see output file below to reproduce issue and to re-run: go test -run=<failed-func>/<filename>"
-                    echo "Copy output file contents (2 lines) below and create file in "${{ inputs.test_data_dir }}"/<failed-func>/<filename> directory"
+                    echo "Copy output file contents (2 lines) below and create file in ${{ inputs.test_data_dir }}/<failed-func>/<filename> directory"
                     echo "========================="
                     echo "--- Contents of file: $file ---"
                     cat "$file"
