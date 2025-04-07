@@ -118,7 +118,7 @@ jobs:
     outputs:
       sanitized_report_path: ${{ steps.sanitize.outputs.sanitized_report_path }}
       repo_project: ${{ steps.sanitize.outputs.repo_project }}
-    steps:
+    steps: 
       - name: Sanitize project folder
         id: sanitize
         run: |
@@ -145,7 +145,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           ref: ${{ github.head_ref }}
       - name: Install gitleaks
@@ -161,7 +161,7 @@ jobs:
         run: |
           gitleaks dir ${{ inputs.project_folder }} -v -f csv -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.csv --exit-code 0
       - name: Upload Gitleaks Report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}-${{ steps.timestamp.outputs.time }}
           path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.csv
