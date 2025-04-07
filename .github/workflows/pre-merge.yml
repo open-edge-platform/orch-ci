@@ -422,7 +422,7 @@ jobs:
       - name: Download Docker Images
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e  # v4.2.1
         with:
-          name: docker-images-${{ needs.run-repo-pipelines.outputs.sanitized_report_path }}
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
 
       - name: Load Docker Images
         run: |
