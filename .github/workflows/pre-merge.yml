@@ -118,7 +118,7 @@ jobs:
     outputs:
       sanitized_report_path: ${{ steps.sanitize.outputs.sanitized_report_path }}
       repo_project: ${{ steps.sanitize.outputs.repo_project }}
-    steps: 
+    steps:
       - name: Sanitize project folder
         id: sanitize
         run: |
