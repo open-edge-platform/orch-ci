@@ -413,7 +413,7 @@ jobs:
 
   scan-images:
     if: ${{ inputs.run_scan_containers && needs.run-repo-pipelines.outputs.images != '[]' }}
-    needs: run-repo-pipelines
+    needs: [sanitize-project-folder, run-repo-pipelines]
     runs-on: ubuntu-latest
     strategy:
       matrix:
