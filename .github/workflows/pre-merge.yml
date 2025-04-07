@@ -413,7 +413,7 @@ jobs:
           echo "Sending failure email..."
 
   scan-images:
-    if: ${{ inputs.run_scan_containers && needs.run-repo-pipelines.outputs.images != '[]' }}
+    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' }}
     needs: [sanitize-project-folder, run-repo-pipelines]
     runs-on: ubuntu-latest
     strategy:
