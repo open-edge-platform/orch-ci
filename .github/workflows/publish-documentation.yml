@@ -214,7 +214,7 @@ jobs:
           # Use GitHub API to create a comment on the PR
           COMMENT="Documentation published at: "
           COMMENT+="https://docs.openedgeplatform.intel.com/"
-          COMMENT+="${SUBDIR}/${branches[0]}"
+          COMMENT+="${SUBDIR}/${branches[0]}/"
           COMMENT_URL="https://api.github.com/repos/"
           COMMENT_URL+="${REPO}/issues/${GITHUB_PR}/comments"
           curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
