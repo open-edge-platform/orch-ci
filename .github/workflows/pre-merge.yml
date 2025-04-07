@@ -208,9 +208,9 @@ jobs:
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.txt
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
+    needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
-      sanitized_report_path: ${{ steps.sanitize.outputs.sanitized_report_path }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
