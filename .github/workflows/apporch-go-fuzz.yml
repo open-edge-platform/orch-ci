@@ -2,10 +2,12 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+# yamllint disable rule:line-length
+
 name: AppOrch Go Fuzzing Tests
 description: "Sets up the environment with necessary tools and dependencies to run AppOrch Go fuzzing tests"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       bootstrap_tools:
@@ -31,55 +33,55 @@ on:
 
 jobs:
   go-fuzz-test:
-    runs-on: ubuntu-24.04-16core-64GB # ubuntu-24.04-4core-16GB ubuntu-22.04-32core-128GB & ubuntu-24.04-16core-64GB
+    runs-on: ubuntu-24.04-16core-64GB  # ubuntu-24.04-4core-16GB ubuntu-22.04-32core-128GB & ubuntu-24.04-16core-64GB
     env:
       gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      with:
-        # Fetch all history, workaround sporadic issue with missing tags
-        fetch-depth: 0
-        # Fetch tags
-        fetch-tags: true
-        # Checkout the branch that triggered the workflow to avoid detached HEAD
-        ref: ${{ github.head_ref }}
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          # Fetch all history, workaround sporadic issue with missing tags
+          fetch-depth: 0
+          # Fetch tags
+          fetch-tags: true
+          # Checkout the branch that triggered the workflow to avoid detached HEAD
+          ref: ${{ github.head_ref }}
 
-    - name: Checkout orch-ci repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      with:
-        repository: open-edge-platform/orch-ci
-        path: ci
-        ref: main
-        token: ${{ env.gh_token }}
+      - name: Checkout orch-ci repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: main
+          token: ${{ env.gh_token }}
 
-    - name: Bootstrap CI environment
-      uses: ./ci/.github/actions/bootstrap
-      with:
-        gh_token: ${{ env.gh_token }}
-        bootstrap_tools: ${{ inputs.bootstrap_tools }}
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          gh_token: ${{ env.gh_token }}
+          bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
-    - name: Run Go Fuzzing test
-      env:
-        FUZZ_SECONDS: ${{ inputs.fuzz_seconds }}
-        FUZZ_SUBPROJECTS: ${{ inputs.fuzz_subprojects }}
-      shell: bash
-      run: |
-        if make go-fuzz; then
-            echo "All tests passed"
-        else
-            dir=${{ inputs.test_data_dir }}
-            if [ -d "$dir" ]; then
-                find "$dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
-                if [ -f "$file" ]; then
-                    echo "========================="
-                    echo "Test failed see output file below to reproduce issue and to re-run: go test -run=<failed-func>/<filename>"
-                    echo "Copy output file contents (2 lines) below and create file in ${{ inputs.test_data_dir }}/<failed-func>/<filename> directory"
-                    echo "========================="
-                    echo "--- Contents of file: $file ---"
-                    cat "$file"
-                fi
-                done
-            fi
-            exit 1
-        fi
+      - name: Run Go Fuzzing test
+        env:
+          FUZZ_SECONDS: ${{ inputs.fuzz_seconds }}
+          FUZZ_SUBPROJECTS: ${{ inputs.fuzz_subprojects }}
+        shell: bash
+        run: |
+          if make go-fuzz; then
+              echo "All tests passed"
+          else
+              dir=${{ inputs.test_data_dir }}
+              if [ -d "$dir" ]; then
+                  find "$dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
+                  if [ -f "$file" ]; then
+                      echo "========================="
+                      echo "Test failed see output file below to reproduce issue and to re-run: go test -run=<failed-func>/<filename>"
+                      echo "Copy output file contents (2 lines) below and create file in ${{ inputs.test_data_dir }}/<failed-func>/<filename> directory"
+                      echo "========================="
+                      echo "--- Contents of file: $file ---"
+                      cat "$file"
+                  fi
+                  done
+              fi
+              exit 1
+          fi
