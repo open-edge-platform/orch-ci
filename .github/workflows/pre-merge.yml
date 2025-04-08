@@ -343,7 +343,7 @@ jobs:
         with:
           name: binaries
           path: |
-            $(printf '%s\n' "${binaries[@]}")
+            $(echo ${{ steps.collect-binaries.outputs.binaries }} | jq -r '.[]')
 
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
