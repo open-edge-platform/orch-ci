@@ -381,12 +381,12 @@ jobs:
         run: |
           # list of images to skip
           skip_images="${{ inputs.trivy_image_skip }}"
-          
+
           IFS=',' read -r -a skip_array <<< "$skip_images"
-          
+
           # all docker images
           all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
-          
+
           filtered_images=()
 
           for image in $(echo "$all_images" | jq -r '.[]'); do
@@ -403,10 +403,10 @@ jobs:
           done
 
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
-          
+
           echo "images=$images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
-      
+
 
       - name: Save Docker Images
         if: ${{ inputs.run_docker_build }}
