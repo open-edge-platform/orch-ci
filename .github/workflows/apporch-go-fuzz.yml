@@ -5,7 +5,6 @@
 # yamllint disable rule:line-length
 
 name: AppOrch Go Fuzzing Tests
-description: "Sets up the environment with necessary tools and dependencies to run AppOrch Go fuzzing tests"
 
 on:  # yamllint disable-line rule:truthy
   workflow_call:
@@ -33,7 +32,7 @@ on:  # yamllint disable-line rule:truthy
 
 jobs:
   go-fuzz-test:
-    runs-on: ubuntu-24.04-16core-64GB  # ubuntu-24.04-4core-16GB ubuntu-22.04-32core-128GB & ubuntu-24.04-16core-64GB
+    runs-on: ubuntu-latest
     env:
       gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
     steps:
