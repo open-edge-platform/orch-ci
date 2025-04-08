@@ -302,6 +302,13 @@ jobs:
         run: |
           make lint
 
+      - name: Upload Lint Report
+        if: ${{ inputs.run_lint && inputs.project_folder == 'vm-provisioning' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: yaml-report
+          path: ${{ github.workspace }}/${{ inputs.project_folder }}/out/yaml-syntax-report.log      
+
       - name: Test Code
         if: ${{ inputs.run_test }}
         working-directory: ${{ inputs.project_folder }}
