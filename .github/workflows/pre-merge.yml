@@ -314,7 +314,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make lint
-
+          
       - name: Upload Lint Report
         if: ${{ inputs.run_lint && inputs.project_folder == 'vm-provisioning' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
