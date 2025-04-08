@@ -323,27 +323,26 @@ jobs:
           make test
           # TO DO find a replacement for cobertura
 
-      - name: Collect binaries
-        id: collect-binaries
+      - name: Scan directories for binaries
+        id: scan-directories
         run: |
           directories=("out" "build" "bin")
-          binaries=()
           for dir in "${directories[@]}"; do
             full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
             if [ -d "$full_path" ]; then
-              while IFS= read -r binary; do
-                binaries+=("$binary")
-              done < <(find "$full_path" -type f -executable)
+              if find "$full_path" -type f -executable | grep -q .; then
+                echo "Scanning directory: $full_path"
+                echo "directory=$full_path" >> $GITHUB_OUTPUT
+              fi
             fi
           done
-          echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
 
-      - name: Upload binaries
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      - name: ClamAV Scan
+        if: ${{ steps.scan-directories.outputs.directory }}
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
         with:
-          name: binaries
-          path: |
-            $(echo ${{ steps.collect-binaries.outputs.binaries }} | jq -r '.[]')
+          report-path: clamav_scan_binary_report.txt
+          project-folder: ${{ steps.scan-directories.outputs.directory }}
 
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
