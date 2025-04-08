@@ -110,6 +110,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "ubuntu-latest"
         type: string
+      trivy_image_skip:
+        description: "Images to skip scanning with trivy"
+        required: false
+        default: ""
+        type: string
 permissions:
   contents: write
 jobs:
@@ -374,9 +379,34 @@ jobs:
         id: list-images
         if: ${{ inputs.run_docker_build }}
         run: |
-          images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
+          # list of images to skip
+          skip_images="${{ inputs.trivy_image_skip }}"
+          
+          IFS=',' read -r -a skip_array <<< "$skip_images"
+          
+          # all docker images
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
+          
+          filtered_images=()
+
+          for image in $(echo "$all_images" | jq -r '.[]'); do
+            skip=false
+            for skip_image in "${skip_array[@]}"; do
+              if [[ "$image" == "$skip_image" ]]; then
+                skip=true
+                break
+              fi
+            done
+            if [ "$skip" = false ]; then
+              filtered_images+=("$image")
+            fi
+          done
+
+          images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
+          
           echo "images=$images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
+      
 
       - name: Save Docker Images
         if: ${{ inputs.run_docker_build }}
