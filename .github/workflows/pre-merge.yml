@@ -212,6 +212,7 @@ jobs:
     needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
+      binaries: ${{ steps.collect-binaries.outputs.binaries }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
@@ -322,27 +323,21 @@ jobs:
           make test
           # TO DO find a replacement for cobertura
 
-      - name: Antivirus scan for binaries
+      - name: Collect binaries
         if: ${{ inputs.run_build }}
-        working-directory: ${{ inputs.project_folder }}
+        id: collect-binaries
         run: |
-          # common dirs to search for binaries
           directories=("out" "build" "bin")
-
+          binaries=()
           for dir in "${directories[@]}"; do
             full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
-            echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
-              find "$full_path" -type f -executable | while read -r binary; do
-                echo "Scanning binary: $binary"
-                # Call the ClamAV action for each binary
-                uses: open-edge-platform/orch-ci/.github/actions/clamav@main
-                with:
-                  report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
-                  project-folder: $binary
-              done
+              while IFS= read -r binary; do
+                binaries+=("$binary")
+              done < <(find "$full_path" -type f -executable)
             fi
           done
+          echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
 
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
@@ -474,3 +469,19 @@ jobs:
         with:
           name: trivy-scan-report-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}.txt
+
+  antivirus-scan:
+    runs-on: ubuntu-latest
+    needs: run-repo-pipelines
+    strategy:
+      matrix:
+        binary: ${{ fromJson(needs.run-repo-pipelines.outputs.binaries) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: ClamAV Scan
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
+        with:
+          report-path: clamav_scan_report-${{ matrix.binary }}.txt
+          project-folder: ${{ matrix.binary }}
