@@ -268,7 +268,7 @@ jobs:
           echo "Building the code"
           make build
 
-      - name: Find and Sign Go Binaries
+      - name: Find and Sign Binaries
         if: ${{ inputs.run_build }}
         working-directory: ${{ inputs.project_folder }}
         env:

@@ -322,6 +322,28 @@ jobs:
           make test
           # TO DO find a replacement for cobertura
 
+      - name: Antivirus scan for binaries
+        if: ${{ inputs.run_build }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          # common dirs to search for binaries
+          directories=("out" "build" "bin")
+
+          for dir in "${directories[@]}"; do
+            full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
+            echo "Checking path: $full_path"
+            if [ -d "$full_path" ]; then
+              find "$full_path" -type f -executable | while read -r binary; do
+                echo "Scanning binary: $binary"
+                # Call the ClamAV action for each binary
+                uses: open-edge-platform/orch-ci/.github/actions/clamav@main
+                with:
+                  report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
+                  project-folder: $binary
+              done
+            fi
+          done
+
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.4
