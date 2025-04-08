@@ -342,7 +342,7 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/clamav@binary_scan
         with:
           report-path: clamav_scan_binary_report.txt
-          project-folder: ${{ steps.scan-directories.outputs.directory }}
+          project-folder: ${{ steps.scan-directories.outputs.directory }}/
 
       - name: Save Go cache
         if: ${{ inputs.cache_go }}

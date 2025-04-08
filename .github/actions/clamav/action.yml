@@ -22,7 +22,7 @@ runs:
     - |
       # Sanitize the report path for artifact name
       SANITIZED_CLAMAV_REPORT_PATH=$(echo "${{ inputs.report-path }}" | tr '/' '-')
-      FULL_REPORT_PATH="/github/workspace/${SANITIZED_CLAMAV_REPORT_PATH}"
+      FULL_REPORT_PATH="${SANITIZED_CLAMAV_REPORT_PATH}"
 
       clamscan -r --bell -i ${{ inputs.project-folder }} > "${FULL_REPORT_PATH}"
 
