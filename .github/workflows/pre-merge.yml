@@ -113,6 +113,27 @@ on:  # yamllint disable-line rule:truthy
 permissions:
   contents: write
 jobs:
+  scorecard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Prepare artifact name
+        id: prepare_name
+        run: echo "sanitized_folder_name=${{ inputs.project_folder }}" | tr '/' '-' >> "$GITHUB_OUTPUT"
+      - name: Run OpenSSF Scorecard
+        uses: ossf/scorecard-action@f49aabe0b5af0936a0987cfb85d86b75731b0186  # v2.4.1
+        with:
+          results_file: scorecard-results-${{ steps.prepare_name.outputs.sanitized_folder_name }}.json
+          results_format: json
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Scorecard Results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: scorecard-results-${{ steps.prepare_name.outputs.sanitized_folder_name }}
+          path: scorecard-results-${{ steps.prepare_name.outputs.sanitized_folder_name }}.json
   sanitize-project-folder:
     runs-on: ubuntu-latest
     outputs:
