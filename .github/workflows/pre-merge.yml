@@ -324,7 +324,6 @@ jobs:
           # TO DO find a replacement for cobertura
 
       - name: Collect binaries
-        if: ${{ inputs.run_build }}
         id: collect-binaries
         run: |
           directories=("out" "build" "bin")
@@ -338,6 +337,13 @@ jobs:
             fi
           done
           echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R . | jq -s -c .)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: binaries
+          path: |
+            $(printf '%s\n' "${binaries[@]}")
 
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
@@ -477,8 +483,10 @@ jobs:
       matrix:
         binary: ${{ fromJson(needs.run-repo-pipelines.outputs.binaries) }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
 
       - name: ClamAV Scan
         uses: open-edge-platform/orch-ci/.github/actions/clamav@main
