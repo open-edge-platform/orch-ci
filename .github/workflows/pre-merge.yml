@@ -474,21 +474,3 @@ jobs:
         with:
           name: trivy-scan-report-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}.txt
-
-  antivirus-scan:
-    runs-on: ubuntu-latest
-    needs: run-repo-pipelines
-    strategy:
-      matrix:
-        binary: ${{ fromJson(needs.run-repo-pipelines.outputs.binaries) }}
-    steps:
-      - name: Download binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: binaries
-
-      - name: ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
-        with:
-          report-path: clamav_scan_report-${{ matrix.binary }}.txt
-          project-folder: ${{ matrix.binary }}
