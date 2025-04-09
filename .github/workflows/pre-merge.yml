@@ -215,7 +215,7 @@ jobs:
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
-      ARTIFACT_PATH: "."
+      ARTIFACT_PATH: ${{ inputs.project_folder }}
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
