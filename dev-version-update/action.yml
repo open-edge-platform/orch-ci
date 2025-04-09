@@ -31,20 +31,15 @@ runs:
 
         CHANGES_MADE=0
 
-        # Split the exclude paths parameter
         IFS=',' read -ra EXCLUDE_PATHS <<< "${{ inputs.exclude_paths }}"
-
-        # Build the find command starting from root
         FIND_CMD="find . -name VERSION -type f"
 
-        # Add all exclusion patterns
         for EXCLUDE in "${EXCLUDE_PATHS[@]}"; do
           FIND_CMD="$FIND_CMD -not -path \"$EXCLUDE\""
         done
 
         echo "Executing: $FIND_CMD"
 
-        # Execute the find command and process results
         for VERSION_PATH in $(eval $FIND_CMD 2>/dev/null || echo ""); do
           echo "Processing $VERSION_PATH"
           export VERSIONFILE="$VERSION_PATH"
