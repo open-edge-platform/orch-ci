@@ -63,25 +63,25 @@ runs:
           fi
         done
 
-    #     if [ $CHANGES_MADE -eq 1 ]; then
-    #       git commit -m "Update version files to next dev version"
-    #       git push origin $BRANCH_NAME
+        if [ $CHANGES_MADE -eq 1 ]; then
+          git commit -m "Update version files to next dev version"
+          git push origin $BRANCH_NAME
 
-    #       echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-    #       echo "changes_made=true" >> $GITHUB_OUTPUT
-    #     else
-    #       echo "No VERSION files found to update"
-    #       echo "changes_made=false" >> $GITHUB_OUTPUT
-    #     fi
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "changes_made=true" >> $GITHUB_OUTPUT
+        else
+          echo "No VERSION files found to update"
+          echo "changes_made=false" >> $GITHUB_OUTPUT
+        fi
 
-    # - name: Create Pull Request
-    #   if: steps.update_versions.outputs.changes_made == 'true'
-    #   shell: bash
-    #   env:
-    #     GH_TOKEN: ${{ github.token }}
-    #   run: |
-    #     gh pr create \
-    #       --title "Version bump to -dev" \
-    #       --body "Automatically bumping version files to next development iteration (-dev suffix)." \
-    #       --base main \
-    #       --head ${{ steps.update_versions.outputs.branch_name }}
+    - name: Create Pull Request
+      if: steps.update_versions.outputs.changes_made == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh pr create \
+          --title "Version bump to -dev" \
+          --body "Automatically bumping version files to next development iteration (-dev suffix)." \
+          --base main \
+          --head ${{ steps.update_versions.outputs.branch_name }}
