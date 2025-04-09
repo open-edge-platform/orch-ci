@@ -74,6 +74,13 @@ jobs:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "aws"
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1
+        with:
+          aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
@@ -136,6 +143,32 @@ jobs:
           fi
           echo "SUBDIR=${subdir}" >> "$GITHUB_ENV"
 
+      - name: Install Spark theme
+        env:
+          ENDPOINT: ${{ inputs.endpoint }}
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+        shell: bash
+        run: |
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          # Download Spark Sphinx theme
+          tmpdir="$(mktemp -d)"
+          aws s3 cp "${ENDPOINT}/theme/current" "${tmpdir}"
+          theme_wheel="$(cat "${tmpdir}/current")"
+          aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
+          # Checkout the first branch to build
+          cd "${GITHUB_WORKSPACE}"
+          git checkout "${branches[0]}"
+          cd "${DOCS_DIR}"
+          # Instantiate Python Virtual Environment
+          make check
+          venv="$(find . -path '*/bin/activate' -name activate)"
+          # shellcheck source=/dev/null
+          source "${venv}"
+          # Install Spark Sphinx theme
+          pip3 install --no-input "${tmpdir}/${theme_wheel}"
+          deactivate
+
       - name: Build Documentation
         env:
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
@@ -177,13 +210,6 @@ jobs:
             fi
           done
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1
-        with:
-          aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-
       - name: Publish documentation
         env:
           ENDPOINT: ${{ inputs.endpoint }}
@@ -201,7 +227,7 @@ jobs:
           rm -rf "${GITHUB_WORKSPACE}/ci"
 
       - name: Create comment with link in PR
-        if: ${{ github.event.pull_request.merged == true }}
+        if: github.event.pull_request.merged == true
         env:
           SUBDIR: ${{ env.SUBDIR }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
