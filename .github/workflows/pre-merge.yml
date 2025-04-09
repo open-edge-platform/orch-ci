@@ -484,8 +484,15 @@ jobs:
           output: "trivy-${{ env.sanitized_image_name }}.txt"
           ignore-unfixed: true
 
+      - name: Calculate MD5 Checksum
+        id: checksum
+        run: |
+          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}.txt" | cut -d " " -f 1)
+          echo "md5sum is $md5sum_value"
+          echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
+
       - name: Upload Trivy Image Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: trivy-scan-report-${{ env.sanitized_image_name }}
+          name: trivy-scan-report-${{ env.sanitized_image_name }}-${{ env.md5sum_value }}
           path: trivy-${{ env.sanitized_image_name }}.txt
