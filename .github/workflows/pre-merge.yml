@@ -64,6 +64,12 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      artifacts_path:
+        description: >-
+          Artifacts path to upload, defaults to 'nothing'
+        required: false
+        default: "nothing"
+        type: string  
       prefix_tag_separator:
         description: >-
           If provided, the tag will be prefixed input.project_folder with this separator
@@ -428,11 +434,11 @@ jobs:
           path: docker-images
 
       - name: Artifact
-        if: ${{ inputs.run_artifact }}
+        if: ${{ inputs.run_artifact && inputs.artifacts_path != 'nothing'}}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
-          path: ${{ env.ARTIFACT_PATH }}
+          path: ${{ inputs.artifacts_path }}
 
       - name: Clean up
         if: ${{ always() }}
