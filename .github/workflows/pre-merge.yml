@@ -480,7 +480,7 @@ jobs:
       - name: Calculate MD5 Checksum
         id: checksum
         run: |
-          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}.txt" | awk '{ print $1 }')
+          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}.txt" | cut -d " " -f 1)
           echo "md5sum is $md5sum_value
           echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
 
