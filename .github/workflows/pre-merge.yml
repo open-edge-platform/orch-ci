@@ -328,7 +328,7 @@ jobs:
         run: |
           directories=("out" "build" "bin")
           for dir in "${directories[@]}"; do
-            full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
+            full_path="${{ inputs.project_folder }}/$dir"
             if [ -d "$full_path" ]; then
               if find "$full_path" -type f -executable | grep -q .; then
                 echo "Scanning directory: $full_path"
@@ -342,7 +342,7 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/clamav@binary_scan
         with:
           report-path: clamav_scan_binary_report.txt
-          project-folder: ${{ steps.scan-directories.outputs.directory }}/
+          project-folder: ${{ steps.scan-directories.outputs.directory }}
 
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
