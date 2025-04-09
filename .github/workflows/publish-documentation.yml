@@ -227,7 +227,6 @@ jobs:
           rm -rf "${GITHUB_WORKSPACE}/ci"
 
       - name: Create comment with link in PR
-        if: github.event.pull_request.merged == true
         env:
           SUBDIR: ${{ env.SUBDIR }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
@@ -244,7 +243,7 @@ jobs:
           COMMENT_URL="https://api.github.com/repos/"
           COMMENT_URL+="${REPO}/issues/${GITHUB_PR}/comments"
           curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-            -X POST "${COMMENT_URL}" -d "{\"body\":\"$COMMENT\"}"
+            -X POST "${COMMENT_URL}" -d "{\"body\":\"$COMMENT\"}" || :
 
       # Checkout orch-ci again so the
       # 'Post Bootstrap CI Environment' step does not fail
