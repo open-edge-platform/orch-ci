@@ -344,7 +344,7 @@ jobs:
 
       - name: ClamAV Scan
         if: ${{ steps.scan-directories.outputs.directory }}
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@binary_scan
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
         with:
           report-path: clamav_scan_binary_report.txt
           project-folder: ${{ steps.scan-directories.outputs.directory }}
