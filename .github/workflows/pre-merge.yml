@@ -217,7 +217,6 @@ jobs:
     needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
-      binaries: ${{ steps.collect-binaries.outputs.binaries }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
@@ -407,7 +406,7 @@ jobs:
           IFS=',' read -r -a skip_array <<< "$skip_images"
 
           # all docker images
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -v clamav | jq -R . | jq -s -c .)
 
           filtered_images=()
 
