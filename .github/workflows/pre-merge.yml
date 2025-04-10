@@ -329,7 +329,7 @@ jobs:
 
       - name: Scan directories for binaries
         id: scan-directories
-        run: | # shellcheck disable=SC2086
+        run: |
           directories=("out" "build" "bin")
           for dir in "${directories[@]}"; do
             full_path="${{ inputs.project_folder }}/$dir"
