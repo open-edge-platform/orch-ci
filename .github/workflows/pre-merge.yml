@@ -438,7 +438,7 @@ jobs:
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
           path: |
-            ${{ inputs.artifacts_path | split(",") }}
+            ${{ inputs.artifacts_path }}
 
       - name: Clean up
         if: ${{ always() }}
