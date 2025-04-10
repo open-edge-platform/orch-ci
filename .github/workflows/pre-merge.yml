@@ -64,6 +64,12 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      artifacts_path:
+        description: >-
+          Artifacts path to upload, defaults to empty string
+        required: false
+        default: "empty"
+        type: string
       prefix_tag_separator:
         description: >-
           If provided, the tag will be prefixed input.project_folder with this separator
@@ -448,10 +454,11 @@ jobs:
           path: docker-images
 
       - name: Artifact
-        if: ${{ inputs.run_artifact }}
-        run: |
-          #TO DO figure out if needed, mainly legacy stage
-          echo "Uploading artifacts..."
+        if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          path: ${{ inputs.artifacts_path }}
 
       - name: Clean up
         if: ${{ always() }}
@@ -464,7 +471,7 @@ jobs:
           echo "Sending failure email..."
 
   scan-images:
-    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' }}
+    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' && needs.run-repo-pipelines.outputs.images != '[""]' }}
     needs: [sanitize-project-folder, run-repo-pipelines]
     runs-on: ubuntu-latest
     strategy:
