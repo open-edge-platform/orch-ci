@@ -327,6 +327,27 @@ jobs:
           make test
           # TO DO find a replacement for cobertura
 
+      - name: Scan directories for binaries
+        id: scan-directories
+        run: |
+          directories=("out" "build" "bin")
+          for dir in "${directories[@]}"; do
+            full_path="${{ inputs.project_folder }}/$dir"
+            if [ -d "$full_path" ]; then
+              if find "$full_path" -type f -executable | grep -q .; then
+                echo "Scanning directory: $full_path"
+                echo "directory=$full_path" >> $GITHUB_OUTPUT
+              fi
+            fi
+          done
+
+      - name: ClamAV Scan
+        if: ${{ steps.scan-directories.outputs.directory }}
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
+        with:
+          report-path: clamav_scan_binary_report.txt
+          project-folder: ${{ steps.scan-directories.outputs.directory }}
+
       - name: Save Go cache
         if: ${{ inputs.cache_go }}
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.4
@@ -385,7 +406,7 @@ jobs:
           IFS=',' read -r -a skip_array <<< "$skip_images"
 
           # all docker images
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | jq -R . | jq -s -c .)
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -v clamav | jq -R . | jq -s -c .)
 
           filtered_images=()
 
