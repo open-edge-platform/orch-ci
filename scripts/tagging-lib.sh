@@ -15,7 +15,7 @@ DOCKERPARENT_STRICT=${DOCKERPARENT_STRICT:-1} # require semver versions on paren
 RELEASE_VERSION=0
 FAIL_VALIDATION=0
 
-# when not running under Jenkins, use current dir as workspace
+# when not running under github, use current dir as workspace
 WORKSPACE=${WORKSPACE:-.}
 BASEDIR=${BASEDIR:-}
 

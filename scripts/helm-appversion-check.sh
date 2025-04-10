@@ -21,7 +21,7 @@ source "$my_dir/tagging-lib.sh"
 fail_version=0
 failed_charts=""
 
-# when not running under Jenkins, use current dir as workspace
+# when not running under github, use current dir as workspace
 WORKSPACE=${WORKSPACE:-.}
 
 read_version

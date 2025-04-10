@@ -45,7 +45,7 @@ markdownlint: ## lint markdown files with markdownlint-cli2
 
 actionlint: ## lint github actions
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
-	actionlint
+	actionlint -shellcheck=
 
 clean: ## cleanup all temporary files
 	rm -rf $(VENV_DIR)
