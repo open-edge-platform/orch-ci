@@ -29,7 +29,7 @@ while getopts "a:e:d:f:j:o:pr:s:v:y:" OPT; do
     a)
       ARCHIVE=1
       ARTIFACT_TYPE=${OPTARG}
-      DEFAULT_EXCLUDE='Jenkinsfile'
+      DEFAULT_EXCLUDE='.github'
       ;;
     e)
       EXCLUDE=${OPTARG}
