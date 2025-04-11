@@ -51,6 +51,7 @@ on:  # yamllint disable-line rule:truthy rule:line-length
 
 permissions:
   contents: write
+  pull-requests: read
 jobs:
   publish-documentation:
     runs-on: ubuntu-latest
@@ -226,12 +227,21 @@ jobs:
           # Remove ci directory
           rm -rf "${GITHUB_WORKSPACE}/ci"
 
+      - name: Get Pull Request Number
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: pr
+        shell: bash
+        run: |
+          # yamllint disable-line rule:line-length
+          echo "::set-output name=pr_number::$(gh pr view --json number -q .number || echo "")"
+
       - name: Create comment with link in PR
         env:
           SUBDIR: ${{ env.SUBDIR }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PR: ${{ github.event.pull_request.number }}
+          GITHUB_PR: ${{ steps.pr.outputs.pr_number }}
         shell: bash
         run: |
           # Restore array
