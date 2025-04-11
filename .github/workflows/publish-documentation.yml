@@ -234,7 +234,7 @@ jobs:
         shell: bash
         run: |
           # yamllint disable-line rule:line-length
-          echo "::set-output name=pr_number::$(gh pr view --json number -q .number || echo "")"
+          echo "::set-output name=pr_number::$(gh pr list --search ${{ github.sha }} --state merged --json number -q '.[] | .number' || echo "")"
 
       - name: Create comment with link in PR
         env:
