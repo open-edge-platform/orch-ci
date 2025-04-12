@@ -230,18 +230,19 @@ jobs:
       - name: Get Pull Request Number
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        id: pr
+        id: gh-cli
         shell: bash
         run: |
-          # yamllint disable-line rule:line-length
-          echo "::set-output name=pr_number::$(gh pr list --search ${{ github.sha }} --state merged --json number -q '.[] | .number' || echo "")"
+          echo "pr-number-closed=$(gh pr list \
+            --search ${{ github.sha }} --state merged \
+            --json number -q '.[] | .number' || echo "")" >> "$GITHUB_OUTPUT"
 
       - name: Create comment with link in PR
         env:
           SUBDIR: ${{ env.SUBDIR }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PR: ${{ steps.pr.outputs.pr_number }}
+          GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
         shell: bash
         run: |
           # Restore array
