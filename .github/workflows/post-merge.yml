@@ -398,6 +398,8 @@ jobs:
       - name: Version Tag
         if: ${{ inputs.run_version_tag }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
             "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \

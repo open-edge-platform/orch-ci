@@ -24,6 +24,9 @@ function create_git_tag {
   git config --global user.email "do-not-reply@intel.com"
   git config --global user.name "github-bot"
 
+  # Use token
+  git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
   git_hash=$(git rev-parse --short HEAD)
   commit_info=$(git log --oneline | grep "${git_hash}")
 
