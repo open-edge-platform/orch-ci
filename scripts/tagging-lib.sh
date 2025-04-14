@@ -63,6 +63,12 @@ function read_version {
     NEW_VERSION=$(yq .version "$VERSIONFILE")
     TAG_VERSION=$NEW_VERSION
 
+  elif [ -f "Chart.yaml" ]
+  then
+    VERSIONFILE="Chart.yaml"
+    NEW_VERSION=$(yq .version "$VERSIONFILE")
+    TAG_VERSION=$NEW_VERSION
+
   else
     echo "ERROR: No versioning file found!"
     FAIL_VALIDATION=1
