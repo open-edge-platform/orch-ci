@@ -169,7 +169,6 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
-          ref: fix_version_tag
           token: ${{ secrets.SYS_ORCH_GITHUB }}
 
       - name: Version Check

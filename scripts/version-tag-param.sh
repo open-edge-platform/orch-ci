@@ -9,7 +9,7 @@
 # if the tag doesn't already exist. Ignore non-SemVer commits.
 # Uses a param, if specified as input to the script, to set a prefix in the tag.
 
-set -eux -o pipefail
+set -eu -o pipefail
 
 # Load the shared library
 my_dir="$(dirname "$0")"
@@ -74,5 +74,8 @@ then
     echo "ERROR: commit merged but failed validation, not tagging!"
   fi
 fi
+
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
 
 exit "$FAIL_VALIDATION"
