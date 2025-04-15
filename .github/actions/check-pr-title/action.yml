@@ -14,9 +14,10 @@ runs:
     - shell: bash
       run: |
         echo "Checking PR title: ${{ inputs.pr_title }}"
-        if [[ ! ${{ inputs.pr_title }} =~ ^(feat|fix|docs|style|refactor|perf|test|chore|build|ci)(\([a-z0-9_-]+\))?:\ [A-Z].+ ]]; then
+        convcommit="^(feat|fix|docs|style|refactor|perf|test|chore|build|ci)(\([a-z0-9_-]+\))?:\ [A-Z].+"
+        if [[ ! ${{ inputs.pr_title }} =~ $convcommit ]]; then
           echo "Error: Pull request title does not follow Conventional Commits format."
           echo "Expected format: <type>(<scope>): <description>"
-          echo "Example: feat: add ability to run extra scans"
+          echo "Example: feat(parser): add ability to parse arrays"
           exit 1
         fi
