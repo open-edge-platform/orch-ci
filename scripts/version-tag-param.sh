@@ -17,7 +17,7 @@ my_dir="$(dirname "$0")"
 source "$my_dir/tagging-lib.sh"
 
 # Use token
-git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ inputs.gh_token }})"
 
 TAG_PARAM=$1
 
