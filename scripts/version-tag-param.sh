@@ -9,12 +9,15 @@
 # if the tag doesn't already exist. Ignore non-SemVer commits.
 # Uses a param, if specified as input to the script, to set a prefix in the tag.
 
-set -eu -o pipefail
+set -eux -o pipefail
 
 # Load the shared library
 my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
+
+# Use token
+git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
 TAG_PARAM=$1
 
