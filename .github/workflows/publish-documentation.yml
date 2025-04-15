@@ -217,8 +217,8 @@ jobs:
             if [ "${SIMPLE_MODE}" == 'true' ]; then
               # Override any existing files with template
               cp -rf "${GITHUB_WORKSPACE}"/_template/* .
-              if [ -f "dictionary_append.txt" ]; then
-                cat "dictionary_append.txt" >> "dict.txt"
+              if [ -f "docs/dictionary_append.txt" ]; then
+                cat "docs/dictionary_append.txt" >> "dict.txt"
               fi
             fi
             echo "Building branch: ${branch}"
