@@ -16,8 +16,10 @@ my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
 
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
 # Use token
-git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ inputs.gh_token }})"
+git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ GITHUB_TOKEN }})"
 
 TAG_PARAM=$1
 
