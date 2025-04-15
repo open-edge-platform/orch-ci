@@ -17,9 +17,12 @@ my_dir="$(dirname "$0")"
 source "$my_dir/tagging-lib.sh"
 
 #remove any entries from the auth header
-git config --global --unset http.https://github.com/.extraheader || true
+git config --global --unset http.https://github.com/.extraheader
 # Use token
 git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN)"
+
+#debug print config
+git config -l
 
 TAG_PARAM=$1
 
