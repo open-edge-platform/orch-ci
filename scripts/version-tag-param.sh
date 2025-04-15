@@ -38,9 +38,8 @@ function create_git_tag {
 
   # clear existing header in case it's set
   git -c "http.https://github.com/.extraheader=" \
-      -c "http.https://github.com/${GITHUB_REPOSITORY}/.extraheader=AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN)"
-
-  git push origin "$TAG_VERSION"
+      -c "http.https://github.com/${GITHUB_REPOSITORY}/.extraheader=AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN)" \
+      push origin "$TAG_VERSION"
 }
 
 # Start of actual code
