@@ -1,10 +1,17 @@
 # Open Edge Platform common CI Repository
 
-Welcome to the `orch-ci` repository, the central hub for continuous integration (CI) workflows and actions for the Open-Edge-Platform project. This repository contains shared workflows, scripts, and actions designed to streamline and automate the development and deployment processes across various Open-Edge-Platform projects.
+Welcome to the `orch-ci` repository, the central hub for continuous integration
+(CI) workflows and actions for the Open-Edge-Platform project. This repository
+contains shared workflows, scripts, and actions designed to streamline and
+automate the development and deployment processes across various
+Open-Edge-Platform projects.
 
 ## Overview
 
-The `orch-ci` repository provides a collection of reusable GitHub Actions and workflows that can be integrated into other repositories within the Open-Edge-Platform project. These workflows cover a range of CI tasks, including building, testing, linting, security scanning, and version tagging.
+The `orch-ci` repository provides a collection of reusable GitHub Actions and
+workflows that can be integrated into other repositories within the
+Open-Edge-Platform project. These workflows cover a range of CI tasks,
+including building, testing, linting, security scanning, and version tagging.
 
 ## Repository Structure
 
@@ -19,7 +26,8 @@ The `orch-ci` repository provides a collection of reusable GitHub Actions and wo
   - `VERSION`: Version information for the repository.
 
 - **Scripts**:
-  - `scripts/`: Contains various scripts for version checking, tagging, and other CI tasks.
+  - `scripts/`: Contains various scripts for version checking, tagging, and
+    other CI tasks.
     - `custom-version-tag.sh`: Custom script for tagging versions.
     - `github-release.sh`: Script for creating GitHub releases.
     - `helm-appversion-check.sh`: Checks Helm chart app versions.
@@ -53,37 +61,51 @@ The `orch-ci` repository provides a collection of reusable GitHub Actions and wo
 
 ### Post-Merge CI Pipeline
 
-The `post-merge.yml` workflow is triggered after merging changes into the main branch. It includes steps for building, testing, linting, security scanning, and version tagging. It ensures that the codebase remains stable and secure after changes are integrated.
+The `post-merge.yml` workflow is triggered after merging changes into the main
+branch. It includes steps for building, testing, linting, security scanning,
+and version tagging. It ensures that the codebase remains stable and secure
+after changes are integrated.
 
 ### Pre-Merge CI Pipeline
 
-The `pre-merge.yml` workflow runs before merging changes, providing a comprehensive set of checks to validate the code. It includes license compliance checks, secret scanning, and various build and test steps to ensure code quality.
+The `pre-merge.yml` workflow runs before merging changes, providing a
+comprehensive set of checks to validate the code. It includes license
+compliance checks, secret scanning, and various build and test steps to ensure
+code quality.
 
 ## Usage
 
 To use the workflows and actions in this repository:
 
-1. **Integrate Workflows**: Reference the shared workflows in your repository's `.github/workflows` directory using the `workflow_call` event.
+1. **Integrate Workflows**: Reference the shared workflows in your repository's
+   `.github/workflows` directory using the `workflow_call` event.
 
-2. **Use Actions**: Incorporate the actions defined in this repository into your workflows by specifying the path to the action in the `uses` field.
+2. **Use Actions**: Incorporate the actions defined in this repository into
+   your workflows by specifying the path to the action in the `uses` field.
 
-3. **Configure Inputs**: Customize the workflows by providing inputs as needed, such as enabling or disabling specific checks or scans.
+3. **Configure Inputs**: Customize the workflows by providing inputs as needed,
+   such as enabling or disabling specific checks or scans.
 
 ## Developing
 
-Before submitting changes, please run `make lint`, which will run a set of linters on all of the files in the repository. This helps ensure code quality and consistency across the project.
+Before submitting changes, please run `make lint`, which will run a set of
+linters on all of the files in the repository. This helps ensure code quality
+and consistency across the project.
 
 ## Contributing
 
-We welcome contributions to improve the CI processes. Please read the `CONTRIBUTING.md` file for guidelines on how to contribute.
+We welcome contributions to improve the CI processes. Please read the
+`CONTRIBUTING.md` file for guidelines on how to contribute.
 
 ## License
 
-This repository is licensed under the Apache License 2.0. See the `LICENSES/Apache-2.0.txt` file for more details.
+This repository is licensed under the Apache License 2.0. See the
+`LICENSES/Apache-2.0.txt` file for more details.
 
 ## Code of Conduct
 
-Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when interacting with the community.
+Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when interacting
+with the community.
 
 ## Security
 
