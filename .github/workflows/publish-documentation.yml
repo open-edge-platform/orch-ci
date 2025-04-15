@@ -113,6 +113,7 @@ jobs:
             requirements.txt
             dict.txt
             docs/conf.py
+            docs/_static/logo.svg
             docs/substitutions.txt
           sparse-checkout-cone-mode: false
           token: ${{ secrets.SYS_ORCH_GITHUB }}
