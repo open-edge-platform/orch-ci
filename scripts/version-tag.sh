@@ -8,7 +8,7 @@
 # Tags a git commit with the SemVer version discovered within the commit,
 # if the tag doesn't already exist. Ignore non-SemVer commits.
 
-set -eux -o pipefail
+set -eu -o pipefail
 
 # Load the shared library
 my_dir="$(dirname "$0")"
