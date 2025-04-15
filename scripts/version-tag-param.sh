@@ -16,6 +16,10 @@ my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
 
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
+# Use token
+git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN)"
 
 TAG_PARAM=$1
 
@@ -36,10 +40,7 @@ function create_git_tag {
   echo "Tags including new tag:"
   git tag -n
 
-  # clear existing header in case it's set
-  git -c "http.https://github.com/.extraheader=" \
-      -c "http.https://github.com/${GITHUB_REPOSITORY}/.extraheader=AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN)" \
-      push origin "$TAG_VERSION"
+  git push origin "$TAG_VERSION"
 }
 
 # Start of actual code
