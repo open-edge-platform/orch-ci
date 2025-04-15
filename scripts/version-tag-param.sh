@@ -16,6 +16,11 @@ my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
 
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
+# Use token
+git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:"$GITHUB_TOKEN" | base64)"
+
 TAG_PARAM=$1
 
 # create a git tag
@@ -69,5 +74,8 @@ then
     echo "ERROR: commit merged but failed validation, not tagging!"
   fi
 fi
+
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
 
 exit "$FAIL_VALIDATION"
