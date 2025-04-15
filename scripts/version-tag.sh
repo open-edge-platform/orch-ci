@@ -15,6 +15,11 @@ my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
 
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
+# Use token
+git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN | base64)"
+
 # create a git tag
 function create_git_tag {
   echo "Creating git tag: $TAG_VERSION"
@@ -23,9 +28,6 @@ function create_git_tag {
 
   git config --global user.email "do-not-reply@intel.com"
   git config --global user.name "github-bot"
-
-  # Use token
-  git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
   git_hash=$(git rev-parse --short HEAD)
   commit_info=$(git log --oneline | grep "${git_hash}")
@@ -66,5 +68,8 @@ then
     echo "ERROR: commit merged but failed validation, not tagging!"
   fi
 fi
+
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
 
 exit "$FAIL_VALIDATION"
