@@ -1,3 +1,7 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 name: "Check PR Title"
 description: "Checks if the pull request title follows Conventional Commits format."
 inputs:
