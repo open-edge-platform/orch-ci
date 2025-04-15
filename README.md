@@ -88,7 +88,3 @@ Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when interacting with
 ## Security
 
 For security-related concerns, please refer to our [Security Policy](SECURITY.md).
-
-## Contact
-
-For questions or support, please open an issue in the repository or contact the maintainers.
