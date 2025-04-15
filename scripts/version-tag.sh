@@ -18,7 +18,7 @@ source "$my_dir/tagging-lib.sh"
 #remove any entries from the auth header
 git config --global --unset http.https://github.com/.extraheader || true
 # Use token
-git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN | base64)"
+git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:"$GITHUB_TOKEN" | base64)"
 
 # create a git tag
 function create_git_tag {
