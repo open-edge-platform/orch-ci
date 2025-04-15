@@ -100,6 +100,7 @@ jobs:
 
       # Use orch-docs as a template
       - name: Checkout template
+        if: ${{ inputs.simple_mode }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: open-edge-platform/orch-docs
@@ -116,6 +117,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Copy template
+        if: ${{ inputs.simple_mode }}
         shell: bash
         run: |
           cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
@@ -212,10 +214,12 @@ jobs:
             git reset --hard
             git checkout "${branch}"
             cd "${DOCS_DIR}"
-            # Override any existing files with template
-            cp -rf "${GITHUB_WORKSPACE}"/_template/* .
-            if [ -f "dictionary_append.txt" ]; then
-              cat "dictionary_append.txt" >> "dict.txt"
+            if [ "${SIMPLE_MODE}" == 'true' ]; then
+              # Override any existing files with template
+              cp -rf "${GITHUB_WORKSPACE}"/_template/* .
+              if [ -f "dictionary_append.txt" ]; then
+                cat "dictionary_append.txt" >> "dict.txt"
+              fi
             fi
             echo "Building branch: ${branch}"
             make build
