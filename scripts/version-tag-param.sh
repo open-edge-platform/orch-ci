@@ -67,9 +67,9 @@ then
   is_git_tag_duplicated
   dockerfile_parentcheck
 
-  if ["$FAIL_VALIDATION" -eq "2" ]
+  if [ "$FAIL_VALIDATION" -eq "2" ]
   then
-    echo "WARN: $TAG_VERSION is already present, not tagging!"}
+    echo "WARN: $TAG_VERSION is already present, not tagging!"
     exit 0
   elif [ "$FAIL_VALIDATION" -eq "0" ]
   then
