@@ -21,9 +21,6 @@ git config --global --unset http.https://github.com/.extraheader || true
 # Use token
 git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:$GITHUB_TOKEN | base64)"
 
-#debug print config
-git config -l
-
 TAG_PARAM=$1
 
 # create a git tag
