@@ -95,12 +95,12 @@ and consistency across the project.
 ## Contributing
 
 We welcome contributions to improve the CI processes. Please read the
-`CONTRIBUTING.md` file for guidelines on how to contribute.
+[CONTRIBUTING.md](https://docs.openedgeplatform.intel.com/edge-manage-docs/main/developer_guide/contributor_guide/index.html) file for guidelines on how to contribute.
 
 ## License
 
 This repository is licensed under the Apache License 2.0. See the
-`LICENSES/Apache-2.0.txt` file for more details.
+[Apache 2.0 License](LICENSES/Apache-2.0.txt) file for more details.
 
 ## Code of Conduct
 
