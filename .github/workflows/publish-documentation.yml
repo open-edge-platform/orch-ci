@@ -57,6 +57,7 @@ on:  # yamllint disable-line rule:truthy rule:line-length
 
 permissions:
   contents: write
+  pull-requests: read
 jobs:
   publish-documentation:
     runs-on: ubuntu-latest
@@ -269,20 +270,34 @@ jobs:
           # Remove ci directory
           rm -rf "${GITHUB_WORKSPACE}/ci"
 
+      - name: Get Pull Request Number
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: gh-cli
+        shell: bash
+        run: |
+          echo "pr-number-closed=$(gh pr list \
+            --search ${{ github.sha }} --state merged \
+            --json number -q '.[] | .number' || echo "")" >> "$GITHUB_OUTPUT"
+
       - name: Create comment with link in PR
         env:
           SUBDIR: ${{ env.SUBDIR }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PR: ${{ github.event.pull_request.number }}
+          GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
         shell: bash
         run: |
           # Restore array
           IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          top="index.html"
+          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${branches[0]/${top}" ]; then
+            top="toc.html"
+          fi
           # Use GitHub API to create a comment on the PR
           COMMENT="Documentation published at: "
           COMMENT+="https://docs.openedgeplatform.intel.com/"
-          COMMENT+="${SUBDIR}/${branches[0]}/"
+          COMMENT+="${SUBDIR}/${branches[0]}/${top}"
           COMMENT_URL="https://api.github.com/repos/"
           COMMENT_URL+="${REPO}/issues/${GITHUB_PR}/comments"
           curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
