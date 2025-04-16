@@ -36,6 +36,7 @@ on:  # yamllint disable-line rule:truthy rule:line-length
 
 permissions:
   contents: write
+  pull-requests: read
 jobs:
   build-documentation:
     runs-on: ubuntu-latest
