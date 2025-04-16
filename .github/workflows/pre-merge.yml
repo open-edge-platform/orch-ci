@@ -331,10 +331,10 @@ jobs:
             ${{ env.GOCACHE }}
             ${{ env.GOMODCACHE }}
             ~/.cache/golangci-lint
-          key: ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          key: ${{ needs.sanitize-project-folder.outputs.repo_project }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
           restore-keys: |
-            ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
-            ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-
+            ${{ needs.sanitize-project-folder.outputs.repo_project }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
+            ${{ needs.sanitize-project-folder.outputs.repo_project }}-${{ runner.os }}-go-
 
       - name: Build Code
         if: ${{ inputs.run_build }}
