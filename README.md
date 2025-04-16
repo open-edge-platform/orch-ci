@@ -95,7 +95,7 @@ and consistency across the project.
 ## Contributing
 
 We welcome contributions to improve the CI processes. Please read the
-[CONTRIBUTING.md](
+[CONTRIBUTION GUIDE](
   https://docs.openedgeplatform.intel.com/edge-manage-docs/main/developer_guide/contributor_guide/index.html)
   file for guidelines on how to contribute.
 
@@ -112,3 +112,4 @@ with the community.
 ## Security
 
 For security-related concerns, please refer to our [Security Policy](SECURITY.md).
+
