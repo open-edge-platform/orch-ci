@@ -94,6 +94,7 @@ jobs:
             docs/_static/logo.svg
             docs/substitutions.txt
           sparse-checkout-cone-mode: false
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
 
       - name: Copy template
         if: ${{ inputs.simple_mode }}
