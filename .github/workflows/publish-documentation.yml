@@ -291,7 +291,7 @@ jobs:
           # Restore array
           IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
           top="index.html"
-          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${branches[0]/${top}" ]; then
+          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${branches[0]}/${top}" ]; then
             top="toc.html"
           fi
           # Use GitHub API to create a comment on the PR
