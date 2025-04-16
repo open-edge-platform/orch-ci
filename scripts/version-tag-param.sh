@@ -58,6 +58,7 @@ echo "$existing_tags"
 read_version
 check_if_releaseversion
 
+RETURN_CODE=0
 # perform checks if a released version
 if [ "$RELEASE_VERSION" -eq "1" ]
 then
@@ -67,7 +68,6 @@ then
   is_git_tag_duplicated
   dockerfile_parentcheck
 
-  RETURN_CODE=0
   if [ "$FAIL_VALIDATION" -eq "2" ]
   then
     echo "WARN: $TAG_VERSION is already present, not tagging!"
