@@ -66,7 +66,12 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       artifacts_path:
         description: >-
-          Artifacts path to upload, defaults to empty string
+          Artifacts path to upload, We can give single or multiple paths as below, defaults to empty string
+          variable_to_use<<EOF
+          path1/output/bin/
+          path2/build/sample/file.txt
+          path3/scripts/*.sh
+          EOF
         required: false
         default: "empty"
         type: string
