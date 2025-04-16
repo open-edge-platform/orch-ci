@@ -139,7 +139,7 @@ jobs:
         with:
           results_file: scorecard-results-${{ steps.prepare_name.outputs.sanitized_folder_name }}.json
           results_format: json
-          repo_token: ${{ secrets.SYS_ORCH_GITHU }}
+          repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Upload Scorecard Results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
