@@ -184,6 +184,20 @@ jobs:
             ./ci/scripts/version-check.sh
           fi
 
+      - name: Version Tag
+        if: ${{ inputs.run_version_tag }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
+              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+          else
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
+          fi
+
       - name: Sanitize project folder
         id: sanitize
         run: |
@@ -394,19 +408,6 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make artifact-publish
-
-      - name: Version Tag
-        if: ${{ inputs.run_version_tag }}
-        working-directory: ${{ inputs.project_folder }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
-        run: |
-          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
-            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
-              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
-          else
-            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
-          fi
 
       - name: Version dev
         if: ${{ inputs.run_version_dev }}
