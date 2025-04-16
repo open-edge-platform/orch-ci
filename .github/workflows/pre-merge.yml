@@ -236,6 +236,7 @@ jobs:
           ignore-unfixed: false
           trivy-config: trivy.yaml
           scanners: 'vuln,misconfig,secret'
+          exit-code: 1
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
