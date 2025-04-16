@@ -31,8 +31,8 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       run_package_build:
         description: "Build node agent package"
-        required: true
-        default: true
+        required: false
+        default: false
         type: boolean
       run_lint:
         description: "Run lint"
