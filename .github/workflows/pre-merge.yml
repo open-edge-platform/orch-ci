@@ -182,7 +182,7 @@ jobs:
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir ${{ inputs.project_folder }} -v -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.csv
+          gitleaks dir ${{ inputs.project_folder }} -v -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
