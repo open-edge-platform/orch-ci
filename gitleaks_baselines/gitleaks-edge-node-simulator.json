@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 39,
+  "EndLine": 39,
+  "StartColumn": 3,
+  "EndColumn": 53,
+  "Match": "productKey = \"0eb02da9-daa6-bbce-efb1-62800ff42489\"",
+  "Secret": "0eb02da9-daa6-bbce-efb1-62800ff42489",
+  "File": "edge-node-simulator/test/mt/mt_test.go",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.6971598,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "edge-node-simulator/test/mt/mt_test.go:generic-api-key:39"
+ }
+]
