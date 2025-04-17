@@ -139,7 +139,7 @@ jobs:
         with:
           results_file: scorecard-results-${{ steps.prepare_name.outputs.sanitized_folder_name }}.json
           results_format: json
-          repo_token: ${{ secrets.SYS_ORCH_GITHU }}
+          repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Upload Scorecard Results
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
@@ -182,6 +182,20 @@ jobs:
               "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
           else
             ./ci/scripts/version-check.sh
+          fi
+
+      - name: Version Tag
+        if: ${{ inputs.run_version_tag }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
+              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+          else
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
           fi
 
       - name: Sanitize project folder
@@ -365,7 +379,7 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         run: |
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com')
+          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
           images_json=$(echo "$images" | jq -R . | jq -s -c .)
           for image in $(echo "$images_json" | jq -r '.[]'); do
             echo "Signing $image"
@@ -394,19 +408,6 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make artifact-publish
-
-      - name: Version Tag
-        if: ${{ inputs.run_version_tag }}
-        working-directory: ${{ inputs.project_folder }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
-        run: |
-          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
-            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
-              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
-          else
-            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
-          fi
 
       - name: Version dev
         if: ${{ inputs.run_version_dev }}

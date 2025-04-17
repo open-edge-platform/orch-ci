@@ -58,6 +58,7 @@ echo "$existing_tags"
 read_version
 check_if_releaseversion
 
+RETURN_CODE=0
 # perform checks if a released version
 if [ "$RELEASE_VERSION" -eq "1" ]
 then
@@ -67,15 +68,21 @@ then
   is_git_tag_duplicated
   dockerfile_parentcheck
 
-  if [ "$FAIL_VALIDATION" -eq "0" ]
+  if [ "$FAIL_VALIDATION" -eq "2" ]
+  then
+    echo "WARN: $TAG_VERSION is already present, not tagging!"
+    RETURN_CODE=0 # do not error out if tag already exists
+  elif [ "$FAIL_VALIDATION" -eq "0" ]
   then
     create_git_tag
+    RETURN_CODE=$FAIL_VALIDATION
   else
     echo "ERROR: commit merged but failed validation, not tagging!"
+    RETURN_CODE=$FAIL_VALIDATION
   fi
 fi
 
 #remove any entries from the auth header
 git config --global --unset http.https://github.com/.extraheader || true
 
-exit "$FAIL_VALIDATION"
+exit "$RETURN_CODE"
