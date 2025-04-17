@@ -187,7 +187,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}-${{ steps.timestamp.outputs.time }}
-          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.csv
+          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
   clamav-antivirus-scan:
     runs-on: ubuntu-latest
     steps:
