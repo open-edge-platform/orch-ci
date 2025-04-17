@@ -171,6 +171,13 @@ jobs:
       - name: Get current timestamp
         id: timestamp
         run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
+      - name: Clone CI repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: gitle
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
