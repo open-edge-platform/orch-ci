@@ -239,7 +239,7 @@ jobs:
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: false
-          trivy-config: trivy.yaml
+          trivy-config: ${{ inputs.project_folder }}/trivy.yaml
           scanners: 'vuln,misconfig,secret'
           exit-code: 1
   run-repo-pipelines:
