@@ -1,0 +1,2 @@
+RuleID,Commit,File,SymlinkFile,Secret,Match,StartLine,EndLine,StartColumn,EndColumn,Author,Message,Date,Email,Fingerprint,Tags
+generic-api-key,,inventory/internal/store/host_test.go,,E5E53D99-708D-4AF5-8378-63880FF62712,"defaultUUIDAPI := ""E5E53D99-708D-4AF5-8378-63880FF62712""",1006,1006,3,58,,,,,inventory/internal/store/host_test.go:generic-api-key:1006,
