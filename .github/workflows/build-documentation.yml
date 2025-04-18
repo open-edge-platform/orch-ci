@@ -1,4 +1,3 @@
----
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -12,6 +11,20 @@ on:  # yamllint disable-line rule:truthy rule:line-length
           Documentation directory where the job will run, defaults to '.'
         required: false
         default: "."
+        type: string
+      output_directory:
+        description: >-
+          Directory where the documentation HTML build is located,
+          defaults to 'out/html'
+        required: false
+        default: "out/html"
+        type: string
+      branch_pattern:
+        description: >-
+          Regex pattern to match against when selecting branches to build for
+          version selector, defaults to '^(main|release-.*)$'
+        required: false
+        default: '^(main|release-.*)$'
         type: string
       simple_mode:
         description: >-
@@ -33,12 +46,28 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: "s3://intel-openedgeplatform-documentation"
         type: string
+      distribution_id:
+        description: >-
+          Distribution ID of documentation hosting service,
+          defaults to 'E1QN7TZJG8M0VL'
+        required: false
+        default: "E1QN7TZJG8M0VL"
+        type: string
+    secrets:
+      SYS_ORCH_GITHUB:
+        description: "PAT (contents: read) to clone private repos"
+        required: true
+      DOC_AWS_ACCESS_KEY_ID:
+        description: AWS access key for docs bucket
+        required: true
+      DOC_AWS_SECRET_ACCESS_KEY:
+        description: AWS secret access key for docs bucket
+        required: true
 
-permissions:
-  contents: write
-  pull-requests: read
 jobs:
   build-documentation:
+    permissions:
+      contents: read        # minimal privilege required
     runs-on: ubuntu-latest
     env:
       DOCS_DIR: ${{ inputs.docs_directory }}
