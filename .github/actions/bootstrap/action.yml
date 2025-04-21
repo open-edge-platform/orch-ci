@@ -131,14 +131,6 @@ runs:
         go-version: ${{ env.GOLANG_VER }}
         cache: false
 
-    - name: "Set up Go envs"
-      if: contains(inputs.bootstrap_tools, 'go') || contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
-      shell: bash
-      run: |
-          echo "Setting up Go envs"
-          echo "GOPRIVATE=github.com/open-edge-platform" >> $GITHUB_ENV
-          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ inputs.gh_token }} | base64)"
-
     - name: "Setup Node.js environment"
       if: contains(inputs.bootstrap_tools, 'nodejs') || contains(inputs.bootstrap_tools, 'all')
       uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e  # v4.3.0
