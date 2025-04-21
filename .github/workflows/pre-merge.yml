@@ -132,7 +132,7 @@ on:  # yamllint disable-line rule:truthy
         default: "trivy.yaml"
         type: string
 permissions:
-  contents: write
+  contents: read
 jobs:
   sanitize-project-folder:
     runs-on: ubuntu-latest
