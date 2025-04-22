@@ -181,7 +181,6 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
-          ref: gitle
           token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Scan for secrets
         env:
