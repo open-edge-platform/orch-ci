@@ -71,7 +71,12 @@ on:  # yamllint disable-line rule:truthy
         type: boolean
       artifacts_path:
         description: >-
-          Artifacts path to upload, defaults to empty string
+          Artifacts path to upload, We can give single or multiple paths as below, defaults to empty string
+          variable_to_use<<EOF
+          path1/output/bin/
+          path2/build/sample/file.txt
+          path3/scripts/*.sh
+          EOF
         required: false
         default: "empty"
         type: string
@@ -131,27 +136,31 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
-
+      trivy_config_path:
+        description: "Path to trivy configuration file"
+        required: false
+        default: "trivy.yaml"
+        type: string
 permissions:
-  contents: write
+  contents: read
 jobs:
   sanitize-project-folder:
     runs-on: ubuntu-latest
     outputs:
-      sanitized_report_path: ${{ steps.sanitize.outputs.sanitized_report_path }}
-      repo_project: ${{ steps.sanitize.outputs.repo_project }}
+      sanitized_project_name: ${{ steps.sanitize.outputs.sanitized_project_name }}
     steps:
       - name: Sanitize project folder
         id: sanitize
         run: |
-          SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
-          echo "SANITIZED_REPORT_PATH=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_ENV"
-          echo "sanitized_report_path=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_OUTPUT"
+          # check if inputs.project_folder is set, if not return repository name
+          if [ -z "${{ inputs.project_folder }}" ] || [ "${{ inputs.project_folder }}" = "." ]; then
+            SANITIZED_PROJECT_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+          else
+            SANITIZED_PROJECT_NAME=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+          fi
 
-          # Only repository, without owner, with project_folder added
-          REPO_PROJECT="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}${SANITIZED_PROJECT_FOLDER}"
-          echo "REPO_PROJECT=$REPO_PROJECT" >> "$GITHUB_ENV"
-          echo "repo_project=$REPO_PROJECT" >> "$GITHUB_OUTPUT"
+          echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
+          echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
   license-compliance-check:
     runs-on: ubuntu-latest
     if: ${{ inputs.run_reuse_check }}
@@ -177,16 +186,21 @@ jobs:
       - name: Get current timestamp
         id: timestamp
         run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
+      - name: Clone CI repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir ${{ inputs.project_folder }} -v -f csv -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.csv --exit-code 0
+          gitleaks dir ${{ inputs.project_folder }} -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}-${{ steps.timestamp.outputs.time }}
-          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.csv
+          name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ steps.timestamp.outputs.time }}
+          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
   clamav-antivirus-scan:
     runs-on: ubuntu-latest
     steps:
@@ -221,14 +235,33 @@ jobs:
           format: 'table'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
-          trivy-config: trivy.yaml
+          trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
-          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.txt"
+          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.txt"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
-          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.txt
+          name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.txt
+  trivy-critical-scan:
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Run Trivy Critical Filesystem Scan
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5  # v0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: false
+          trivy-config: ${{ inputs.trivy_config_path }}
+          scanners: 'vuln,misconfig,secret'
+          exit-code: 1
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
@@ -253,8 +286,7 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
-          ref: merge_en_agents
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          ref: ${{ inputs.orch_ci_repo_ref }}
 
       - name: Version Check
         if: ${{ inputs.run_version_check }}
@@ -271,7 +303,6 @@ jobs:
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Dep Version Check
@@ -318,10 +349,10 @@ jobs:
             ${{ env.GOCACHE }}
             ${{ env.GOMODCACHE }}
             ~/.cache/golangci-lint
-          key: ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
           restore-keys: |
-            ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
-            ${{ env.REPO_PROJECT }}-${{ runner.os }}-go-
+            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
+            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
 
       - name: Build Code
         if: ${{ inputs.run_build }}
@@ -485,14 +516,14 @@ jobs:
         if: ${{ inputs.run_docker_build }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
       - name: Artifact
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
 
       - name: Clean up
@@ -516,7 +547,7 @@ jobs:
       - name: Download Docker Images
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e  # v4.2.1
         with:
-          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
       - name: Load Docker Images
         run: |
@@ -552,3 +583,12 @@ jobs:
         with:
           name: trivy-scan-report-${{ env.sanitized_image_name }}-${{ env.md5sum_value }}
           path: trivy-${{ env.sanitized_image_name }}.txt
+
+      - name: Scan Image for High/Critical Issues
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5  # v0.30.0
+        with:
+          image-ref: ${{ matrix.image }}
+          format: table
+          ignore-unfixed: false
+          severity: 'HIGH,CRITICAL'
+          exit-code: 1

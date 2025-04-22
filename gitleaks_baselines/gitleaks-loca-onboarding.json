@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 377,
+  "EndLine": 377,
+  "StartColumn": 21,
+  "EndColumn": 70,
+  "Match": "client_secret\": \"rZ7InrubTphjWxzYHeWBsCTvKhDNqmsS\"",
+  "Secret": "rZ7InrubTphjWxzYHeWBsCTvKhDNqmsS",
+  "File": "loca-onboarding/pkg/examples/loca_api_task_management_tasks_get.json",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 4.6875,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "loca-onboarding/pkg/examples/loca_api_task_management_tasks_get.json:generic-api-key:377"
+ }
+]

@@ -16,6 +16,11 @@ my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
 
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
+# Use token
+git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:"$GITHUB_TOKEN" | base64)"
+
 TAG_PARAM=$1
 
 # create a git tag
@@ -53,6 +58,7 @@ echo "$existing_tags"
 read_version
 check_if_releaseversion
 
+RETURN_CODE=0
 # perform checks if a released version
 if [ "$RELEASE_VERSION" -eq "1" ]
 then
@@ -62,12 +68,21 @@ then
   is_git_tag_duplicated
   dockerfile_parentcheck
 
-  if [ "$FAIL_VALIDATION" -eq "0" ]
+  if [ "$FAIL_VALIDATION" -eq "2" ]
+  then
+    echo "WARN: $TAG_VERSION is already present, not tagging!"
+    RETURN_CODE=0 # do not error out if tag already exists
+  elif [ "$FAIL_VALIDATION" -eq "0" ]
   then
     create_git_tag
+    RETURN_CODE=$FAIL_VALIDATION
   else
     echo "ERROR: commit merged but failed validation, not tagging!"
+    RETURN_CODE=$FAIL_VALIDATION
   fi
 fi
 
-exit "$FAIL_VALIDATION"
+#remove any entries from the auth header
+git config --global --unset http.https://github.com/.extraheader || true
+
+exit "$RETURN_CODE"
