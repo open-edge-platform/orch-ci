@@ -9,11 +9,6 @@ name: Post-Merge CI Pipeline
 on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
-      run_security_scans:
-        description: "Run security scans"
-        required: false
-        default: false
-        type: boolean
       run_version_check:
         description: "Run version check"
         required: false

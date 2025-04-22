@@ -59,11 +59,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
-      run_scan_containers:
-        description: "Run scan containers"
-        required: false
-        default: true
-        type: boolean
       run_artifact:
         description: "Run artifact"
         required: false
