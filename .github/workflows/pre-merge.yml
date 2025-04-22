@@ -176,11 +176,17 @@ jobs:
       - name: Get current timestamp
         id: timestamp
         run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
+      - name: Clone CI repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir ${{ inputs.project_folder }} -v -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json --exit-code 0
+          gitleaks dir ${{ inputs.project_folder }} -v --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:

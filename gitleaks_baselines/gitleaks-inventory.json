@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 1006,
+  "EndLine": 1006,
+  "StartColumn": 3,
+  "EndColumn": 58,
+  "Match": "defaultUUIDAPI := \"E5E53D99-708D-4AF5-8378-63880FF62712\"",
+  "Secret": "E5E53D99-708D-4AF5-8378-63880FF62712",
+  "File": "inventory/internal/store/host_test.go",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 3.7635586,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "inventory/internal/store/host_test.go:generic-api-key:1006"
+ }
+]
