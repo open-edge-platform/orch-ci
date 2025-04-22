@@ -126,8 +126,13 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: ""
         type: string
+      trivy_config_path:
+        description: "Path to trivy configuration file"
+        required: false
+        default: "trivy.yaml"
+        type: string
 permissions:
-  contents: write
+  contents: read
 jobs:
   sanitize-project-folder:
     runs-on: ubuntu-latest
@@ -222,7 +227,7 @@ jobs:
           format: 'table'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
-          trivy-config: trivy.yaml
+          trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.txt"
       - name: Upload Trivy Scan Report
@@ -246,7 +251,7 @@ jobs:
           format: 'table'
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: false
-          trivy-config: ${{ inputs.project_folder }}/trivy.yaml
+          trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
           exit-code: 1
   run-repo-pipelines:
