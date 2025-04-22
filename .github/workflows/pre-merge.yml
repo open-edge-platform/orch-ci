@@ -137,26 +137,20 @@ jobs:
   sanitize-project-folder:
     runs-on: ubuntu-latest
     outputs:
-      sanitized_report_path: ${{ steps.sanitize.outputs.sanitized_report_path }}
-      repo_project: ${{ steps.sanitize.outputs.repo_project }}
+      sanitized_project_name: ${{ steps.sanitize.outputs.sanitized_project_name }}
     steps:
       - name: Sanitize project folder
         id: sanitize
         run: |
           # check if inputs.project_folder is set, if not return repository name
           if [ -z "${{ inputs.project_folder }}" ] || [ "${{ inputs.project_folder }}" = "." ]; then
-            SANITIZED_PROJECT_FOLDER="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+            SANITIZED_PROJECT_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
           else
-            SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+            SANITIZED_PROJECT_NAME=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
           fi
 
-          echo "SANITIZED_REPORT_PATH=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_ENV"
-          echo "sanitized_report_path=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_OUTPUT"
-
-          # Only repository, without owner, with project_folder added
-          REPO_PROJECT="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}${SANITIZED_PROJECT_FOLDER}"
-          echo "REPO_PROJECT=$REPO_PROJECT" >> "$GITHUB_ENV"
-          echo "repo_project=$REPO_PROJECT" >> "$GITHUB_OUTPUT"
+          echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
+          echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
   license-compliance-check:
     runs-on: ubuntu-latest
     if: ${{ inputs.run_reuse_check }}
@@ -191,12 +185,12 @@ jobs:
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir ${{ inputs.project_folder }} -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
+          gitleaks dir ${{ inputs.project_folder }} -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}-${{ steps.timestamp.outputs.time }}
-          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
+          name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ steps.timestamp.outputs.time }}
+          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
   clamav-antivirus-scan:
     runs-on: ubuntu-latest
     steps:
@@ -233,12 +227,12 @@ jobs:
           ignore-unfixed: true
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
-          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.txt"
+          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.txt"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
-          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.txt
+          name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.txt
   trivy-critical-scan:
     runs-on: ubuntu-latest
     needs: sanitize-project-folder
@@ -345,10 +339,10 @@ jobs:
             ${{ env.GOCACHE }}
             ${{ env.GOMODCACHE }}
             ~/.cache/golangci-lint
-          key: ${{ needs.sanitize-project-folder.outputs.repo_project }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
           restore-keys: |
-            ${{ needs.sanitize-project-folder.outputs.repo_project }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
-            ${{ needs.sanitize-project-folder.outputs.repo_project }}-${{ runner.os }}-go-
+            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
+            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
 
       - name: Build Code
         if: ${{ inputs.run_build }}
@@ -488,14 +482,14 @@ jobs:
         if: ${{ inputs.run_docker_build }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
       - name: Artifact
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
 
       - name: Clean up
@@ -519,7 +513,7 @@ jobs:
       - name: Download Docker Images
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e  # v4.2.1
         with:
-          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
       - name: Load Docker Images
         run: |
