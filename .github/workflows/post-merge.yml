@@ -170,7 +170,6 @@ jobs:
           repository: open-edge-platform/orch-ci
           ref: ${{ inputs.orch_ci_repo_ref }}
           path: ci
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
 
       - name: Version Check
         if: ${{ inputs.run_version_check }}
@@ -210,7 +209,6 @@ jobs:
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Security Scans
