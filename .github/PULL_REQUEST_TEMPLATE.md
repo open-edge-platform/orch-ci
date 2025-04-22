@@ -1,4 +1,4 @@
-# Pull Request Template
+## Pull Request Template
 
 <!---
   SPDX-FileCopyrightText: (C) 2025 Intel Corporation
