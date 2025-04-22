@@ -12,7 +12,7 @@ path = [
     "**/go.mod*",
     "**/go.sum",
     "VERSION",
-    "trivy_baselines/*"
+    "gitleaks_baselines/*"
 ]
 
 SPDX-FileCopyrightText = "2025 Intel Corporation"
