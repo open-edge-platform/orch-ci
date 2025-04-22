@@ -293,7 +293,6 @@ jobs:
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Dep Version Check
