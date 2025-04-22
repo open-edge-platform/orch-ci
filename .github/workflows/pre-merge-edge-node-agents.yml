@@ -132,7 +132,7 @@ jobs:
 
       - name: Run Trivy Filesystem Scan
         if: ${{ inputs.run_security_scans }}
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
