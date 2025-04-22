@@ -11,7 +11,8 @@ path = [
     "*.md",
     "**/go.mod*",
     "**/go.sum",
-    "VERSION"
+    "VERSION",
+    "trivy_baselines/*"
 ]
 
 SPDX-FileCopyrightText = "2025 Intel Corporation"
