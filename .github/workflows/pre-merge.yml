@@ -187,6 +187,7 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
+          ref: add_pr_template
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
