@@ -143,7 +143,13 @@ jobs:
       - name: Sanitize project folder
         id: sanitize
         run: |
-          SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+          # check if inputs.project_folder is set, if not return repository name
+          if [ -z "${{ inputs.project_folder }}" ] || [ "${{ inputs.project_folder }}" = "." ]; then
+            SANITIZED_PROJECT_FOLDER="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+          else
+            SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+          fi
+
           echo "SANITIZED_REPORT_PATH=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_ENV"
           echo "sanitized_report_path=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_OUTPUT"
 
@@ -181,12 +187,11 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir ${{ inputs.project_folder }} -v --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
+          gitleaks dir ${{ inputs.project_folder }} -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_report_path }}.json
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
@@ -278,7 +283,6 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
 
       - name: Version Check
         if: ${{ inputs.run_version_check }}
@@ -295,7 +299,6 @@ jobs:
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Dep Version Check
