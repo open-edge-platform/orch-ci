@@ -143,7 +143,13 @@ jobs:
       - name: Sanitize project folder
         id: sanitize
         run: |
-          SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+          # check if inputs.project_folder is set, if not return repository name
+          if [ -z "${{ inputs.project_folder }}" ] || [ "${{ inputs.project_folder }}" = "." ]; then
+            SANITIZED_PROJECT_FOLDER="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+          else
+            SANITIZED_PROJECT_FOLDER=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+          fi
+
           echo "SANITIZED_REPORT_PATH=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_ENV"
           echo "sanitized_report_path=${SANITIZED_PROJECT_FOLDER}" >> "$GITHUB_OUTPUT"
 
