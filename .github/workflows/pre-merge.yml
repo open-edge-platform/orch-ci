@@ -181,7 +181,6 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
@@ -278,7 +277,6 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
 
       - name: Version Check
         if: ${{ inputs.run_version_check }}
