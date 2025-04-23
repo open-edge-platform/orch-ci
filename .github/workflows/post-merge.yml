@@ -213,12 +213,6 @@ jobs:
         with:
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
-      - name: Security Scans
-        if: ${{ inputs.run_security_scans }}
-        working-directory: ${{ inputs.project_folder }}
-        run: |
-          echo 'Call scanners from a different yml'
-
       - name: Dep Version Check
         if: ${{ inputs.run_dep_version_check }}
         working-directory: ${{ inputs.project_folder }}
