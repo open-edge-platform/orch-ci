@@ -106,13 +106,18 @@ on:  # yamllint disable-line rule:truthy
         type: string
       cache_go:
         description: >-
-          "Should Go-related cache for project be saved/restored."
+          Should Go-related cache for project be saved/restored.
+          The cache created by `pre-merge` is only available for current branch (i.e., not for other branches and not for `main`).
+          However, the cache created by `main` is available for both `main` and all other branches.
+          That's why it's good that caching was also enabled for `post-merge` and took into account the cache from all actions that could generate it
+          (usually: `run_build`, `run_lint`, and `run_test`).
         required: false
         default: false
         type: boolean
       remove_cache_go:
         description: >-
-          "Should Go-related cache for project be removed when not needed anymore."
+          Should Go-related cache for project be removed when not needed anymore.
+          It can be useful when there's not enough space on the runner, and all actions that create/use the cache have already been completed.
         required: false
         default: false
         type: boolean
@@ -416,14 +421,14 @@ jobs:
           project-folder: ${{ steps.scan-directories.outputs.directory }}
 
       - name: Save Go cache
-        if: ${{ inputs.cache_go }}
+        if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.4
         with:
           path: |
             ${{ env.GOCACHE }}
             ${{ env.GOMODCACHE }}
             ~/.cache/golangci-lint
-          key: ${{ steps.restored-project-go-cache.outputs.cache-primary-key }}
+          key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
 
       - name: Remove Go-related cache when not needed anymore to free up space
         if: ${{ inputs.remove_cache_go }}
