@@ -257,6 +257,23 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
           exit-code: 1
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Set up CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
