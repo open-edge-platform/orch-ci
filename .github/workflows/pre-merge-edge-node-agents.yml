@@ -102,7 +102,7 @@ jobs:
 
       - name: REUSE Compliance Check
         if: ${{ inputs.run_reuse_check == true }}
-        uses: fsfe/reuse-action@v4
+        uses: fsfe/reuse-action@v5
 
       - name: Checkout action repository
         uses: actions/checkout@v4
