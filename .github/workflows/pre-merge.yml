@@ -267,11 +267,73 @@ jobs:
         with:
            fetch-depth: 0
 
+      - name: Checkout action repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          ref: ${{ inputs.orch_ci_repo_ref }}
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: ${{ inputs.bootstrap_tools }}
+
+      - name: Make sure directories where the cache will be restored exist and are empty
+        if: ${{ inputs.cache_go }}
+        run: |
+          # Some caches from previous steps/jobs might be left, clean them up to avoid
+          # "Cannot open: File exists" errors
+
+          GOCACHE="$(go env GOCACHE)"
+          GOMODCACHE="$(go env GOMODCACHE)"
+
+          mkdir -p "${GOCACHE}" "${GOMODCACHE}" ~/.cache/golangci-lint
+
+          echo "Cache sizes before removal:"
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
+          sudo du -sh ~/.cache/golangci-lint
+
+          sudo rm -rf "${GOCACHE:?}"/{*,.*} || true
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*} || true
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*} || true
+
+          echo "Cache sizes after removal:"
+          sudo du -sh "${GOCACHE}"
+          sudo du -sh "${GOMODCACHE}"
+          sudo du -sh ~/.cache/golangci-lint
+
+          echo "GOCACHE=$GOCACHE" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=$GOMODCACHE" >> "$GITHUB_ENV"
+
+      - name: Restore Go cache
+        if: ${{ inputs.cache_go }}
+        id: restored-project-go-cache
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.4
+        with:
+          path: |
+            ${{ env.GOCACHE }}
+            ${{ env.GOMODCACHE }}
+            ~/.cache/golangci-lint
+          key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          restore-keys: |
+            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
+            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
+
       - name: Set up CodeQL
         uses: github/codeql-action/init@28deaeda66b76a05916b6923827895f2b14ab387  # v3.28.16
         with:
-          build-mode: autobuild
+          build-mode: manual
           languages: go
+
+      - name: Build Code
+        if: ${{ inputs.run_build }}
+        working-directory: ${{ inputs.project_folder }}
+        shell: bash
+        run: |
+          echo "Building the code"
+          make build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@28deaeda66b76a05916b6923827895f2b14ab387  # v3.28.16
