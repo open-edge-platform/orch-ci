@@ -109,7 +109,7 @@ on:  # yamllint disable-line rule:truthy
           Should Go-related cache for project be saved/restored.
           The cache created by `pre-merge` is only available for current branch (i.e., not for other branches and not for `main`).
           However, the cache created by `main` is available for both `main` and all other branches.
-          That's why it's good that caching was also enabled for `post-merge` and took into account the cache from all actions that could generate it 
+          That's why it's good that caching was also enabled for `post-merge` and took into account the cache from all actions that could generate it
           (usually: `run_build`, `run_lint`, and `run_test`).
         required: false
         default: false
