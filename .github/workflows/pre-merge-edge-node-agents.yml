@@ -118,7 +118,7 @@ jobs:
 
       - name: Run ClamAV Scan
         if: ${{ inputs.run_security_scans }}
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@4c94cdd01e58beab5f822f1eeb0439a523018a55
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@main
         with:
           report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
           project-folder: ${{ inputs.project_folder }}
@@ -150,7 +150,7 @@ jobs:
           path: trivy_scan_report-${{ env.SANITIZED_REPORT_PATH }}.txt
 
       - name: Setup CI environment
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@4c94cdd01e58beab5f822f1eeb0439a523018a55
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@main
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 

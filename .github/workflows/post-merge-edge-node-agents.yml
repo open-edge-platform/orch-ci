@@ -106,7 +106,7 @@ jobs:
           token: ${{ secrets.SYS_ORCH_GITHUB }}
 
       - name: Setup CI environment
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@4c94cdd01e58beab5f822f1eeb0439a523018a55
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@main
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
