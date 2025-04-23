@@ -155,7 +155,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
       - name: REUSE Compliance Check
-        uses: fsfe/reuse-action@211d2700d0242a061dfd6bb1e654004c806f3264  # v5.0.0
+        uses: fsfe/reuse-action@bb774aa972c2a89ff34781233d275075cbddf542  # v5.0.0
   secrets-gitleaks-scan:
     runs-on: ubuntu-latest
     needs: sanitize-project-folder
