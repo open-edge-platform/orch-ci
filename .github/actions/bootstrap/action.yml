@@ -220,13 +220,13 @@ runs:
           ./go_install.sh
 
     - name: "Save Go tools to cache"
-      if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
+      if: steps.restored-go-cache.outputs.cache-hit != 'true' && (contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all'))
       uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.3
       with:
         path: |
           ${{ env.temp_go_cache }}
           ${{ env.temp_go_modcache }}
-        key: ${{ steps.restored-go-cache.outputs.cache-primary-key }}
+        key: bootstrap-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/GOTOOLS_VERSIONS') }}
 
     - name: "Restore original Go cache paths"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
