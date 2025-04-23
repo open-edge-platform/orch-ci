@@ -29,6 +29,11 @@ on:  # yamllint disable-line rule:truthy
         description: "Run build"
         required: true
         type: boolean
+      run_package_build:
+        description: "Build node agent package"
+        required: false
+        default: false
+        type: boolean
       run_lint:
         description: "Run lint"
         required: false
@@ -121,6 +126,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: ""
         type: string
+      run_integration_test:
+        description: "Integration tests for edge node agents"
+        required: false
+        default: false
+        type: boolean
       trivy_config_path:
         description: "Path to trivy configuration file"
         required: false
@@ -313,9 +323,9 @@ jobs:
           sudo du -sh "${GOMODCACHE}"
           sudo du -sh ~/.cache/golangci-lint
 
-          sudo rm -rf "${GOCACHE:?}"/{*,.*}
-          sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
-          sudo rm -rf ~/.cache/golangci-lint/{*,.*}
+          sudo rm -rf "${GOCACHE:?}"/{*,.*} || true
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*} || true
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*} || true
 
           echo "Cache sizes after removal:"
           sudo du -sh "${GOCACHE}"
@@ -360,6 +370,30 @@ jobs:
           make test
           # TO DO find a replacement for cobertura
 
+      - name: Integration test
+        if: ${{ inputs.run_integration_test }}
+        working-directory: ${{ inputs.project_folder }}
+        shell: bash
+        run: |
+          make integration_test
+
+      - name: Fuzz test
+        if: ${{ inputs.run_integration_test }}
+        working-directory: ${{ inputs.project_folder }}
+        shell: bash
+        run: |
+          make fuzztest
+
+      - name: Build Package
+        if: ${{ inputs.run_package_build }}
+        working-directory: ${{ inputs.project_folder }}
+        shell: bash
+        run: |
+          if [ "${{ inputs.project_folder }}" == "platform-update-agent" ]; then
+              make inbmdownload
+          fi
+          make package
+
       - name: Scan directories for binaries
         id: scan-directories
         run: |
@@ -402,9 +436,9 @@ jobs:
           sudo du -sh "${GOMODCACHE}"
           sudo du -sh ~/.cache/golangci-lint
 
-          sudo rm -rf "${GOCACHE:?}"/{*,.*}
-          sudo rm -rf "${GOMODCACHE:?}"/{*,.*}
-          sudo rm -rf ~/.cache/golangci-lint/{*,.*}
+          sudo rm -rf "${GOCACHE:?}"/{*,.*} || true
+          sudo rm -rf "${GOMODCACHE:?}"/{*,.*} || true
+          sudo rm -rf ~/.cache/golangci-lint/{*,.*} || true
 
           echo "Cache sizes after removal:"
           sudo du -sh "${GOCACHE}"
