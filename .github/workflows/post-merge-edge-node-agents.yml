@@ -13,11 +13,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "ubuntu-24.04"
         type: string
-      run_security_scans:
-        description: "Run security scans"
-        required: false
-        default: true
-        type: boolean
       run_build:
         description: "Run build"
         required: false
@@ -114,11 +109,6 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/bootstrap@40d61a820157bc9b70d3f2bdc5aec786073d48f2
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-
-      - name: Security Scans
-        if: ${{ inputs.run_security_scans == true }}
-        run: |
-          echo 'Call scanners from a different yml'
 
       - name: Build Code
         if: ${{ (inputs.run_build == true) && (inputs.project_folder != 'common') && (inputs.project_folder != 'platform-observability-agent') }}
