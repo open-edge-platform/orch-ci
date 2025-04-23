@@ -81,7 +81,7 @@ runs:
           done
           echo "------------------------------------------------------"
 
-          # git push origin $BRANCH_NAME
+          git push origin $BRANCH_NAME
 
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "changes_made=true" >> $GITHUB_OUTPUT
