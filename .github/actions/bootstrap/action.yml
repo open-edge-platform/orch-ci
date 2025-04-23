@@ -239,8 +239,8 @@ runs:
         sudo du -sh $(go env GOCACHE)
         sudo du -sh $(go env GOMODCACHE)
 
-        sudo rm -rf "$(go env GOCACHE)"/{*,.*}
-        sudo rm -rf "$(go env GOMODCACHE)"/{*,.*}
+        sudo rm -rf "$(go env GOCACHE)"/{*,.*} || true
+        sudo rm -rf "$(go env GOMODCACHE)"/{*,.*} || true
 
         echo "Temporary cache sizes after removal:"
         sudo du -sh $(go env GOCACHE)
