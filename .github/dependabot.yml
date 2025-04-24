@@ -5,7 +5,14 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directories:
+      - "/"  # this enabled searching only in /.github/workflows directory
+      - "/.github/actions/bootstrap"
+      - "/.github/actions/clamav"
+      - "/dev-version-update"
+      - "/discover-changed-files"
+      - "/discover-changed-subfolders"
+      - "/verify-branch-name"
     schedule:
       interval: daily
     open-pull-requests-limit: 10
