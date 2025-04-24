@@ -267,10 +267,10 @@ runs:
 
       # The configuration from `v1` won't work in `v2` - it first needs to be migrated: https://golangci-lint.run/product/migration-guide/
       # That's why it's better to give projects the option to choose which version they want to use (`v1` by default).
-      # To enable `v2`, you need to explicitly set `golang-lint2` in `bootstrap_tools`.
+      # To enable `v2`, you need to explicitly set `golangci-lint2` in `bootstrap_tools`.
       # TODO: Once all projects have migrated to `v2`, both steps can be merged.
     - name: Install golangci-lint2
-      if: contains(inputs.bootstrap_tools, 'golang-lint2')
+      if: contains(inputs.bootstrap_tools, 'golangci-lint2')
       shell: bash
       run: |
         curl -Lo /tmp/golangci-lint2.deb "https://github.com/golangci/golangci-lint/releases/download/v${GOLANG_CI_LINT2_VER}/golangci-lint-${GOLANG_CI_LINT2_VER}-linux-amd64.deb"
