@@ -16,8 +16,8 @@ runs:
     - name: Set up Git identity
       shell: bash
       run: |
-        git config --global user.name "Github Bot"
-        git config --global user.email "github-bot@intel.com"
+        git config --global user.name "github-bot@intel.com "
+        git config --global user.email "do-not-reply@intel.com"
 
     - name: Find and update VERSION files
       id: update_versions
