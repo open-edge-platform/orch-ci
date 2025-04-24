@@ -473,3 +473,4 @@ runs:
       run: |
         wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_${{ env.GITLEAKS_VER }}_linux_x64.tar.gz
         sudo tar xf gitleaks.tar.gz -C /usr/local/bin gitleaks
+        rm gitleaks.tar.gz
