@@ -276,7 +276,7 @@ runs:
         curl -Lo /tmp/golangci-lint2.deb "https://github.com/golangci/golangci-lint/releases/download/v${GOLANG_CI_LINT2_VER}/golangci-lint-${GOLANG_CI_LINT2_VER}-linux-amd64.deb"
         sha256sum -c --ignore-missing ${{ github.action_path }}/SHA256SUM
         sudo dpkg -i /tmp/golangci-lint2.deb
-        rm -rf /tmp/golangci-lint2.deb        
+        rm -rf /tmp/golangci-lint2.deb
 
     - name: Install helm
       if: contains(inputs.bootstrap_tools, 'helm') || contains(inputs.bootstrap_tools, 'all')
