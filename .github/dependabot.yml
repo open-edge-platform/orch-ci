@@ -6,7 +6,7 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directories:
-      - "/"  # this enabled searching only in /.github/workflows directory
+      - "/"  # this enables searching only in /.github/workflows directory
       - "/.github/actions/bootstrap"
       - "/.github/actions/clamav"
       - "/dev-version-update"
