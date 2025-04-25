@@ -586,6 +586,11 @@ jobs:
           name: trivy-scan-report-${{ env.sanitized_image_name }}-${{ env.md5sum_value }}
           path: trivy-${{ env.sanitized_image_name }}.txt
 
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          ref: ${{ github.head_ref }}
+
       - name: Scan Image for High/Critical Issues
         uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5  # 0.30.0
         with:
@@ -593,4 +598,10 @@ jobs:
           format: table
           ignore-unfixed: false
           severity: 'HIGH,CRITICAL'
+          output: "trivy-${{ env.sanitized_image_name }}-high-critical.txt"
+          trivy-config: ${{ inputs.trivy_config_path }}
           exit-code: 1
+      - name: Display report for High/Critical Issues
+        if: ${{ always() }}
+        run: |
+          cat trivy-${{ env.sanitized_image_name }}-high-critical.txt
