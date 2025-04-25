@@ -572,7 +572,6 @@ jobs:
           format: table
           output: "trivy-${{ env.sanitized_image_name }}.txt"
           ignore-unfixed: true
-          trivy-config: ${{ inputs.trivy_config_path }}
 
       - name: Calculate MD5 Checksum
         id: checksum
@@ -595,4 +594,3 @@ jobs:
           ignore-unfixed: false
           severity: 'HIGH,CRITICAL'
           exit-code: 1
-          trivy-config: .trivyignore
