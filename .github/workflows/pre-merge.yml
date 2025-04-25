@@ -598,5 +598,6 @@ jobs:
           format: table
           ignore-unfixed: false
           severity: 'HIGH,CRITICAL'
+          trivy-summary-enabled: true
           trivy-config: ${{ inputs.trivy_config_path }}
           exit-code: 1
