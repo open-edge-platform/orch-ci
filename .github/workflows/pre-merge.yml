@@ -594,3 +594,4 @@ jobs:
           ignore-unfixed: false
           severity: 'HIGH,CRITICAL'
           exit-code: 1
+          trivyignores: .trivyignore
