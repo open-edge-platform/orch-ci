@@ -602,5 +602,6 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           exit-code: 1
       - name: Display report for High/Critical Issues
+        if: ${{ always() }}
         run: |
           cat trivy-${{ env.sanitized_image_name }}-high-critical.txt
