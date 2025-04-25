@@ -27,6 +27,6 @@ jobs:
           echo "Test that go works and we can go-get modules"
           go version
           go mod init test_mod
-          go get github.com/open-edge-platform/infra-core/inventory/v2@main
+          go get github.com/open-edge-platform/infra-core/inventory/v2@v2.23.2
 
         # TODO: add more test to validate that bootstrap is working

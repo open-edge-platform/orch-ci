@@ -91,7 +91,7 @@ jobs:
       PROJECT_NAME: ${{ github.repository }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           # Fetch all history, workaround sporadic issue with missing tags
           fetch-depth: 0
@@ -102,10 +102,10 @@ jobs:
 
       - name: REUSE Compliance Check
         if: ${{ inputs.run_reuse_check == true }}
-        uses: fsfe/reuse-action@v4
+        uses: fsfe/reuse-action@bb774aa972c2a89ff34781233d275075cbddf542  # v5.0.0
 
       - name: Checkout action repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: open-edge-platform/orch-ci
           path: ci
@@ -118,14 +118,14 @@ jobs:
 
       - name: Run ClamAV Scan
         if: ${{ inputs.run_security_scans }}
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@40d61a820157bc9b70d3f2bdc5aec786073d48f2
+        uses: ./ci/.github/actions/clamav
         with:
           report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
           project-folder: ${{ inputs.project_folder }}
 
       - name: Upload ClamAV Scan Report
         if: ${{ inputs.run_security_scans }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: ${{ env.CLAMAV_ARTIFACT_NAME }}
           path: ${{ env.SANITIZED_CLAMAV_REPORT_PATH }}
@@ -144,13 +144,13 @@ jobs:
 
       - name: Upload Trivy Scan Report
         if: ${{ inputs.run_security_scans }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: trivy-scan-report-${{ env.SANITIZED_REPORT_PATH }}
           path: trivy_scan_report-${{ env.SANITIZED_REPORT_PATH }}.txt
 
       - name: Setup CI environment
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@40d61a820157bc9b70d3f2bdc5aec786073d48f2
+        uses: ./ci/.github/actions/bootstrap
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
