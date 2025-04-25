@@ -595,4 +595,4 @@ jobs:
           ignore-unfixed: false
           severity: 'HIGH,CRITICAL'
           exit-code: 1
-          trivy-config: ${{ inputs.trivy_config_path }}
+          trivy-config: .trivyignore
