@@ -24,6 +24,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: true
         type: boolean
+      run_package_build:
+        description: "Build node agent package"
+        required: false
+        default: false
+        type: boolean
       run_lint:
         description: "Run lint"
         required: false
@@ -290,6 +295,16 @@ jobs:
         run: |
           echo "Building the code"
           make build
+
+      - name: Build Package
+        if: ${{ inputs.run_package_build }}
+        working-directory: ${{ inputs.project_folder }}
+        shell: bash
+        run: |
+          if [ "${{ inputs.project_folder }}" == "platform-update-agent" ]; then
+              make inbmdownload
+          fi
+          make package
 
       - name: Find and Sign Binaries
         if: ${{ inputs.run_build }}
