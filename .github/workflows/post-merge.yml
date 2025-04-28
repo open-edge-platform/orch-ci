@@ -430,7 +430,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make helm-push
-      
+
       - name: Push Agent packages
         if: ${{ inputs.run_deb_push }}
         working-directory: ${{ inputs.project_folder }}
