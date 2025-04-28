@@ -64,6 +64,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_deb_push:
+        description: "Run debian push"
+        required: false
+        default: false
+        type: boolean
       run_artifact:
         description: "Run artifact"
         required: false
@@ -351,7 +356,7 @@ jobs:
           key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
 
       - name: Configure AWS credentials
-        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact || inputs.run_deb_push
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
@@ -359,7 +364,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Login to Amazon ECR
-        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact || inputs.run_deb_push
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
         with:
           registries: "080137407410"
@@ -425,6 +430,30 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make helm-push
+      
+      - name: Push Agent packages
+        if: ${{ inputs.run_deb_push }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          REGISTRY='080137407410.dkr.ecr.us-west-2.amazonaws.com'
+
+          if [ -z "$(cat VERSION | grep 'dev')" ]; then
+            echo "Uploading artifacts..."
+            cd build/artifacts
+
+            for DEB_PKG in *.deb; do
+              PKG_VER=$(dpkg-deb -f "${DEB_PKG}" Version)
+              PKG_NAME=$(dpkg-deb -f "${DEB_PKG}" Package)
+              #REPOSITORY=en/deb/${{ inputs.runner_version }}/${PKG_NAME}
+              REPOSITORY=en/deb/${PKG_NAME}
+
+              aws ecr create-repository --region us-west-2 --repository-name edge-orch/${REPOSITORY} || true
+              oras push ${REGISTRY}/edge-orch/${REPOSITORY}:${PKG_VER} \
+              --artifact-type application/vnd.intel.orch.deb ./${DEB_PKG}
+            done
+
+            cd -
+          fi
 
       - name: Artifact
         if: ${{ inputs.run_artifact }}
