@@ -8,7 +8,8 @@ on:  # yamllint disable-line rule:truthy
     branches:
       - main
   workflow_dispatch:
-
+permissions:
+  contents: read
 jobs:
   pre-merge:
     uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@main
