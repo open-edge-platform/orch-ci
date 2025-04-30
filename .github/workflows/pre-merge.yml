@@ -173,7 +173,7 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174 # v5.4.0
+        uses: astral-sh/setup-uv@22695119d769bdb6f7032ad67b9bca0ef8c4a174  # v5.4.0
 
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" .github --no-exit-codes > zizimor_scan_report.txt
