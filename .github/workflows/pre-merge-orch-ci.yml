@@ -2,16 +2,17 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 name: Pre-Merge CI Pipeline
-
+permissions:
+  contents: read
 on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - main
   workflow_dispatch:
-permissions:
-  contents: read
 jobs:
   pre-merge:
+    permissions:
+      contents: read
     uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@main
     with:
       run_security_scans: true
