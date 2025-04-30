@@ -9,6 +9,9 @@ inputs:
     description: "Comma-separated list of path patterns to exclude from search"
     required: false
     default: "*/node_modules/*,*/dist/*,*/build/*,*/vendor/*,*/bin/*,*/pkg/*,*/.git/*"
+  gh_token:
+    required: true
+    description: "GitHub token for creating pull request"
 
 runs:
   using: "composite"
@@ -16,8 +19,8 @@ runs:
     - name: Set up Git identity
       shell: bash
       run: |
-        git config --global user.name "Github Bot"
-        git config --global user.email "github-bot@intel.com"
+        git config --global user.name "github-bot@intel.com "
+        git config --global user.email "do-not-reply@intel.com"
 
     - name: Find and update VERSION files
       id: update_versions
@@ -52,14 +55,32 @@ runs:
             NEXT_VERSION=$(get_next_version "$NEW_VERSION" "-dev")
             echo "Updating $VERSION_PATH from $NEW_VERSION to $NEXT_VERSION"
 
+            # Check if .update-version.sh exists in the same directory and execute it
+            VERSION_DIR=$(dirname "$VERSION_PATH")
+            UPDATE_SCRIPT="$VERSION_DIR/.update-version.sh"
+
+            if [ -f "$UPDATE_SCRIPT" ]; then
+              echo "Found .update-version.sh in $VERSION_DIR, executing..."
+              chmod +x "$UPDATE_SCRIPT"
+              "$UPDATE_SCRIPT" "$NEXT_VERSION"
+            fi
+
             echo "$NEXT_VERSION" > "$VERSION_PATH"
-            git add "$VERSION_PATH"
+            git add -A
             CHANGES_MADE=1
           fi
         done
 
         if [ $CHANGES_MADE -eq 1 ]; then
-          git commit -m "Update version files to next dev version"
+          git commit -m "Update VERSION files to next dev version"
+
+          echo "------------------------------------------------------"
+          echo "Updated files:"
+          git diff --name-only HEAD~1 HEAD | while read file; do
+            echo "- $file"
+          done
+          echo "------------------------------------------------------"
+
           git push origin $BRANCH_NAME
 
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
@@ -73,10 +94,10 @@ runs:
       if: steps.update_versions.outputs.changes_made == 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ inputs.gh_token }}
       run: |
         gh pr create \
           --title "Version bump to -dev" \
-          --body "Automatically bumping version files to next development iteration (-dev suffix)." \
+          --body "Automatically bumping the version to the next development iteration (-dev suffix)." \
           --base main \
           --head ${{ steps.update_versions.outputs.branch_name }}

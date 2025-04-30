@@ -95,7 +95,7 @@ and consistency across the project.
 ## Contributing
 
 We welcome contributions to improve the CI processes. Please read the
-[CONTRIBUTING.md](
+[CONTRIBUTION GUIDE](
   https://docs.openedgeplatform.intel.com/edge-manage-docs/main/developer_guide/contributor_guide/index.html)
   file for guidelines on how to contribute.
 
@@ -108,6 +108,13 @@ This repository is licensed under the Apache License 2.0. See the
 
 Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) when interacting
 with the community.
+
+## Community and Support
+
+To learn more about the project, its community, and governance, visit
+the [Edge Orchestrator Community](https://docs.openedgeplatform.intel.com/edge-manage-docs/main/index.html).
+
+For support, start with [Troubleshooting](https://docs.openedgeplatform.intel.com/edge-manage-docs/main/developer_guide/troubleshooting/index.html)
 
 ## Security
 

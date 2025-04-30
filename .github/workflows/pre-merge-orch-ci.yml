@@ -8,7 +8,8 @@ on:  # yamllint disable-line rule:truthy
     branches:
       - main
   workflow_dispatch:
-
+permissions:
+  contents: read
 jobs:
   pre-merge:
     uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@main
@@ -21,6 +22,6 @@ jobs:
       run_test: false
       run_validate_clean_folder: false
       run_docker_build: false
-      run_scan_containers: false
       bootstrap_tools: "go,gotools,nodejs"
+      trivy_config_path: trivy.yaml
     secrets: inherit

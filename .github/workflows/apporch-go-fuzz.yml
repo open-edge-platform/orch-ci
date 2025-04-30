@@ -29,7 +29,8 @@ on:  # yamllint disable-line rule:truthy
         description: "Directory used to store Go fuzzing test data used to run test"
         default: "/"
         type: string
-
+permissions:
+  contents: read
 jobs:
   go-fuzz-test:
     runs-on: ubuntu-latest

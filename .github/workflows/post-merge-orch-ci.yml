@@ -8,13 +8,13 @@ on:   # yamllint disable-line rule:truthy
     branches:
       - main
   workflow_dispatch:
-
+permissions:
+  contents: read
 jobs:
   post-merge:
     uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@main
     with:
       run_build: false
-      run_security_scans: false
       run_version_check: false
       run_dep_version_check: false
       run_version_tag: true

@@ -131,23 +131,15 @@ runs:
         go-version: ${{ env.GOLANG_VER }}
         cache: false
 
-    - name: "Set up Go envs"
-      if: contains(inputs.bootstrap_tools, 'go') || contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
-      shell: bash
-      run: |
-          echo "Setting up Go envs"
-          echo "GOPRIVATE=github.com/open-edge-platform" >> $GITHUB_ENV
-          git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:${{ inputs.gh_token }} | base64)"
-
     - name: "Setup Node.js environment"
       if: contains(inputs.bootstrap_tools, 'nodejs') || contains(inputs.bootstrap_tools, 'all')
-      uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e  # v4.3.0
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4.4.0
       with:
         node-version: '18'
 
     - name: "Set up Python environment"
       if: contains(inputs.bootstrap_tools, 'python') || contains(inputs.bootstrap_tools, 'all')
-      uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55  # v5.5.0
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
       with:
         python-version: '3.13'
         cache: 'pip'
@@ -173,7 +165,9 @@ runs:
         "npm-groovy-lint@${NPM_GROOVY_LINT_VER}" \
         "swagger-cli@${SWAGGER_CLI_VER}" \
         "@eslint/js@${ESLINT_VER}" \
-        "pajv@${PAJV_VER}"
+        "pajv@${PAJV_VER}" \
+        "@dbml/cli@${DBML_CLI_VER}" \
+        "@softwaretechnik/dbml-renderer@${DBML_RENDERER_VER}"
 
     - name: "Use separate cache for Go tools"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
@@ -226,13 +220,13 @@ runs:
           ./go_install.sh
 
     - name: "Save Go tools to cache"
-      if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
+      if: steps.restored-go-cache.outputs.cache-hit != 'true' && (contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all'))
       uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.3
       with:
         path: |
           ${{ env.temp_go_cache }}
           ${{ env.temp_go_modcache }}
-        key: ${{ steps.restored-go-cache.outputs.cache-primary-key }}
+        key: bootstrap-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/GOTOOLS_VERSIONS') }}
 
     - name: "Restore original Go cache paths"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
@@ -245,8 +239,8 @@ runs:
         sudo du -sh $(go env GOCACHE)
         sudo du -sh $(go env GOMODCACHE)
 
-        sudo rm -rf "$(go env GOCACHE)"/{*,.*}
-        sudo rm -rf "$(go env GOMODCACHE)"/{*,.*}
+        sudo rm -rf "$(go env GOCACHE)"/{*,.*} || true
+        sudo rm -rf "$(go env GOMODCACHE)"/{*,.*} || true
 
         echo "Temporary cache sizes after removal:"
         sudo du -sh $(go env GOCACHE)
@@ -270,6 +264,19 @@ runs:
         sha256sum -c --ignore-missing ${{ github.action_path }}/SHA256SUM
         sudo dpkg -i /tmp/golangci-lint.deb
         rm -rf /tmp/golangci-lint.deb
+
+      # The configuration from `v1` won't work in `v2` - it first needs to be migrated: https://golangci-lint.run/product/migration-guide/
+      # That's why it's better to give projects the option to choose which version they want to use (`v1` by default).
+      # To enable `v2`, you need to explicitly set `golangci-lint2` in `bootstrap_tools`.
+      # TODO: Once all projects have migrated to `v2`, both steps can be merged.
+    - name: Install golangci-lint2
+      if: contains(inputs.bootstrap_tools, 'golangci-lint2')
+      shell: bash
+      run: |
+        curl -Lo /tmp/golangci-lint2.deb "https://github.com/golangci/golangci-lint/releases/download/v${GOLANG_CI_LINT2_VER}/golangci-lint-${GOLANG_CI_LINT2_VER}-linux-amd64.deb"
+        sha256sum -c --ignore-missing ${{ github.action_path }}/SHA256SUM
+        sudo dpkg -i /tmp/golangci-lint2.deb
+        rm -rf /tmp/golangci-lint2.deb
 
     - name: Install helm
       if: contains(inputs.bootstrap_tools, 'helm') || contains(inputs.bootstrap_tools, 'all')
@@ -464,5 +471,6 @@ runs:
       if: contains(inputs.bootstrap_tools, 'gitleaks') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_${{ env.GITLEAKS_VER }}_linux_x64.tar.gz
-        sudo tar xf gitleaks.tar.gz -C /usr/local/bin gitleaks
+        wget -O /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.24.2/gitleaks_${{ env.GITLEAKS_VER }}_linux_x64.tar.gz
+        sudo tar xf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+        rm /tmp/gitleaks.tar.gz
