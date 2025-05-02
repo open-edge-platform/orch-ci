@@ -9,7 +9,7 @@ on:   # yamllint disable-line rule:truthy
       - main
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
   security-events: write
   id-token: write
 jobs:
