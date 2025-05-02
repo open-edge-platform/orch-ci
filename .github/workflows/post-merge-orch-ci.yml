@@ -10,6 +10,7 @@ on:   # yamllint disable-line rule:truthy
       - test
   workflow_dispatch:
 permissions:
+  contents: read
   security-events: write
   id-token: write
 jobs:
