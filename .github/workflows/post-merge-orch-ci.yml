@@ -9,6 +9,10 @@ on:   # yamllint disable-line rule:truthy
     branches:
       - main
   workflow_dispatch:
+permissions:
+  contents: read
+  security-events: write
+  id-token: write
 jobs:
   post-merge:
     permissions:
