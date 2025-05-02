@@ -15,7 +15,7 @@ permissions:
   id-token: write
 jobs:
   post-merge:
-    uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@test
+    uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@main
     with:
       run_build: false
       run_version_check: false
