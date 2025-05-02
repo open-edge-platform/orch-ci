@@ -7,7 +7,6 @@ on:   # yamllint disable-line rule:truthy
   push:
     branches:
       - main
-      - test
   workflow_dispatch:
 permissions:
   contents: read
