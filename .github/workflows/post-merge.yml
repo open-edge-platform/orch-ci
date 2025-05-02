@@ -182,6 +182,8 @@ jobs:
   run-repo-pipelines:
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
+    permissions:
+      id-token: write
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
