@@ -10,6 +10,8 @@ on:   # yamllint disable-line rule:truthy
   workflow_dispatch:
 permissions:
   contents: read
+  security-events: write
+  id-token: write
 jobs:
   post-merge:
     uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@main
