@@ -189,7 +189,7 @@ jobs:
           else
             subdir="${rshort}"
           fi
-          echo "SUBDIR=${subdir}" >> "$GITHUB_ENV"
+          echo "SUBDIR=${subdir:-NULL}" >> "$GITHUB_ENV"
 
       - name: Install Spark theme
         env:
