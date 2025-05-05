@@ -25,4 +25,3 @@ jobs:
       run_docker_push: false
       run_helm_build: false
       run_helm_push: false
-    secrets: inherit
