@@ -87,6 +87,7 @@ jobs:
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
           token: ${{ secrets.SYS_ORCH_GITHUB }}
+          persist-credentials: false
 
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
@@ -111,6 +112,7 @@ jobs:
           # Checkout the branch that triggered the workflow
           # to avoid detached HEAD
           ref: ${{ github.head_ref }}
+          persist-credentials: false
 
       # Use edge-manage-docs as a template
       - name: Checkout template
@@ -329,3 +331,4 @@ jobs:
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
           token: ${{ secrets.SYS_ORCH_GITHUB }}
+          persist-credentials: false
