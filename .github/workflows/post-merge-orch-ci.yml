@@ -4,15 +4,13 @@
 name: Post-Merge CI Pipeline
 permissions:
   contents: read
+  security-events: write
+  id-token: write
 on:   # yamllint disable-line rule:truthy
   push:
     branches:
       - main
   workflow_dispatch:
-permissions:
-  contents: read
-  security-events: write
-  id-token: write
 jobs:
   post-merge:
     permissions:
