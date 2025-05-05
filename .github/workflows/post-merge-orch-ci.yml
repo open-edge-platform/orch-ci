@@ -7,7 +7,6 @@ on:   # yamllint disable-line rule:truthy
   push:
     branches:
       - main
-      - permissions
   workflow_dispatch:
 jobs:
   post-merge:
