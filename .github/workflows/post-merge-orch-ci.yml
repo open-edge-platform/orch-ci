@@ -2,10 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 ---
 name: Post-Merge CI Pipeline
-permissions:
-  contents: read
-  security-events: write
-  id-token: write
+permissions: {}
 on:   # yamllint disable-line rule:truthy
   push:
     branches:
@@ -15,6 +12,8 @@ jobs:
   post-merge:
     permissions:
       contents: read
+      security-events: write
+      id-token: write
     uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@main
     with:
       run_build: false
