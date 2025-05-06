@@ -442,9 +442,6 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         shell: bash
         run: |
-          if [ "${{ inputs.project_folder }}" == "platform-update-agent" ]; then
-              make inbmdownload
-          fi
           make package
 
       - name: Scan directories for binaries
