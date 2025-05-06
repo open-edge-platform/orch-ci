@@ -191,7 +191,7 @@ jobs:
           else
             subdir="${rshort}"
           fi
-          echo "SUBDIR=${subdir}" >> "$GITHUB_ENV"
+          echo "SUBDIR=${subdir:-NULL}" >> "$GITHUB_ENV"
 
       - name: Install Spark theme
         env:
@@ -287,7 +287,7 @@ jobs:
 
       - name: Get Pull Request Number
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         id: gh-cli
         shell: bash
         run: |
@@ -299,7 +299,7 @@ jobs:
         env:
           SUBDIR: ${{ env.SUBDIR }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
         shell: bash
         run: |
@@ -313,10 +313,13 @@ jobs:
           COMMENT="Documentation published at: "
           COMMENT+="https://docs.openedgeplatform.intel.com/"
           COMMENT+="${SUBDIR}/${branches[0]}/${top}"
-          COMMENT_URL="https://api.github.com/repos/"
-          COMMENT_URL+="${REPO}/issues/${GITHUB_PR}/comments"
-          curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-            -X POST "${COMMENT_URL}" -d "{\"body\":\"$COMMENT\"}" || :
+          COMMENT_URL="/repos/${REPO}/issues/${GITHUB_PR}/comments"
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${COMMENT_URL}" \
+            -f "body=${COMMENT}" || :
 
       # Checkout orch-ci again so the
       # 'Post Bootstrap CI Environment' step does not fail
