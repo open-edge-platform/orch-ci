@@ -24,22 +24,25 @@ runs:
       shell: bash
       id: discover-changes
       working-directory: ${{ inputs.project_folder }}
+      env:
+        BASE_REF: ${{ github.base_ref }}
+        REF_NAME: ${{ github.ref_name }}
       run: |
         # Fetch the base branch or the current branch
-        if [ -n "${{ github.base_ref }}" ]; then
+        if [ -n "${BASE_REF}" ]; then
           # Logic for PR build
-          git fetch origin ${{ github.base_ref }}
+          git fetch origin ${BASE_REF}
         else
           # For push events
-          git fetch origin ${{ github.ref_name }}
+          git fetch origin ${REF_NAME}
         fi
 
         changed_files=()
 
         # Check for changes in each file
-        if [ -n "${{ github.base_ref }}" ]; then
+        if [ -n "${BASE_REF}" ]; then
           # Logic for PR build
-          changed_files=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          changed_files=$(git diff --name-only origin/${BASE_REF} HEAD)
         else
           # Diff in case of post-merge is done with respect to last-1 commit in the current branch
           changed_files=$(git diff --name-only HEAD~1 HEAD)
@@ -59,5 +62,7 @@ runs:
 
     - name: Debug Changed Files
       shell: bash
+      env:
+        CHANGED_FILES: ${{ steps.discover-changes.outputs.changed_files }}
       run: |
-        echo "Changed Files: ${{ steps.discover-changes.outputs.changed_files }}"
+        echo "Changed Files: ${CHANGED_FILES}"

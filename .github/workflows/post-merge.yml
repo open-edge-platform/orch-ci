@@ -141,12 +141,14 @@ jobs:
     steps:
       - name: Sanitize project folder
         id: sanitize
+        env: 
+          INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           # check if inputs.project_folder is set, if not return repository name
-          if [ -z "${{ inputs.project_folder }}" ] || [ "${{ inputs.project_folder }}" = "." ]; then
+          if [ -z "${INPUTS_PROJECT_FOLDER}" ] || [ "${INPUTS_PROJECT_FOLDER}" = "." ]; then
             SANITIZED_PROJECT_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
           else
-            SANITIZED_PROJECT_NAME=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+            SANITIZED_PROJECT_NAME=$(echo "${INPUTS_PROJECT_FOLDER}" | tr '/' '-')
           fi
 
           echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
@@ -216,10 +218,11 @@ jobs:
         if: ${{ inputs.run_version_check }}
         env:
           BASEDIR: ${{ inputs.project_folder }}
+          PREFIX_TAG_SEPARATOR: ${{ inputs.prefix_tag_separator }}
         run: |
-          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
             ./ci/scripts/version-check.sh \
-              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+              "${BASEDIR}${PREFIX_TAG_SEPARATOR}"
           else
             ./ci/scripts/version-check.sh
           fi
@@ -229,11 +232,13 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          PREFIX_TAG_SEPARATOR: ${{ inputs.prefix_tag_separator }}
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           set -eu -o pipefail
-          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
             "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
-              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+              "${PROJECT_FOLDER}${PREFIX_TAG_SEPARATOR}"
           else
             "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
           fi
@@ -320,12 +325,13 @@ jobs:
         env:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           # common dirs to search for binaries
           directories=("out" "build" "bin")
 
           for dir in "${directories[@]}"; do
-            full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
+            full_path="$GITHUB_WORKSPACE/${PROJECT_FOLDER}/$dir"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               find "$full_path" -type f -executable | while read -r binary; do

@@ -27,11 +27,13 @@ runs:
       shell: bash
       id: discover-changes
       working-directory: ${{ inputs.project_folder }}
+      env:
+        BASE_REF: ${{ github.base_ref }}
       run: |
         # Fetch the base branch or the current branch
-        if [ -n "${{ github.base_ref }}" ]; then
+        if [ -n "${BASE_REF}" ]; then
           # Logic for PR build
-          git fetch origin ${{ github.base_ref }}
+          git fetch origin ${BASE_REF}
         else
           # For push events
           git fetch origin ${{ github.ref_name }}
@@ -42,10 +44,10 @@ runs:
         changed_projects=()
 
         # Check for changes in each subfolder
-        if [ -n "${{ github.base_ref }}" ]; then
+        if [ -n "${BASE_REF}" ]; then
           # Logic for PR build
           for project in $projects; do
-            if ! git diff --quiet origin/${{ github.base_ref }} HEAD -- $project; then
+            if ! git diff --quiet origin/${BASE_REF} HEAD -- $project; then
               changed_projects+=("${project%/}")
             fi
           done
@@ -78,5 +80,7 @@ runs:
 
     - name: Debug Changed Projects
       shell: bash
+      env:
+        CHANGED_PROJECTS: ${{ steps.discover-changes.outputs.changed_projects }}
       run: |
-        echo "Changed Projects: ${{ steps.discover-changes.outputs.changed_projects }}"
+        echo "Changed Projects: ${CHANGED_PROJECTS}"
