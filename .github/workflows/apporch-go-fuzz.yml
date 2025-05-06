@@ -29,10 +29,11 @@ on:  # yamllint disable-line rule:truthy
         description: "Directory used to store Go fuzzing test data used to run test"
         default: "/"
         type: string
-permissions:
-  contents: read
+permissions: {}
 jobs:
   go-fuzz-test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     env:
       gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
@@ -46,6 +47,7 @@ jobs:
           fetch-tags: true
           # Checkout the branch that triggered the workflow to avoid detached HEAD
           ref: ${{ github.head_ref }}
+          persist-credentials: false
 
       - name: Checkout orch-ci repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -54,6 +56,7 @@ jobs:
           path: ci
           ref: main
           token: ${{ env.gh_token }}
+          persist-credentials: false
 
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
