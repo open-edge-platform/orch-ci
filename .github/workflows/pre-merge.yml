@@ -25,6 +25,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_freeup_ubuntu_space:
+        description: "Freeup space in runner by removing unwanted packages"
+        required: false
+        default: false
+        type: boolean  
       run_build:
         description: "Run build"
         required: true
@@ -402,7 +407,8 @@ jobs:
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
 
-      - name: Free Disk Space Ubuntu
+      - name: Free Ubuntu Disk Space
+        if: ${{ inputs.run_freeup_ubuntu_space }}
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be  # v1.3.1
         with:
           android: true
