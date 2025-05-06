@@ -154,15 +154,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       sanitized_project_name: ${{ steps.sanitize.outputs.sanitized_project_name }}
+    env:
+      INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
     steps:
       - name: Sanitize project folder
         id: sanitize
         run: |
           # check if inputs.project_folder is set, if not return repository name
-          if [ -z "${{ inputs.project_folder }}" ] || [ "${{ inputs.project_folder }}" = "." ]; then
+          if [ -z "${INPUTS_PROJECT_FOLDER}" ] || [ "${INPUTS_PROJECT_FOLDER}" = "." ]; then
             SANITIZED_PROJECT_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
           else
-            SANITIZED_PROJECT_NAME=$(echo "${{ inputs.project_folder }}" | tr '/' '-')
+            SANITIZED_PROJECT_NAME=$(echo "${INPUTS_PROJECT_FOLDER}" | tr '/' '-')
           fi
 
           echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
@@ -209,6 +211,9 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     needs: sanitize-project-folder
+    env:
+      INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
+      SANITIZIED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -232,7 +237,7 @@ jobs:
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          gitleaks dir ${{ inputs.project_folder }} -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json -r gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
+          gitleaks dir "${INPUTS_PROJECT_FOLDER}"" -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-"${SANITIZIED_PROJECT_NAME}".json -r gitleaks-"${SANITIZIED_PROJECT_NAME}".json
       - name: Upload Gitleaks Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
@@ -345,10 +350,11 @@ jobs:
         if: ${{ inputs.run_version_check }}
         env:
           BASEDIR: ${{ inputs.project_folder }}
+          PREFIX_TAG_SEPARATOR: ${{ inputs.prefix_tag_separator }}
         run: |
-          if [ -n "${{ inputs.prefix_tag_separator }}" ]; then
+          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
             ./ci/scripts/version-check.sh \
-              "${{ inputs.project_folder }}${{ inputs.prefix_tag_separator }}"
+              "${BASEDIR}${PREFIX_TAG_SEPARATOR}"
           else
             ./ci/scripts/version-check.sh
           fi
@@ -458,10 +464,12 @@ jobs:
 
       - name: Scan directories for binaries
         id: scan-directories
+        env:
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           directories=("out" "build" "bin")
           for dir in "${directories[@]}"; do
-            full_path="${{ inputs.project_folder }}/$dir"
+            full_path="${PROJECT_FOLDER}/$dir"
             if [ -d "$full_path" ]; then
               if find "$full_path" -type f -executable | grep -q .; then
                 echo "Scanning directory: $full_path"
@@ -528,9 +536,11 @@ jobs:
       - name: List Docker Images
         id: list-images
         if: ${{ inputs.run_docker_build }}
+        env:
+          TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
           # list of images to skip
-          skip_images="${{ inputs.trivy_image_skip }}"
+          skip_images="${TRIVY_IMAGE_SKIP}"
 
           IFS=',' read -r -a skip_array <<< "$skip_images"
 
@@ -560,9 +570,11 @@ jobs:
 
       - name: Save Docker Images
         if: ${{ inputs.run_docker_build }}
+        env:
+          IMAGES: ${{ steps.list-images.outputs.images }}
         run: |
           mkdir -p docker-images
-          images=${{ steps.list-images.outputs.images }}
+          images=${IMAGES}
           # Remove the brackets and split the string into individual image names
           formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
           for image in $formatted_images; do
@@ -616,9 +628,11 @@ jobs:
 
       - name: Sanitize Image Name
         id: sanitize
+        env:
+          MATRIX_IMAGE: ${{ matrix.image }}
         run: |
           # Replace colon with underscore
-          sanitized_image_name="${{ matrix.image }}"
+          sanitized_image_name="${MATRIX_IMAGE}"
           sanitized_image_name="${sanitized_image_name//[:\/]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
