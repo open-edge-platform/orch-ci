@@ -18,3 +18,9 @@ rules:
       - .github/workflows/pre-merge.yml:531
       - .github/workflows/pre-merge.yml:564
       - .github/workflows/pre-merge.yml:620
+      # expansion only happens from the caller workflow
+      - ./.github/workflows/apporch-go-fuzz.yml:67
+  github-env:
+    ignore:
+      - ./.github/actions/bootstrap/action.yml:175
+      - ./.github/actions/bootstrap/action.yml:175
