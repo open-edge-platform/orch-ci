@@ -1,10 +1,11 @@
+---
 # SPDX-FileCopyrightText: 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 rules:
   template-injection:
     ignore:
-      # ignore expansion in post merge for now.
+      # ignore expansion in post merge.expansion only happens from the caller workflow
       - .github/workflows/post-merge.yml:142
       - .github/workflows/post-merge.yml:215
       - .github/workflows/post-merge.yml:227
