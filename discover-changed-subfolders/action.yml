@@ -62,8 +62,13 @@ runs:
         # Debugging: Print the changed projects array
         echo "Changed Projects Array: ${changed_projects[@]}"
 
-        # Convert the array to a JSON
-        changed_projects_list=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s -c .)
+        if [ -n "$changed_projects" ]; then
+            # Convert the array to a JSON
+            changed_projects_list=$(printf '%s\n' "${changed_projects[@]}" | jq -R . | jq -s -c .)
+        else
+            # Set to an empty JSON array if no projects are changed
+            changed_projects_list="[]"
+        fi
 
         # Debugging: Print the changed projects list
         echo "Changed Projects List: $changed_projects_list"

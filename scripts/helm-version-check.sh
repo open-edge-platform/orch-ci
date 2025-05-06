@@ -13,7 +13,7 @@ my_dir="$(dirname "$0")"
 # shellcheck source=scripts/tagging-lib.sh
 source "$my_dir/tagging-lib.sh"
 
-# when not running under Jenkins, use current dir as workspace
+# when not running under github, use current dir as workspace
 WORKSPACE=${WORKSPACE:-.}
 
 # EXPLICIT_CURRENT_DIR defaults to 0.

@@ -35,12 +35,12 @@ function create_git_tag {
   local commit_info=""
 
   git config --global user.email "do-not-reply@intel.com"
-  git config --global user.name "Jenkins"
+  git config --global user.name "github-bot@intel.com "
 
   git_hash=$(git rev-parse --short HEAD)
   commit_info=$(git log --oneline | grep "${git_hash}")
 
-  git tag -a "$full_tag" -m "Tagged by Jenkins. COMMIT:${commit_info}"
+  git tag -a "$full_tag" -m "Tagged by github-bot. COMMIT:${commit_info}"
 
   echo "Tags including new tag:"
   git tag -n

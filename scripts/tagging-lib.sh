@@ -15,7 +15,7 @@ DOCKERPARENT_STRICT=${DOCKERPARENT_STRICT:-1} # require semver versions on paren
 RELEASE_VERSION=0
 FAIL_VALIDATION=0
 
-# when not running under Jenkins, use current dir as workspace
+# when not running under github, use current dir as workspace
 WORKSPACE=${WORKSPACE:-.}
 BASEDIR=${BASEDIR:-}
 
@@ -60,6 +60,12 @@ function read_version {
   elif [ -f ".chartver.yaml" ] && [ -n "$(yq '.release // "" ' .chartver.yaml)" ]
   then
     VERSIONFILE="$(yq .release .chartver.yaml)/Chart.yaml"
+    NEW_VERSION=$(yq .version "$VERSIONFILE")
+    TAG_VERSION=$NEW_VERSION
+
+  elif [ -f "Chart.yaml" ]
+  then
+    VERSIONFILE="Chart.yaml"
     NEW_VERSION=$(yq .version "$VERSIONFILE")
     TAG_VERSION=$NEW_VERSION
 
@@ -162,7 +168,7 @@ function is_git_tag_duplicated {
   do
     if [ "$TAG_PREFIX$TAG_VERSION" = "$existing_tag" ]
     then
-      echo "ERROR: Duplicate tag: $existing_tag"
+      echo "WARN: Duplicate tag: $existing_tag"
       # shellcheck disable=SC2034 # consumed by the dependent scripts
       FAIL_VALIDATION=2
     fi

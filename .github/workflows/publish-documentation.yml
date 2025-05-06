@@ -27,6 +27,12 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: '^(main|release-.*)$'
         type: string
+      simple_mode:
+        description: >-
+          When true, override configuration for simple documentation sites
+        required: false
+        default: true
+        type: boolean
       orch_ci_repo_ref:
         description: >-
           The ref of the orch-ci repo, including bootstrap action and scripts,
@@ -48,11 +54,25 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: "E1QN7TZJG8M0VL"
         type: string
+    secrets:
+      SYS_ORCH_GITHUB:
+        description: "PAT (contents: read) to clone private repos"
+        required: true
+      DOC_AWS_ACCESS_KEY_ID:
+        description: AWS access key for docs bucket
+        required: true
+      DOC_AWS_SECRET_ACCESS_KEY:
+        description: AWS secret access key for docs bucket
+        required: true
 
-permissions:
-  contents: write
+permissions: {}
+
 jobs:
   publish-documentation:
+    permissions:
+      contents: read          # needed for actions/checkout
+      pull-requests: read     # needed for gh pr list
+      issues: write           # needed to post PR comment
     runs-on: ubuntu-latest
     env:
       DOCS_DIR: ${{ inputs.docs_directory }}
@@ -67,12 +87,20 @@ jobs:
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
           token: ${{ secrets.SYS_ORCH_GITHUB }}
+          persist-credentials: false
 
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "aws"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.1.0
+        with:
+          aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
 
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -84,6 +112,35 @@ jobs:
           # Checkout the branch that triggered the workflow
           # to avoid detached HEAD
           ref: ${{ github.head_ref }}
+          persist-credentials: false
+
+      # Use edge-manage-docs as a template
+      - name: Checkout template
+        if: ${{ inputs.simple_mode }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          repository: open-edge-platform/edge-manage-docs
+          ref: main
+          path: _template
+          persist-credentials: false
+          sparse-checkout: |
+            docconf
+            Makefile
+            requirements.txt
+            dict.txt
+            docs/conf.py
+            docs/_static/logo.svg
+            docs/substitutions.txt
+          sparse-checkout-cone-mode: false
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Copy template
+        if: ${{ inputs.simple_mode }}
+        shell: bash
+        run: |
+          cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
+          # Override any existing files with template
+          cp -rf "${GITHUB_WORKSPACE}"/_template/* .
 
       - name: Collect branches
         env:
@@ -134,10 +191,37 @@ jobs:
           else
             subdir="${rshort}"
           fi
-          echo "SUBDIR=${subdir}" >> "$GITHUB_ENV"
+          echo "SUBDIR=${subdir:-NULL}" >> "$GITHUB_ENV"
+
+      - name: Install Spark theme
+        env:
+          ENDPOINT: ${{ inputs.endpoint }}
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+        shell: bash
+        run: |
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          # Download Spark Sphinx theme
+          tmpdir="$(mktemp -d)"
+          aws s3 cp "${ENDPOINT}/theme/current" "${tmpdir}"
+          theme_wheel="$(cat "${tmpdir}/current")"
+          aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
+          # Checkout the first branch to build
+          cd "${GITHUB_WORKSPACE}"
+          git checkout "${branches[0]}"
+          cd "${DOCS_DIR}"
+          # Instantiate Python Virtual Environment
+          make check
+          venv="$(find . -path '*/bin/activate' -name activate)"
+          # shellcheck source=/dev/null
+          source "${venv}"
+          # Install Spark Sphinx theme
+          pip3 install --no-input "${tmpdir}/${theme_wheel}"
+          deactivate
 
       - name: Build Documentation
         env:
+          SIMPLE_MODE: ${{ inputs.simple_mode }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
         shell: bash
         run: |
@@ -145,8 +229,16 @@ jobs:
           IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
           for branch in "${branches[@]}"; do
             cd "${GITHUB_WORKSPACE}"
+            git reset --hard
             git checkout "${branch}"
             cd "${DOCS_DIR}"
+            if [ "${SIMPLE_MODE}" == 'true' ]; then
+              # Override any existing files with template
+              cp -rf "${GITHUB_WORKSPACE}"/_template/* .
+              if [ -f "docs/dictionary_append.txt" ]; then
+                cat "docs/dictionary_append.txt" >> "dict.txt"
+              fi
+            fi
             echo "Building branch: ${branch}"
             make build
             if [[ ! -d "${OUT_DIR}" ]]; then
@@ -177,13 +269,6 @@ jobs:
             fi
           done
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1
-        with:
-          aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-west-2
-
       - name: Publish documentation
         env:
           ENDPOINT: ${{ inputs.endpoint }}
@@ -200,6 +285,42 @@ jobs:
           # Remove ci directory
           rm -rf "${GITHUB_WORKSPACE}/ci"
 
+      - name: Get Pull Request Number
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        id: gh-cli
+        shell: bash
+        run: |
+          echo "pr-number-closed=$(gh pr list \
+            --search ${{ github.sha }} --state merged \
+            --json number -q '.[] | .number' || echo "")" >> "$GITHUB_OUTPUT"
+
+      - name: Create comment with link in PR
+        env:
+          SUBDIR: ${{ env.SUBDIR }}
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
+        shell: bash
+        run: |
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          top="index.html"
+          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${branches[0]}/${top}" ]; then
+            top="toc.html"
+          fi
+          # Use GitHub API to create a comment on the PR
+          COMMENT="Documentation published at: "
+          COMMENT+="https://docs.openedgeplatform.intel.com/"
+          COMMENT+="${SUBDIR}/${branches[0]}/${top}"
+          COMMENT_URL="/repos/${REPO}/issues/${GITHUB_PR}/comments"
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${COMMENT_URL}" \
+            -f "body=${COMMENT}" || :
+
       # Checkout orch-ci again so the
       # 'Post Bootstrap CI Environment' step does not fail
       - name: Checkout action repository
@@ -210,3 +331,4 @@ jobs:
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
           token: ${{ secrets.SYS_ORCH_GITHUB }}
+          persist-credentials: false
