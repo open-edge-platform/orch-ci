@@ -141,7 +141,7 @@ jobs:
     steps:
       - name: Sanitize project folder
         id: sanitize
-        env: 
+        env:
           INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           # check if inputs.project_folder is set, if not return repository name
