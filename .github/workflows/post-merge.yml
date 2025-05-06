@@ -121,7 +121,7 @@ on:  # yamllint disable-line rule:truthy
         default: false
         type: boolean
       persist_creds:
-        description: "Keep checkout creds"
+        description: "deprecated. will be removed in the future"
         required: false
         default: false
         type: boolean
@@ -196,7 +196,7 @@ jobs:
         with:
           # Do not persist credentials by default, otherwise they
           # will clash with credentials set by bootstrap action
-          persist-credentials: ${{ inputs.persist_creds }}
+          persist-credentials: false
           # Fetch all history, otherwise sporadic issue with missing tags
           fetch-depth: 0
           # Fetch tags
@@ -312,9 +312,6 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         shell: bash
         run: |
-          if [ "${{ inputs.project_folder }}" == "platform-update-agent" ]; then
-              make inbmdownload
-          fi
           make package
 
       - name: Find and Sign Binaries

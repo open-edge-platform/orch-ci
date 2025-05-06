@@ -184,7 +184,7 @@ jobs:
         uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca  # v6.0.1
 
       - name: Run zizmor
-        run: uvx zizmor=="$ZIZMOR_VERSION" .github --no-exit-codes > zizimor_scan_report.txt
+        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
 
       - name: Upload Zizimor Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
@@ -216,7 +216,7 @@ jobs:
           ref: ${{ github.head_ref }}
           persist-credentials: false
       - name: Install gitleaks
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@main
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@31986a986cab0a87721ecb694388029e94e55ff7   # 0.1.8
         with:
           bootstrap_tools: "gitleaks"
       - name: Get current timestamp
@@ -454,9 +454,6 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         shell: bash
         run: |
-          if [ "${{ inputs.project_folder }}" == "platform-update-agent" ]; then
-              make inbmdownload
-          fi
           make package
 
       - name: Scan directories for binaries
