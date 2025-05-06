@@ -29,7 +29,7 @@ on:  # yamllint disable-line rule:truthy
         description: "Freeup space in runner by removing unwanted packages"
         required: false
         default: false
-        type: boolean  
+        type: boolean
       run_build:
         description: "Run build"
         required: true
