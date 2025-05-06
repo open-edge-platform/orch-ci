@@ -36,7 +36,7 @@ runs:
           git fetch origin ${BASE_REF}
         else
           # For push events
-          git fetch origin ${{ github.ref_name }}
+          git fetch origin ${BASE_REF}
         fi
 
         # List all subfolders
