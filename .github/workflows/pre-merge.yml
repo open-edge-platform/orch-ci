@@ -59,10 +59,25 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_docker_push:
+        description: "Run docker push"
+        required: false
+        default: false
+        type: boolean
       run_helm_build:
         description: "Run helm build"
         required: false
         default: false
+        type: boolean
+      run_helm_push:
+        description: "Run helm push"
+        required: false
+        default: false
+        type: boolean
+      run_scan_containers:
+        description: "Run scan containers"
+        required: false
+        default: true
         type: boolean
       run_artifact:
         description: "Run artifact"
@@ -130,6 +145,11 @@ on:  # yamllint disable-line rule:truthy
         description: "Label for runner"
         required: false
         default: "ubuntu-latest"
+        type: string
+      version_suffix:
+        description: "Set a VERSION_SUFFIX for usage in Makefiles to tag dev images"
+        required: false
+        default: ""
         type: string
       trivy_image_skip:
         description: "Images to skip scanning with trivy"
@@ -521,17 +541,51 @@ jobs:
         run: |
           bash -c "diff -u <(echo -n) <(git diff .)"
 
+      - name: Configure AWS credentials
+        if: inputs.run_docker_push || inputs.run_helm_push
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722  # v4.0.1
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        if: inputs.run_docker_push || inputs.run_helm_push
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
+        with:
+          registries: "080137407410"
+
       - name: Build Docker image
         if: ${{ inputs.run_docker_build }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
         run: |
           make docker-build
+
+      - name: Push Docker image
+        if: ${{ inputs.run_docker_push }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
+        run: |
+          make docker-push
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
         run: |
           make helm-build
+
+      - name: Push Helm chart
+        if: ${{ inputs.run_helm_push }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          VERSION_SUFFIX: ${{ inputs.version_suffix }}
+        run: |
+          make helm-push
 
       - name: List Docker Images
         id: list-images
