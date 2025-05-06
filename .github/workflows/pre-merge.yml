@@ -199,8 +199,8 @@ jobs:
       - name: Upload Zizimor Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: zizimor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: zizimor_scan_report.txt
+          name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: zizmor_scan_report.txt
   license-compliance-check:
     permissions:
       contents: read
