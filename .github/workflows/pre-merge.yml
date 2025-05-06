@@ -402,6 +402,12 @@ jobs:
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
 
+      - name: Free Disk Space Ubuntu
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: true
+          dotnet: true
+
       - name: Build Code
         if: ${{ inputs.run_build }}
         working-directory: ${{ inputs.project_folder }}
