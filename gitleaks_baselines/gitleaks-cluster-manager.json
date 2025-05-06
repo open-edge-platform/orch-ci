@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 67,
+  "EndLine": 67,
+  "StartColumn": 6,
+  "EndColumn": 114,
+  "Match": "jwtToken = \"eyJhbGciOiJQUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2eE1yTjFSOVB3UGZnWFVaTFlTYW55ejRXa2hjS040WG8t\"",
+  "Secret": "eyJhbGciOiJQUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI2eE1yTjFSOVB3UGZnWFVaTFlTYW55ejRXa2hjS040WG8t",
+  "File": "cluster-manager/internal/rest/getv2clustersnamekubeconfig_test.go",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 5.2442317,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "cluster-manager/internal/rest/getv2clustersnamekubeconfig_test.go:generic-api-key:67"
+ }
+]
