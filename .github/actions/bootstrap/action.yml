@@ -172,7 +172,7 @@ runs:
     - name: "Use separate cache for Go tools"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
-      run: |
+      run: | # zizmor: ignore[github-env]
         mkdir -p $(go env GOCACHE) $(go env GOMODCACHE)
 
         # Set a temporary cache location (only for tools)
