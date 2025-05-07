@@ -624,15 +624,11 @@ jobs:
 
       - name: Save Docker Images
         if: ${{ inputs.run_docker_build }}
-        env:
-          IMAGES: ${{ steps.list-images.outputs.images }}
-        run: |
-          images="${IMAGES}"
+        run: |  # zizmor: ignore[template-injection]
+          images=${{ steps.list-images.outputs.images }}
           mkdir -p docker-images
-          echo "images are: ${images}"
           # Remove the brackets and split the string into individual image names
           formatted_images=$(echo "${images}" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
-          echo "formated images: ${formatted_images}"
           for image in $formatted_images; do
             docker save -o "docker-images/${image//[:\/]/_}.tar" "$image"
           done
