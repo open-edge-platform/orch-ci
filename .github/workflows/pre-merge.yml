@@ -383,11 +383,6 @@ jobs:
           else
             ./ci/scripts/version-check.sh
           fi
-  
-      - name: Bootstrap CI environment
-        uses: ./ci/.github/actions/bootstrap
-        with:
-          bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Install GitHub CLI
         run: |
@@ -397,6 +392,27 @@ jobs:
          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
          sudo apt update
          sudo apt install gh
+         
+      - name: Version Tag
+        if: ${{ inputs.run_version_tag }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          PREFIX_TAG_SEPARATOR: ${{ inputs.prefix_tag_separator }}
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
+              "${PROJECT_FOLDER}${PREFIX_TAG_SEPARATOR}"
+          else
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
+          fi
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Verify Release
         env:
