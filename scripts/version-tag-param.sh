@@ -41,8 +41,6 @@ function create_git_tag {
   git tag -n
 
   git push origin "$TAG_VERSION"
-  create_release
-  upload_asset_to_release "$ASSET_PATH" "$ASSET_NAME"
 }
 
 # create a release using GitHub CLI
@@ -92,6 +90,8 @@ then
   elif [ "$FAIL_VALIDATION" -eq "0" ]
   then
     create_git_tag
+    create_release
+    upload_asset_to_release
     RETURN_CODE=$FAIL_VALIDATION
     #if [ "$TAG_PARAM" == "standalone-node/" ]; then
      # upload_asset_to_release "standalone-node/requirements.txt" "requirements.txt"
