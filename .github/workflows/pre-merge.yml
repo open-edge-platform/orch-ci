@@ -383,6 +383,12 @@ jobs:
           else
             ./ci/scripts/version-check.sh
           fi
+  
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: ${{ inputs.bootstrap_tools }}
+
       - name: Set up GitHub CLI
         uses: actions/setup-gh-cli@v2
 
@@ -398,12 +404,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           gh release upload "standalone-node/1.0.33" "standalone-node/requirements.txt" --clobber
-
-      - name: Bootstrap CI environment
-        uses: ./ci/.github/actions/bootstrap
-        with:
-          bootstrap_tools: ${{ inputs.bootstrap_tools }}
-
       - name: Dep Version Check
         if: ${{ inputs.run_dep_version_check }}
         working-directory: ${{ inputs.project_folder }}

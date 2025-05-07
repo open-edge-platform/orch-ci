@@ -43,6 +43,15 @@ function create_git_tag {
   git push origin "$TAG_VERSION"
 }
 
+# Upload asset to GitHub release
+function upload_asset_to_release {
+  local asset_path=$1
+  local asset_name=$2
+
+  echo "Uploading asset to release: $TAG_VERSION"
+  gh release upload "$TAG_VERSION" "$asset_path" --clobber --name "$asset_name"
+}
+
 # Start of actual code
 echo "Checking git repo with remotes:"
 git remote -v
@@ -76,6 +85,11 @@ then
   then
     create_git_tag
     RETURN_CODE=$FAIL_VALIDATION
+    if [ "$TAG_PARAM" == "standalone-node/" ]; then
+      upload_asset_to_release "standalone-node/requirements.txt" "requirements.txt"
+    else
+      echo "Project name is not standalone-node, skipping asset upload."
+    fi
   else
     echo "ERROR: commit merged but failed validation, not tagging!"
     RETURN_CODE=$FAIL_VALIDATION
