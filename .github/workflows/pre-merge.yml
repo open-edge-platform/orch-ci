@@ -634,7 +634,8 @@ jobs:
           # Remove the brackets and split the string into individual image names
           formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
           for image in $formatted_images; do
-            docker save -o "docker-images/${image//[:\/]/_}.tar" "$image"
+            sanitized_image=$(echo "$image" | tr -d '"')
+            docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
           done
 
       - name: Upload Docker Images
