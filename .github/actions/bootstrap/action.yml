@@ -192,9 +192,6 @@ runs:
         echo "New GOCACHE: $(go env GOCACHE)"
         echo "New GOMODCACHE: $(go env GOMODCACHE)"
 
-        sudo du -sh $(go env GOCACHE)
-        sudo du -sh $(go env GOMODCACHE)
-
     - name: "Restore Go tools from cache"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       id: restored-go-cache
