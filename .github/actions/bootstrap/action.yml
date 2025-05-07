@@ -173,9 +173,6 @@ runs:
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        echo "Original GOCACHE: $(go env GOCACHE)"
-        echo "Original GOMODCACHE: $(go env GOMODCACHE)"
-
         mkdir -p $(go env GOCACHE) $(go env GOMODCACHE)
 
         # Set a temporary cache location (only for tools)
@@ -188,9 +185,6 @@ runs:
         go env -w GOMODCACHE=$temp_go_modcache
         echo "temp_go_cache=$(go env GOCACHE)" >> $GITHUB_ENV
         echo "temp_go_modcache=$(go env GOMODCACHE)" >> $GITHUB_ENV
-
-        echo "New GOCACHE: $(go env GOCACHE)"
-        echo "New GOMODCACHE: $(go env GOMODCACHE)"
 
     - name: "Restore Go tools from cache"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
