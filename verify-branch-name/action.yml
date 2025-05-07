@@ -5,12 +5,12 @@
 name: 'Verify Branch Name'
 runs:
   using: "composite"
-  env:
-    HEAD_REF: ${{ github.head_ref }}
   steps:
     - name: Checkout code
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
     - name: Verify branch name
+      env:
+        HEAD_REF: ${{ github.head_ref }}
       shell: bash
       run: |
         if [[ "${HEAD_REF}" =~ ^(main|release-.*)$ ]]; then
