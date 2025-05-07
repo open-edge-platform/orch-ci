@@ -5,7 +5,7 @@
 rules:
   secrets-inherit:
     ignore:
-      - .github/workflows/post-merge-orch-ci.yml:17
+      - .github/workflows/post-merge-orch-ci.yml
   github-env:
     ignore:
       - ./.github/actions/bootstrap/action.yml:175
