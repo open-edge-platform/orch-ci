@@ -178,9 +178,6 @@ runs:
 
         mkdir -p $(go env GOCACHE) $(go env GOMODCACHE)
 
-        sudo du -sh $(go env GOCACHE)
-        sudo du -sh $(go env GOMODCACHE)
-
         # Set a temporary cache location (only for tools)
         temp_go_cache="/tmp/.cache/go-build"
         temp_go_modcache="/tmp/.cache/gopkgmod"
