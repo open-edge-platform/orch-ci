@@ -68,18 +68,19 @@ jobs:
         env:
           FUZZ_SECONDS: ${{ inputs.fuzz_seconds }}
           FUZZ_SUBPROJECTS: ${{ inputs.fuzz_subprojects }}
+          TEST_DATA_DIR: ${{ inputs.test_data_dir }}
         shell: bash
         run: |
           if make go-fuzz; then
               echo "All tests passed"
           else
-              dir=${{ inputs.test_data_dir }}
+              dir=${TEST_DATA_DIR}
               if [ -d "$dir" ]; then
                   find "$dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
                   if [ -f "$file" ]; then
                       echo "========================="
                       echo "Test failed see output file below to reproduce issue and to re-run: go test -run=<failed-func>/<filename>"
-                      echo "Copy output file contents (2 lines) below and create file in ${{ inputs.test_data_dir }}/<failed-func>/<filename> directory"
+                      echo "Copy output file contents (2 lines) below and create file in ${TEST_DATA_DIR}/<failed-func>/<filename> directory"
                       echo "========================="
                       echo "--- Contents of file: $file ---"
                       cat "$file"

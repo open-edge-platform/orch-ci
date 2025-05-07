@@ -172,7 +172,7 @@ runs:
     - name: "Use separate cache for Go tools"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
-      run: |
+      run: |  # zizmor: ignore[github-env]
         echo "Original GOCACHE: $(go env GOCACHE)"
         echo "Original GOMODCACHE: $(go env GOMODCACHE)"
 
@@ -194,7 +194,6 @@ runs:
 
         echo "New GOCACHE: $(go env GOCACHE)"
         echo "New GOMODCACHE: $(go env GOMODCACHE)"
-
         sudo du -sh $(go env GOCACHE)
         sudo du -sh $(go env GOMODCACHE)
 
