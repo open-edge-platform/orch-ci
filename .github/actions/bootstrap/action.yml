@@ -478,6 +478,6 @@ runs:
       if: contains(inputs.bootstrap_tools, 'oasdiff') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        wget -O /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v${{ env.OASDIFF_VER }}/oasdiff_${{ OASDIFF_VER }}_linux_amd64.tar.gz
+        wget -O /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v${{ env.OASDIFF_VER }}/oasdiff_${{ env.OASDIFF_VER }}_linux_amd64.tar.gz
         sudo tar xf /tmp/oasdiff.tar.gz -C /usr/local/bin oasdiff
         rm /tmp/oasdiff.tar.gz
