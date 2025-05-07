@@ -25,7 +25,7 @@ TAG_PARAM=$1
 
 # create a git tag
 function create_git_tag {
-  echo "Creating git tag: $TAG_VERSION"
+  echo "New Creating git tag: $TAG_VERSION"
   local git_hash=""
   local commit_info=""
 
@@ -37,7 +37,7 @@ function create_git_tag {
 
   git tag -a "$TAG_VERSION" -m "Tagged by github-bot. COMMIT:${commit_info}"
 
-  echo "Tags including new tag:"
+  echo "New Tags including new tag:"
   git tag -n
 
   git push origin "$TAG_VERSION"
@@ -45,7 +45,7 @@ function create_git_tag {
 
 # create a release using GitHub CLI
 function create_release {
-  echo "Creating release for tag: $TAG_VERSION"
+  echo "New Creating release for tag: $TAG_VERSION"
   gh release create "$TAG_VERSION" --title "Release $TAG_VERSION" --notes "Release notes for $TAG_VERSION"
 }
 
@@ -54,7 +54,7 @@ function upload_asset_to_release {
   local asset_path="standalone-node/requirements.txt"
   local asset_name="requirements.txt"
 
-  echo "Uploading asset to release: $TAG_VERSION"
+  echo "New Uploading asset to release: $TAG_VERSION"
   gh release upload "$TAG_VERSION" "$asset_path" --clobber --name "$asset_name"
 }
 
@@ -90,6 +90,7 @@ then
   elif [ "$FAIL_VALIDATION" -eq "0" ]
   then
     create_git_tag
+    echo "NEW, After tagging!!"
     create_release
     upload_asset_to_release
     RETURN_CODE=$FAIL_VALIDATION
