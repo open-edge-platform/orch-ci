@@ -385,6 +385,12 @@ jobs:
           fi
       - name: Set up GitHub CLI
         uses: actions/setup-gh-cli@v2
+
+      - name: Verify Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+        run: |
+          gh release list | grep "standalone-node/1.0.33"
         
       - name: Asset Release
         #if: ${{ inputs.run_asset_release }}
