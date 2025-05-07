@@ -628,7 +628,7 @@ jobs:
           IMAGES: ${{ steps.list-images.outputs.images }}
         run: |
           set -euxo pipefail
-          docker images   
+          docker images
           mkdir -p docker-images
           images=${IMAGES}
           # Remove the brackets and split the string into individual image names
