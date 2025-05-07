@@ -628,9 +628,8 @@ jobs:
           IMAGES: ${{ steps.list-images.outputs.images }}
         run: |
           mkdir -p docker-images
-          images=${IMAGES}
           # Remove the brackets and split the string into individual image names
-          formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
+          formatted_images=$(echo "${IMAGES}" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
           for image in $formatted_images; do
             docker save -o "docker-images/${image//[:\/]/_}.tar" "$image"
           done
