@@ -389,14 +389,21 @@ jobs:
         with:
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
-      - name: Set up GitHub CLI
-        uses: actions/setup-gh-cli@v2
+      - name: Install GitHub CLI
+        run: |
+         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+         sudo apt-add-repository https://cli.github.com/packages
+         sudo apt update
+         sudo apt install gh
 
       - name: Verify Release
         env:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
-          gh release list | grep "standalone-node/1.0.33"
+          if ! gh release list | grep -q "standalone-node/1.0.33"; then
+            echo "Release standalone-node/1.0.33 not found"
+            exit 1
+          fi
         
       - name: Asset Release
         #if: ${{ inputs.run_asset_release }}
@@ -404,6 +411,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           gh release upload "standalone-node/1.0.33" "standalone-node/requirements.txt" --clobber
+
       - name: Dep Version Check
         if: ${{ inputs.run_dep_version_check }}
         working-directory: ${{ inputs.project_folder }}
