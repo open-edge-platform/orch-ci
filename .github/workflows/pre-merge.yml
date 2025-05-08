@@ -410,11 +410,6 @@ jobs:
             echo "inside else!!!"
             "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
           fi
-
-      - name: Bootstrap CI environment
-        uses: ./ci/.github/actions/bootstrap
-        with:
-          bootstrap_tools: ${{ inputs.bootstrap_tools }}
         
       - name: Create Release from new tag and upload file in Asset Release
         #if: ${{ inputs.run_asset_release }}
@@ -433,6 +428,11 @@ jobs:
         
           # Upload the asset to the release
           gh release upload "$latest_tag" "requirements.txt" --clobber
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: ${{ inputs.bootstrap_tools }}
 
       - name: Verify Release 
         env:
