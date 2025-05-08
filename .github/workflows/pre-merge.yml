@@ -413,13 +413,14 @@ jobs:
         
       - name: Create Release from new tag and upload file in Asset Release
         #if: ${{ inputs.run_asset_release }}
+        working-directory: ${{ inputs.project_folder }}
         env:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB  }}
         run: |
           #!/bin/bash
           set -euo pipefail
          
-          echo "Using GitHub token: $SYS_ORCH_GITHUB"
+          echo "Using GitHub token: $GITHUB_TOKEN:"
           # Fetch the latest tag
           latest_tag=$(git tag --list "standalone-node/*" | sort -V | tail -n 1)
           echo "Latest tag: $latest_tag"
