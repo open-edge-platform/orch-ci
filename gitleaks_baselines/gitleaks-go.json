@@ -1,0 +1,42 @@
+[
+ {
+  "RuleID": "jwt",
+  "Description": "Uncovered a JSON Web Token, which may lead to unauthorized access to web applications and sensitive user data.",
+  "StartLine": 88,
+  "EndLine": 88,
+  "StartColumn": 36,
+  "EndColumn": 896,
+  "Match": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzYyZGMzNzRjNWJmMWEyZjEwMzllZDhkNjYyOWM5MGI5M2EwNGUifQ.eyJpc3MiOiJodHRwOi8vZGV4OjMyMDAwIiwic3ViIjoiQ2lRd09HRTROamcwWWkxa1lqZzRMVFJpTnpNdE9UQmhPUzB6WTJReE5qWXhaalUwTmpnU0JXeHZZMkZzIiwiYXVkIjoib25vcy1ndWkiLCJleHAiOjE5MDk5Mzg0NDcsImlhdCI6MTU5NDU3ODQ0Nywibm9uY2UiOiJjelJ2TmtoTFVYbFhVSE5EYWpsMmNHSlFjMVZOUld0T2NERmtMbkJ0ZHkxbFJTMVlkM0YzVUVGNE5IZFEiLCJhdF9oYXNoIjoiWXcxQ1M1UmdvYVRVWUNUZWtxUkxBZyIsImVtYWlsIjoic2VhbkBvcGVubmV0d29ya2luZy5vcmciLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6InNlYW4ifQ.OMxzPd9CD7CoZVPRYSXJdLy8QCQjkIyjD7xFKBbDDsOCvIK9MkNHBTgQfrc3gmv8DZaAyzj9abLRS1TPWBwfQl5QJW9unXbjtk4KukXxv0CbKN3NyRV5Nm5YlGm66DIlPMj8udlqyau_xUJXrVC4T13sPo1CVpnAHut6Rr9zwPj3pVLwPXO2dkqHH4c1YM9Lyg8fpMv5eGd3iN6xcRMCcxUFkqffvwS1mCW6BUoBvnbMMZEaNokAC6HcWD8EB_m-Z7nt_xP_C_mnnZGFJNGDU0fRUjdGRxQ6AHYVg1zCS_B8P1IxkIe6tnBRi8309s99Q4MhlDWSoju_fe8pU7iLwQ`",
+  "Secret": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImRmMzYyZGMzNzRjNWJmMWEyZjEwMzllZDhkNjYyOWM5MGI5M2EwNGUifQ.eyJpc3MiOiJodHRwOi8vZGV4OjMyMDAwIiwic3ViIjoiQ2lRd09HRTROamcwWWkxa1lqZzRMVFJpTnpNdE9UQmhPUzB6WTJReE5qWXhaalUwTmpnU0JXeHZZMkZzIiwiYXVkIjoib25vcy1ndWkiLCJleHAiOjE5MDk5Mzg0NDcsImlhdCI6MTU5NDU3ODQ0Nywibm9uY2UiOiJjelJ2TmtoTFVYbFhVSE5EYWpsMmNHSlFjMVZOUld0T2NERmtMbkJ0ZHkxbFJTMVlkM0YzVUVGNE5IZFEiLCJhdF9oYXNoIjoiWXcxQ1M1UmdvYVRVWUNUZWtxUkxBZyIsImVtYWlsIjoic2VhbkBvcGVubmV0d29ya2luZy5vcmciLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6InNlYW4ifQ.OMxzPd9CD7CoZVPRYSXJdLy8QCQjkIyjD7xFKBbDDsOCvIK9MkNHBTgQfrc3gmv8DZaAyzj9abLRS1TPWBwfQl5QJW9unXbjtk4KukXxv0CbKN3NyRV5Nm5YlGm66DIlPMj8udlqyau_xUJXrVC4T13sPo1CVpnAHut6Rr9zwPj3pVLwPXO2dkqHH4c1YM9Lyg8fpMv5eGd3iN6xcRMCcxUFkqffvwS1mCW6BUoBvnbMMZEaNokAC6HcWD8EB_m-Z7nt_xP_C_mnnZGFJNGDU0fRUjdGRxQ6AHYVg1zCS_B8P1IxkIe6tnBRi8309s99Q4MhlDWSoju_fe8pU7iLwQ",
+  "File": "go/pkg/auth/jwt_test.go",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 5.8550963,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "go/pkg/auth/jwt_test.go:jwt:88"
+ },
+ {
+  "RuleID": "jwt",
+  "Description": "Uncovered a JSON Web Token, which may lead to unauthorized access to web applications and sensitive user data.",
+  "StartLine": 89,
+  "EndLine": 89,
+  "StartColumn": 37,
+  "EndColumn": 598,
+  "Match": "eyJhbGciOiJIUzI1NiIsImtpZCI6ImRmMzYyZGMzNzRjNWJmMWEyZjEwMzllZDhkNjYyOWM5MGI5M2EwNGUifQ.eyJpc3MiOiJodHRwOi8vZGV4OjMyMDAwIiwic3ViIjoiQ2lRd09HRTROamcwWWkxa1lqZzRMVFJpTnpNdE9UQmhPUzB6WTJReE5qWXhaalUwTmpnU0JXeHZZMkZzIiwiYXVkIjoib25vcy1ndWkiLCJleHAiOjE5MDk5Mzg0NDcsImlhdCI6MTU5NDU3ODQ0Nywibm9uY2UiOiJjelJ2TmtoTFVYbFhVSE5EYWpsMmNHSlFjMVZOUld0T2NERmtMbkJ0ZHkxbFJTMVlkM0YzVUVGNE5IZFEiLCJhdF9oYXNoIjoiWXcxQ1M1UmdvYVRVWUNUZWtxUkxBZyIsImVtYWlsIjoic2VhbkBvcGVubmV0d29ya2luZy5vcmciLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6InNlYW4ifQ.vAx1WCxsJNEvpfMvTU0IqnWgen1xmS3lOjkorZL5uWU`",
+  "Secret": "eyJhbGciOiJIUzI1NiIsImtpZCI6ImRmMzYyZGMzNzRjNWJmMWEyZjEwMzllZDhkNjYyOWM5MGI5M2EwNGUifQ.eyJpc3MiOiJodHRwOi8vZGV4OjMyMDAwIiwic3ViIjoiQ2lRd09HRTROamcwWWkxa1lqZzRMVFJpTnpNdE9UQmhPUzB6WTJReE5qWXhaalUwTmpnU0JXeHZZMkZzIiwiYXVkIjoib25vcy1ndWkiLCJleHAiOjE5MDk5Mzg0NDcsImlhdCI6MTU5NDU3ODQ0Nywibm9uY2UiOiJjelJ2TmtoTFVYbFhVSE5EYWpsMmNHSlFjMVZOUld0T2NERmtMbkJ0ZHkxbFJTMVlkM0YzVUVGNE5IZFEiLCJhdF9oYXNoIjoiWXcxQ1M1UmdvYVRVWUNUZWtxUkxBZyIsImVtYWlsIjoic2VhbkBvcGVubmV0d29ya2luZy5vcmciLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6InNlYW4ifQ.vAx1WCxsJNEvpfMvTU0IqnWgen1xmS3lOjkorZL5uWU",
+  "File": "go/pkg/auth/jwt_test.go",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 5.6551185,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "go/pkg/auth/jwt_test.go:jwt:89"
+ }
+]
