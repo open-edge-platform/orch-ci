@@ -422,12 +422,16 @@ jobs:
           # Fetch the latest tag
           latest_tag=$(git tag --list "standalone-node/*" | sort -V | tail -n 1)
           echo "Latest tag: $latest_tag"
+          echo "Attempting to create a release for tag: $latest_tag"
 
           # Create a release for the latest tag
           gh release create "$latest_tag" --title "Release $latest_tag" --notes "Release notes for $latest_tag"
+          echo "Release creation command executed for tag: $latest_tag"
         
+          echo "Attempting to upload asset to release: $latest_tag"
           # Upload the asset to the release
           gh release upload "$latest_tag" "requirements.txt" --clobber
+          echo "Asset upload command executed for tag: $latest_tag"
 
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
