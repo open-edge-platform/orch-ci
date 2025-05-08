@@ -55,8 +55,8 @@ function upload_asset_to_release {
   local asset_name="requirements.txt"
 
   echo "New Uploading asset to release: $TAG_VERSION"
-  gh release upload "$TAG_VERSION" "$asset_path" --clobber
-  #gh release upload "standalone-node/1.0.33" "standalone-node/requirements.txt" --clobber
+  gh release upload "$TAG_VERSION" "$asset_name" --clobber
+  #gh release upload "standalone-node/1.0.33" "requirements.txt" --clobber
 }
 
 # Start of actual code
