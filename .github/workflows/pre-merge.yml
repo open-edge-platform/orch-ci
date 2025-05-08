@@ -404,11 +404,11 @@ jobs:
           set -eu -o pipefail
           if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
             echo "inside if !!!"
-            "$GITHUB_WORKSPACE"/scripts/version-tag-param.sh \
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
               "${PROJECT_FOLDER}${PREFIX_TAG_SEPARATOR}"
           else
             echo "inside else!!!"
-            "$GITHUB_WORKSPACE"/scripts/version-tag.sh
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
           fi
 
       - name: Bootstrap CI environment
