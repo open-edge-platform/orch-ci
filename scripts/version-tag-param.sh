@@ -92,8 +92,8 @@ then
   then
     create_git_tag
     echo "NEW, After tagging!!"
-    create_release
-    upload_asset_to_release
+    #create_release
+    #upload_asset_to_release
     RETURN_CODE=$FAIL_VALIDATION
     #if [ "$TAG_PARAM" == "standalone-node/" ]; then
      # upload_asset_to_release "standalone-node/requirements.txt" "requirements.txt"

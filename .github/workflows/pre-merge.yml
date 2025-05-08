@@ -415,6 +415,24 @@ jobs:
         uses: ./ci/.github/actions/bootstrap
         with:
           bootstrap_tools: ${{ inputs.bootstrap_tools }}
+        
+      - name: Create Release from new tag
+        #if: ${{ inputs.run_asset_release }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          #!/bin/bash
+          set -euo pipefail
+
+          # Fetch the latest tag
+          latest_tag=$(git tag --list "standalone-node/*" | sort -V | tail -n 1)
+          echo "Latest tag: $latest_tag"
+
+          # Create a release for the latest tag
+          gh release create "$latest_tag" --title "Release $latest_tag" --notes "Release notes for $latest_tag"
+        
+          # Upload the asset to the release
+          gh release upload "$latest_tag" "requirements.txt" --clobber
 
       - name: Verify Release
         env:
