@@ -633,9 +633,15 @@ jobs:
           images=${IMAGES}
           # Remove the brackets and split the string into individual image names
           formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
+
           for image in $formatted_images; do
             sanitized_image=$(echo "$image" | tr -d '"')
-            docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
+            # Check if the sanitized image name is not empty
+            if [ -n "$sanitized_image" ]; then
+              docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
+            else
+              echo "Skipping empty image name."
+            fi
           done
 
       - name: Upload Docker Images
