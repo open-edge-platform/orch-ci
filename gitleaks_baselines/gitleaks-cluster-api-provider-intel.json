@@ -38,25 +38,5 @@
   "Message": "",
   "Tags": [],
   "Fingerprint": "../cluster-api-provider-intel/pkg/auth/auth_echo/auth_echo_test.go:jwt:152"
- },
- {
-  "RuleID": "generic-api-key",
-  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
-  "StartLine": 1,
-  "EndLine": 1,
-  "StartColumn": 4939,
-  "EndColumn": 4967,
-  "Match": "keybcs2\", \"keybcs2_nopad_bin\"",
-  "Secret": "keybcs2_nopad_bin",
-  "File": "../cluster-api-provider-intel/vendor/ariga.io/atlas/sql/mysql/internal/mysqlversion/is/collate2charset.maria",
-  "SymlinkFile": "",
-  "Commit": "",
-  "Entropy": 3.7345216,
-  "Author": "",
-  "Email": "",
-  "Date": "",
-  "Message": "",
-  "Tags": [],
-  "Fingerprint": "../cluster-api-provider-intel/vendor/ariga.io/atlas/sql/mysql/internal/mysqlversion/is/collate2charset.maria:generic-api-key:1"
  }
 ]
