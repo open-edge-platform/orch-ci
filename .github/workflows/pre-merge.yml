@@ -385,32 +385,6 @@ jobs:
             ./ci/scripts/version-check.sh
           fi
 
-      - name: Install GitHub CLI
-        run: |
-         sudo apt update
-         sudo apt install -y software-properties-common
-         curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /usr/share/keyrings/githubcli-archive-keyring.gpg > /dev/null
-         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-         sudo apt update
-         sudo apt install gh
-
-      - name: Version Tag/Create a new tag
-        working-directory: ${{ inputs.project_folder }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
-          PREFIX_TAG_SEPARATOR: "/"
-          PROJECT_FOLDER: ${{ inputs.project_folder }}
-        run: |
-          set -eu -o pipefail
-          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
-            echo "inside if !!!"
-            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
-              "${PROJECT_FOLDER}${PREFIX_TAG_SEPARATOR}"
-          else
-            echo "inside else!!!"
-            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
-          fi
-        
       - name: Create Release from new tag and upload file in Asset Release
         #if: ${{ inputs.run_asset_release }}
         working-directory: ${{ inputs.project_folder }}
@@ -520,6 +494,44 @@ jobs:
           echo "Building the code"
           make build
 
+      - name: Upload Assets 
+        run: |
+         sudo apt update
+         sudo apt install -y software-properties-common
+         curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /usr/share/keyrings/githubcli-archive-keyring.gpg > /dev/null
+         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+         sudo apt update
+         sudo apt install gh
+         # Set environment variables
+         export GITHUB_TOKEN=${{ secrets.SYS_ORCH_GITHUB }}
+         cd ${{ inputs.project_folder }}
+         
+         echo "Using GitHub token: $GITHUB_TOKEN:"
+         # Fetch the latest tag
+         latest_tag=$(git tag --list "standalone-node/*" | sort -V | tail -n 1)
+         echo "Latest tag: $latest_tag"
+         echo "Attempting to create a release for tag: $latest_tag"
+         # Create a release for the latest tag
+         gh release create "$latest_tag" --title "Release $latest_tag" --notes "Release notes for $latest_tag"
+         echo "Release creation command executed for tag: $latest_tag"
+
+         # Check if sen-installation-files.tar.gz file exists
+         if [ -f "installation_scripts/out/sen-installation-files.tar.gz" ]; then
+          echo "sen-installation-files.tar.gz found, extracting..."
+          tar -xzf installation_scripts/out/sen-installation-files.tar.gz -C installation_scripts/out/
+
+          # Check for usb-bootable-files.tar.gz
+          if [ -f "installation_scripts/out/usb-bootable-files.tar.gz" ]; then
+           echo "usb-bootable-files.tar.gz found, uploading to release assets..."
+           gh release upload "$latest_tag" "installation_scripts/out/usb-bootable-files.tar.gz" --clobber
+           echo "usb-bootable-files.tar.gz uploaded to release assets."
+          else
+           echo "usb-bootable-files.tar.gz not found, skipping upload."
+          fi
+         else
+         echo "sen-installation-files.tar.gz not found, skipping extraction and upload."
+         fi
+        
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
