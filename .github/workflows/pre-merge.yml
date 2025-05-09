@@ -453,7 +453,24 @@ jobs:
         run: |
           echo "Building the code"
           make build
-
+      
+      - name: Version Tag/Create a new tag
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          PREFIX_TAG_SEPARATOR: "/"
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
+            echo "inside if !!!"
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
+              "${PROJECT_FOLDER}${PREFIX_TAG_SEPARATOR}"
+          else
+            echo "inside else!!!"
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
+          fi
+    
       - name: Upload Assets 
         run: |
          sudo apt update
