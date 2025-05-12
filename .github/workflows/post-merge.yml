@@ -130,6 +130,17 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "ubuntu-latest"
         type: string
+    secrets:
+      SYS_ORCH_GITHUB:
+        required: false
+      COSIGN_PASSWORD:
+        required: false
+      COSIGN_PRIVATE_KEY:
+        required: false
+      NO_AUTH_ECR_PUSH_USERNAME:
+        required: false
+      NO_AUTH_ECR_PUSH_PASSWD:
+        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
