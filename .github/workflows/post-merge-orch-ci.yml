@@ -24,5 +24,5 @@ jobs:
       run_docker_push: false
       run_helm_build: false
       run_helm_push: false
-    secrets:  # zizmor: ignore[secrets-inherit]
-      inherit
+    secrets:
+      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
