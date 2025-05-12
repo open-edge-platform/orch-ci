@@ -502,7 +502,7 @@ jobs:
               tar -xzf installation_scripts/out/usb-bootable-files.tar.gz -C installation_scripts/out/
               echo "usb-bootable-files.tar.gz extracted."
               # Upload each extracted file to release assets
-              for file in installation_scripts/out/hook-os.iso installation_scripts/out/edge_microvisor_toolkit.raw.gz installation_scripts/out/sen-rke2-package.tar.gz installation_scripts/out/checksums.md5; do
+              for file in installation_scripts/out/hook-os.iso installation_scripts/out/edge_microvisor_toolkit.raw.gz installation_scripts/out/sen-rke2-package.tar.gz installation_scripts/out/checksums.md5 installation_scripts/out/bootable-usb-prepare.sh; do
                 if [ -f "$file" ]; then
                   echo "Uploading $file to release assets..."
                   gh release upload "$latest_tag" "$file" --clobber
