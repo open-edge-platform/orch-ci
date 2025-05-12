@@ -470,7 +470,7 @@ jobs:
             echo "inside else!!!"
             "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
           fi
-    
+
       - name: Upload Assets 
         run: |
          sudo apt update
@@ -494,21 +494,30 @@ jobs:
 
          # Check if sen-installation-files.tar.gz file exists
          if [ -f "installation_scripts/out/sen-installation-files.tar.gz" ]; then
-          echo "sen-installation-files.tar.gz found, extracting..."
-          tar -xzf installation_scripts/out/sen-installation-files.tar.gz -C installation_scripts/out/
-
-          # Check for usb-bootable-files.tar.gz
-          if [ -f "installation_scripts/out/usb-bootable-files.tar.gz" ]; then
-           echo "usb-bootable-files.tar.gz found, uploading to release assets..."
-           gh release upload "$latest_tag" "installation_scripts/out/usb-bootable-files.tar.gz" --clobber
-           echo "usb-bootable-files.tar.gz uploaded to release assets."
+            echo "sen-installation-files.tar.gz found, extracting..."
+            tar -xzf installation_scripts/out/sen-installation-files.tar.gz -C installation_scripts/out/
+            # Check for usb-bootable-files.tar.gz
+            if [ -f "installation_scripts/out/usb-bootable-files.tar.gz" ]; then
+              echo "usb-bootable-files.tar.gz found, extracting..."
+              tar -xzf installation_scripts/out/usb-bootable-files.tar.gz -C installation_scripts/out/
+              echo "usb-bootable-files.tar.gz extracted."
+              # Upload each extracted file to release assets
+              for file in installation_scripts/out/hook-os.iso installation_scripts/out/edge_microvisor_toolkit.raw.gz installation_scripts/out/sen-rke2-package.tar.gz installation_scripts/out/checksums.md5; do
+                if [ -f "$file" ]; then
+                  echo "Uploading $file to release assets..."
+                  gh release upload "$latest_tag" "$file" --clobber
+                  echo "$file uploaded to release assets."
+                else
+                  echo "$file not found, skipping upload."
+                fi
+              done
+            else
+              echo "usb-bootable-files.tar.gz not found, skipping extraction and upload."
+            fi
           else
-           echo "usb-bootable-files.tar.gz not found, skipping upload."
+            echo "sen-installation-files.tar.gz not found, skipping extraction and upload."
           fi
-         else
-         echo "sen-installation-files.tar.gz not found, skipping extraction and upload."
-         fi
-        
+
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
