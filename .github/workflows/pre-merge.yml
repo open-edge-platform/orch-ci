@@ -166,6 +166,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "trivy.yaml"
         type: string
+    secrets:
+      NO_AUTH_ECR_PUSH_USERNAME:
+        required: false
+      NO_AUTH_ECR_PUSH_PASSWD:
+        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
