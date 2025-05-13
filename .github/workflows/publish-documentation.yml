@@ -93,7 +93,7 @@ jobs:
         uses: ./ci/.github/actions/bootstrap
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-          bootstrap_tools: "aws"
+          bootstrap_tools: "aws,jq"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5  # v4.2.0
@@ -193,6 +193,47 @@ jobs:
           fi
           echo "SUBDIR=${subdir:-NULL}" >> "$GITHUB_ENV"
 
+      - name: Create version switcher
+        env:
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+          DISTID: ${{ inputs.distribution_id }}
+          SUBDIR: ${{ env.SUBDIR }}
+        shell: bash
+        run: |
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          count="${#branches[@]}"
+          # Create version switcher if more than one branch matched
+          if [[ "${count}" -gt 1 ]]; then
+            # Fetch CloudFront distribution Alt Domain Name
+            domain="$(aws cloudfront get-distribution-config --id "${DISTID}" | \
+              jq -r '.DistributionConfig.Aliases.Items[0]')"
+            url="https://${domain}/${SUBDIR}"
+            # Select first branch
+            echo -e "${url}\n${branches[0]}" > \
+              "${GITHUB_WORKSPACE}/_template/docconf/docconf/switcher_data.txt"
+            echo '[' > "${GITHUB_WORKSPACE}/_template/switcher.json"
+            for branch in "${branches[@]}"; do
+              # Find branches that match patterns:
+              # release-#.# or release-#.#.#
+              if echo "${branch}" | grep -qE '^release-\d(\.\d){1,2}$'; then
+                version="${branch#*-}"
+              else
+                version="${branch}"
+              fi
+              echo -e "    {\n      \"name\":\"${version}\"," >> \
+                "${GITHUB_WORKSPACE}/_template/switcher.json"
+              echo -e "      \"version\":\"${version}\"," >> \
+                "${GITHUB_WORKSPACE}/_template/switcher.json"
+              echo -e "      \"url\":\"${url}/${version}/\"\n    }," >> \
+                "${GITHUB_WORKSPACE}/_template/switcher.json"
+            done
+            echo ']' >> "${GITHUB_WORKSPACE}/_template/switcher.json"
+            # Remove trailing comma
+            sed -i -zE '$ s/(.*)    },/\1    }/' \
+              "${GITHUB_WORKSPACE}/_template/switcher.json"
+          fi
+
       - name: Install Spark theme
         env:
           ENDPOINT: ${{ inputs.endpoint }}
@@ -268,6 +309,30 @@ jobs:
                 "${GITHUB_WORKSPACE}/_UPLOAD/${version}"
             fi
           done
+
+      - name: Copy version switcher
+        env:
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+        shell: bash
+        run: |
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          count="${#branches[@]}"
+          # Copy version switcher if more than one branch matched
+          if [[ "${count}" -gt 1 ]]; then
+            cp "${GITHUB_WORKSPACE}/_template/switcher.json" \
+              "${GITHUB_WORKSPACE}/_UPLOAD"
+            cd "${GITHUB_WORKSPACE}/_UPLOAD"
+            # Strip version from URL
+            url="$(cat switcher.json | jq -r '.[0].url')"
+            url="$(echo "${url%*/}" | rev | cut -d'/' -f2- | rev)"
+            # Replace switcher URL, if exists
+            pattern='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
+            for file in $(grep -rl "${pattern}"); do
+              sed -i "s|${pattern}.*;$|${pattern} '${url}/switcher.json';|" \
+                "${file}"
+            done
+          fi
 
       - name: Publish documentation
         env:
