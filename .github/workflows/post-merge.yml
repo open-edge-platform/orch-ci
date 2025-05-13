@@ -96,10 +96,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "."
         type: string
-      extraction_dir:
+      assets_dir:
         description: >-
-          Specifies the directory from which files will be extracted and uploaded as release assets.
-          If provided, this directory will be used to locate the extracted files.
+          Specifies the directory containing files and packages to be uploaded as part of the release assets. 
+          This directory should include all necessary artifacts that need to be attached to the GitHub release. 
+          If provided, the workflow will iterate over the contents of this directory and upload each file to the release.
         required: false
         default: ""
         type: string
@@ -340,11 +341,11 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
-          EXTRACTION_DIR: "${{ inputs.extraction_dir }}"
+          ASSETS_DIR: "${{ inputs.assets_dir }}"
         run: |
-          # Check if EXTRACTION_DIR is provided and exists
-          if [ -z "$EXTRACTION_DIR" ] || [ ! -d "$EXTRACTION_DIR" ]; then
-            echo "Error: EXTRACTION_DIR is not set or does not exist."
+          # Check if ASSETS_DIR is provided and exists
+          if [ -z "$ASSETS_DIR" ] || [ ! -d "ASSETS_DIR" ]; then
+            echo "Error: ASSETS_DIR is not set or does not exist."
             exit 1
           fi
 
@@ -359,7 +360,7 @@ jobs:
           gh release create "$latest_tag" --title "Release $latest_tag" --notes "Release notes for $latest_tag"
           echo "Release creation command executed for tag: $latest_tag"
 
-          for file in "$EXTRACTION_DIR"/*; do
+          for file in "$ASSETS_DIR"/*; do
             if [ -f "$file" ]; then
               echo "Uploading $file to release assets..."
               gh release upload "$latest_tag" "$file" --clobber
