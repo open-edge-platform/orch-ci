@@ -130,6 +130,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "ubuntu-latest"
         type: string
+      trivy_config_path:
+        description: "Path to trivy configuration file"
+        required: false
+        default: "trivy.yaml"
+        type: string
     secrets:
       SYS_ORCH_GITHUB:
         required: false
