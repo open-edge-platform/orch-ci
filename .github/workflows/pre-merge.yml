@@ -34,6 +34,11 @@ on:  # yamllint disable-line rule:truthy
         description: "Run build"
         required: true
         type: boolean
+      run_upload_assets:
+        description: "Upload assets"
+        required: false
+        default: false
+        type: boolean
       run_package_build:
         description: "Build node agent package"
         required: false
@@ -106,6 +111,14 @@ on:  # yamllint disable-line rule:truthy
           Project subfolder where the job will run, defaults to '.'
         required: false
         default: "."
+        type: string
+      assets_dir:
+        description: >-
+          Specifies the directory containing files and packages to be uploaded as part of the release assets.
+          This directory should include all necessary artifacts that need to be attached to the GitHub release.
+          If provided, the workflow will iterate over the contents of this directory and upload each file to the release.
+        required: false
+        default: ""
         type: string
       orch_ci_repo_ref:
         description: >-
@@ -360,7 +373,7 @@ jobs:
           # Fetch tags
           fetch-tags: true
           # Checkout the branch that triggered the workflow to avoid detached HEAD
-          ref: ${{ github.head_ref }}
+          ref: test-pre-merge
           persist-credentials: false
 
       - name: Checkout action repository
@@ -452,6 +465,53 @@ jobs:
         run: |
           echo "Building the code"
           make build
+
+      - name: Version Tag/Create a new tag
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          PREFIX_TAG_SEPARATOR: "/"
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
+        run: |
+          set -eu -o pipefail
+          if [ -n "${PREFIX_TAG_SEPARATOR}" ]; then
+            echo "inside if !!!"
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag-param.sh \
+              "${PROJECT_FOLDER}${PREFIX_TAG_SEPARATOR}"
+          else
+            echo "inside else!!!"
+            "$GITHUB_WORKSPACE"/ci/scripts/version-tag.sh
+          fi
+
+      - name: Upload Assets
+        if: ${{ inputs.run_upload_assets}}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          ASSETS_DIR: "${{ inputs.assets_dir }}"
+        run: |
+          # Check if ASSETS_DIR is provided and exists
+          if [ -z "$ASSETS_DIR" ] || [ ! -d "ASSETS_DIR" ]; then
+            echo "Error: ASSETS_DIR is not set or does not exist."
+            exit 1
+          fi
+          cd ${{ inputs.project_folder }}
+          # Fetch the latest tag using the project folder
+          latest_tag=$(git tag --list "${{ inputs.project_folder }}/*" | sort -V | tail -n 1)
+          echo "Latest tag: $latest_tag"
+          echo "Attempting to create a release for tag: $latest_tag"
+          # Create a release for the latest tag
+          gh release create "$latest_tag" --title "Release $latest_tag" --notes "Release notes for $latest_tag"
+          echo "Release creation command executed for tag: $latest_tag"
+          for file in "$ASSETS_DIR"/*; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file to release assets..."
+              gh release upload "$latest_tag" "$file" --clobber
+              echo "$file uploaded to release assets."
+            else
+              echo "$file not found, skipping upload."
+            fi
+          done
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
