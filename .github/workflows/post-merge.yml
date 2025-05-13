@@ -24,11 +24,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: true
         type: boolean
-      run_extraction:
-        description: "Run extraction"
-        required: false
-        default: false
-        type: boolean
       run_upload_assets:
         description: "Upload assets"
         required: false
@@ -340,20 +335,17 @@ jobs:
           echo "Building the code"
           make build
 
-      - name: Run extraction
-        if: ${{ inputs.run_extraction}}
-        working-directory: ${{ inputs.project_folder }}
-        shell: bash
-        run: |
-         echo "extract packages"
-         make extraction
-
       - name: Upload Assets
         if: ${{ inputs.run_upload_assets}}
         working-directory: ${{ inputs.project_folder }}
         env:
           EXTRACTION_DIR: "${{ inputs.extraction_dir }}"
         run: |
+          # Check if EXTRACTION_DIR is provided and exists
+          if [ -z "$EXTRACTION_DIR" ] || [ ! -d "$EXTRACTION_DIR" ]; then
+            echo "Error: EXTRACTION_DIR is not set or does not exist."
+            exit 1
+          fi
           sudo apt update
           sudo apt install -y software-properties-common
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /usr/share/keyrings/githubcli-archive-keyring.gpg > /dev/null
