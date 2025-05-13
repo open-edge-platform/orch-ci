@@ -242,7 +242,7 @@ jobs:
         uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca  # v6.0.1
 
       - name: Run zizmor
-        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format=github > zizmor_scan_report.sarif
+        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
         uses: github/codeql-action/upload-sarif@60168efe1c415ce0f5521ea06d5c2062adbeed1b  # v3.28.17
