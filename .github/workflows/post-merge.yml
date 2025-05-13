@@ -98,8 +98,8 @@ on:  # yamllint disable-line rule:truthy
         type: string
       assets_dir:
         description: >-
-          Specifies the directory containing files and packages to be uploaded as part of the release assets. 
-          This directory should include all necessary artifacts that need to be attached to the GitHub release. 
+          Specifies the directory containing files and packages to be uploaded as part of the release assets.
+          This directory should include all necessary artifacts that need to be attached to the GitHub release.
           If provided, the workflow will iterate over the contents of this directory and upload each file to the release.
         required: false
         default: ""
