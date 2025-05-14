@@ -491,8 +491,8 @@ jobs:
           ASSETS_DIR: "${{ inputs.assets_dir }}"
         run: |
           # Check if ASSETS_DIR is provided and exists
-          if [ -z "$ASSETS_DIR" ] || [ ! -d "ASSETS_DIR" ]; then
-            echo "Error: ASSETS_DIR is not set or does not exist."
+          if [ -z "$ASSETS_DIR" ] || [ ! -d "$ASSETS_DIR" ]; then
+            echo "Error: $ASSETS_DIR is not set or does not exist."
             exit 1
           fi
           cd ${{ inputs.project_folder }}
