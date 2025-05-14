@@ -488,7 +488,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
-          ASSETS_DIR: "${{ inputs.assets_dir }}"
+          ASSETS_DIR: ${{ inputs.assets_dir }}
         run: |
           # Check if ASSETS_DIR is provided and exists
           if [ -z "$ASSETS_DIR" ] || [ ! -d "$ASSETS_DIR" ]; then
