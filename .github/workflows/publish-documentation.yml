@@ -202,6 +202,17 @@ jobs:
         run: |
           # Restore array
           IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          # Trim release prefix
+          trim_prefix() {
+            local branch="${1}"
+            # Find branches that match patterns:
+            # release-#.# or release-#.#.#
+            if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
+              echo "${branch#*-}"
+            else
+              echo "${branch}"
+            fi
+          }
           count="${#branches[@]}"
           # Create version switcher if more than one branch matched
           if [[ "${count}" -gt 1 ]]; then
@@ -209,18 +220,12 @@ jobs:
             domain="$(aws cloudfront get-distribution-config --id "${DISTID}" | \
               jq -r '.DistributionConfig.Aliases.Items[0]')"
             url="https://${domain}/${SUBDIR}"
-            # Select first branch
-            echo -e "${url}\n${branches[0]}" > \
+            # Select first version
+            echo -e "${url}\n$(trim_prefix "${branches[0]}")" > \
               "${GITHUB_WORKSPACE}/_template/docconf/docconf/switcher_data.txt"
             echo '[' > "${GITHUB_WORKSPACE}/_template/switcher.json"
             for branch in "${branches[@]}"; do
-              # Find branches that match patterns:
-              # release-#.# or release-#.#.#
-              if echo "${branch}" | grep -qE '^release-\d(\.\d){1,2}$'; then
-                version="${branch#*-}"
-              else
-                version="${branch}"
-              fi
+              version="$(trim_prefix "${branch}")"
               echo -e "    {\n      \"name\":\"${version}\"," >> \
                 "${GITHUB_WORKSPACE}/_template/switcher.json"
               echo -e "      \"version\":\"${version}\"," >> \
@@ -303,7 +308,7 @@ jobs:
           for branch in "${branches[@]}"; do
             # Find branches that match patterns:
             # release-#.# or release-#.#.#
-            if echo "${branch}" | grep -qE '^release-\d(\.\d){1,2}$'; then
+            if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
               version="${branch#*-}"
               mv "${GITHUB_WORKSPACE}/_UPLOAD/${branch}" \
                 "${GITHUB_WORKSPACE}/_UPLOAD/${version}"
