@@ -223,6 +223,9 @@ jobs:
           BASEURL: ${{ env.BASEURL }}
         shell: bash
         run: |
+          # Template directory exists only when simple mode is active
+          # Create template directory for non-simple mode
+          mkdir -p "${GITHUB_WORKSPACE}/_template/docconf/docconf"
           # Restore array
           IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
           count="${#versions[@]}"
@@ -274,7 +277,6 @@ jobs:
 
       - name: Build Documentation
         env:
-          SIMPLE_MODE: ${{ inputs.simple_mode }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
         shell: bash
@@ -288,12 +290,10 @@ jobs:
             git reset --hard
             git checkout "${branch}"
             cd "${DOCS_DIR}"
-            if [ "${SIMPLE_MODE}" == 'true' ]; then
-              # Override any existing files with template
-              cp -rf "${GITHUB_WORKSPACE}"/_template/* .
-              if [ -f "docs/dictionary_append.txt" ]; then
-                cat "docs/dictionary_append.txt" >> "dict.txt"
-              fi
+            # Override any existing files with template
+            cp -rf "${GITHUB_WORKSPACE}"/_template/* .
+            if [ -f "docs/dictionary_append.txt" ]; then
+              cat "docs/dictionary_append.txt" >> "dict.txt"
             fi
             echo "Building branch: ${branch}"
             make build
