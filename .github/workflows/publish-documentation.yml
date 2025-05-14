@@ -302,6 +302,7 @@ jobs:
               echo "${branch}"
               exit 1
             fi
+            mkdir -p "${GITHUB_WORKSPACE}/_UPLOAD"
             mv "${OUT_DIR}" "${GITHUB_WORKSPACE}/_UPLOAD/${versions[$index]}"
             make clean || :
           done
