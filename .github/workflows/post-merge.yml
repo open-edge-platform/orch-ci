@@ -342,17 +342,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
           ASSETS_DIR: "${{ inputs.assets_dir }}"
+          PROJECT_FOLDER: "${{ inputs.project_folder }}"
         run: |
           # Check if ASSETS_DIR is provided and exists
-          if [ -z "$ASSETS_DIR" ] || [ ! -d "ASSETS_DIR" ]; then
-            echo "Error: ASSETS_DIR is not set or does not exist."
+          if [ -z "$ASSETS_DIR" ] || [ ! -d "$ASSETS_DIR" ]; then
+            echo "Error: $ASSETS_DIR is not set or does not exist."
             exit 1
           fi
 
-          cd ${{ inputs.project_folder }}
+          # Check if PROJECT_FOLDER is provided and exists
+          if [ -z "$PROJECT_FOLDER" ] || [ ! -d "$PROJECT_FOLDER" ]; then
+             echo "Error: $PROJECT_FOLDER is not set or does not exist."
+             exit 1
+          fi
+
+          cd "$PROJECT_FOLDER"
 
           # Fetch the latest tag using the project folder
-          latest_tag=$(git tag --list "${{ inputs.project_folder }}/*" | sort -V | tail -n 1)
+          latest_tag=$(git tag --list "${PROJECT_FOLDER}/*" | sort -V | tail -n 1)
           echo "Latest tag: $latest_tag"
           echo "Attempting to create a release for tag: $latest_tag"
 
