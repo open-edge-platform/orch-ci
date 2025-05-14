@@ -142,7 +142,7 @@ jobs:
           # Override any existing files with template
           cp -rf "${GITHUB_WORKSPACE}"/_template/* .
 
-      - name: Collect branches
+      - name: Collect branches and versions
         env:
           PATTERN: ${{ inputs.branch_pattern }}
         shell: bash
@@ -160,9 +160,21 @@ jobs:
             echo "ERROR: No branches matched 'branch_pattern': ${PATTERN}"
             exit 1
           fi
+          declare -a versions
+          for branch in "${branches[@]}"; do
+            # Find branches that match patterns:
+            # release-#.# or release-#.#.#
+            if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
+              versions+=("${branch#*-}")
+            else
+              versions+=("${branch}")
+            fi
+          done
           # Convert the array to a string with comma delimeters
           branches=$(IFS=','; echo "${branches[*]}")
+          versions=$(IFS=','; echo "${versions[*]}")
           echo "DOCS_BRANCHES=${branches}" >> "$GITHUB_ENV"
+          echo "DOCS_VERSIONS=${versions}" >> "$GITHUB_ENV"
 
       - name: Get Subdirectory
         shell: bash
@@ -193,44 +205,39 @@ jobs:
           fi
           echo "SUBDIR=${subdir:-NULL}" >> "$GITHUB_ENV"
 
-      - name: Create version switcher
+      - name: Get Base URL
         env:
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           DISTID: ${{ inputs.distribution_id }}
           SUBDIR: ${{ env.SUBDIR }}
         shell: bash
         run: |
+          # Fetch CloudFront distribution Alt Domain Name
+          domain="$(aws cloudfront get-distribution-config --id "${DISTID}" | \
+            jq -r '.DistributionConfig.Aliases.Items[0]')"
+          url="https://${domain}/${SUBDIR}"
+          echo "BASEURL=${url:-intel.com}" >> "$GITHUB_ENV"
+
+      - name: Create version switcher
+        env:
+          DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
+          BASEURL: ${{ env.BASEURL }}
+        shell: bash
+        run: |
           # Restore array
-          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
-          # Trim release prefix
-          trim_prefix() {
-            local branch="${1}"
-            # Find branches that match patterns:
-            # release-#.# or release-#.#.#
-            if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
-              echo "${branch#*-}"
-            else
-              echo "${branch}"
-            fi
-          }
-          count="${#branches[@]}"
-          # Create version switcher if more than one branch matched
+          IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
+          count="${#versions[@]}"
+          # Create version switcher if more than one version
           if [[ "${count}" -gt 1 ]]; then
-            # Fetch CloudFront distribution Alt Domain Name
-            domain="$(aws cloudfront get-distribution-config --id "${DISTID}" | \
-              jq -r '.DistributionConfig.Aliases.Items[0]')"
-            url="https://${domain}/${SUBDIR}"
             # Select first version
-            echo -e "${url}\n$(trim_prefix "${branches[0]}")" > \
+            echo -e "${BASEURL}\n${versions[0]}" > \
               "${GITHUB_WORKSPACE}/_template/docconf/docconf/switcher_data.txt"
             echo '[' > "${GITHUB_WORKSPACE}/_template/switcher.json"
-            for branch in "${branches[@]}"; do
-              version="$(trim_prefix "${branch}")"
+            for version in "${versions[@]}"; do
               echo -e "    {\n      \"name\":\"${version}\"," >> \
                 "${GITHUB_WORKSPACE}/_template/switcher.json"
               echo -e "      \"version\":\"${version}\"," >> \
                 "${GITHUB_WORKSPACE}/_template/switcher.json"
-              echo -e "      \"url\":\"${url}/${version}/\"\n    }," >> \
+              echo -e "      \"url\":\"${BASEURL}/${version}/\"\n    }," >> \
                 "${GITHUB_WORKSPACE}/_template/switcher.json"
             done
             echo ']' >> "${GITHUB_WORKSPACE}/_template/switcher.json"
@@ -269,11 +276,14 @@ jobs:
         env:
           SIMPLE_MODE: ${{ inputs.simple_mode }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+          DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
         shell: bash
         run: |
           # Restore array
           IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
-          for branch in "${branches[@]}"; do
+          IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
+          for index in "${!branches[@]}"; do
+            branch="${branches[$index]}"
             cd "${GITHUB_WORKSPACE}"
             git reset --hard
             git checkout "${branch}"
@@ -292,49 +302,28 @@ jobs:
               echo "${branch}"
               exit 1
             fi
-            mkdir -p "${GITHUB_WORKSPACE}/_UPLOAD/${branch}"
-            mv "${OUT_DIR}"/* "${GITHUB_WORKSPACE}/_UPLOAD/${branch}"
+            mv "${OUT_DIR}" "${GITHUB_WORKSPACE}/_UPLOAD/${versions[$index]}"
             make clean || :
-            rm -rf "${OUT_DIR}"
-          done
-
-      - name: Trim release prefix
-        env:
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
-        shell: bash
-        run: |
-          # Restore array
-          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
-          for branch in "${branches[@]}"; do
-            # Find branches that match patterns:
-            # release-#.# or release-#.#.#
-            if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
-              version="${branch#*-}"
-              mv "${GITHUB_WORKSPACE}/_UPLOAD/${branch}" \
-                "${GITHUB_WORKSPACE}/_UPLOAD/${version}"
-            fi
           done
 
       - name: Copy version switcher
         env:
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+          BASEURL: ${{ env.BASEURL }}
+          DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
         shell: bash
         run: |
           # Restore array
-          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
-          count="${#branches[@]}"
-          # Copy version switcher if more than one branch matched
+          IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
+          count="${#versions[@]}"
+          # Copy version switcher if more than one version
           if [[ "${count}" -gt 1 ]]; then
             cp "${GITHUB_WORKSPACE}/_template/switcher.json" \
               "${GITHUB_WORKSPACE}/_UPLOAD"
             cd "${GITHUB_WORKSPACE}/_UPLOAD"
-            # Strip version from URL
-            url="$(cat switcher.json | jq -r '.[0].url')"
-            url="$(echo "${url%*/}" | rev | cut -d'/' -f2- | rev)"
             # Replace switcher URL, if exists
-            pattern='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
-            for file in $(grep -rl "${pattern}"); do
-              sed -i "s|${pattern}.*;$|${pattern} '${url}/switcher.json';|" \
+            pat='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
+            for file in $(grep -rl "${pat}"); do
+              sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" \
                 "${file}"
             done
           fi
@@ -367,22 +356,21 @@ jobs:
 
       - name: Create comment with link in PR
         env:
-          SUBDIR: ${{ env.SUBDIR }}
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+          BASEURL: ${{ env.BASEURL }}
+          DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
         shell: bash
         run: |
           # Restore array
-          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
           top="index.html"
-          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${branches[0]}/${top}" ]; then
+          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${versions[0]}/${top}" ]; then
             top="toc.html"
           fi
           # Use GitHub API to create a comment on the PR
           COMMENT="Documentation published at: "
-          COMMENT+="https://docs.openedgeplatform.intel.com/"
-          COMMENT+="${SUBDIR}/${branches[0]}/${top}"
+          COMMENT+="${BASEURL}/${versions[0]}/${top}"
           COMMENT_URL="/repos/${REPO}/issues/${GITHUB_PR}/comments"
           gh api \
             --method POST \
