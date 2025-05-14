@@ -373,7 +373,7 @@ jobs:
           # Fetch tags
           fetch-tags: true
           # Checkout the branch that triggered the workflow to avoid detached HEAD
-          ref: test-pre-merge
+          ref: ${{ github.head_ref }}
           persist-credentials: false
 
       - name: Checkout action repository
