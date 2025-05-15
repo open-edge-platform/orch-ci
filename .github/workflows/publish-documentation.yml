@@ -137,7 +137,7 @@ jobs:
       - name: Copy template
         shell: bash
         run: |
-          mkdir -p "${GITHUB_WORKSPACE}/_template"
+          mkdir -p "${GITHUB_WORKSPACE}/_template/_init"
           cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
           # Override any existing files with template
           cp -rf "${GITHUB_WORKSPACE}"/_template/* .
