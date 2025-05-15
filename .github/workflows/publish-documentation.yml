@@ -223,9 +223,6 @@ jobs:
           count="${#versions[@]}"
           # Create version switcher if more than one version
           if [[ "${count}" -gt 1 ]]; then
-            # Select first version
-            echo -e "${BASEURL}\n${versions[0]}" > \
-              "${GITHUB_WORKSPACE}/_template/switcher_data.txt"
             echo '[' > "${GITHUB_WORKSPACE}/_template/switcher.json"
             for version in "${versions[@]}"; do
               echo -e "    {\n      \"name\":\"${version}\"," >> \
@@ -272,19 +269,18 @@ jobs:
           source "${venv}"
           # Install Spark Sphinx theme
           pip3 install --no-input "${tmpdir}/${theme_wheel}"
-          # Enable version switcher if available
-          if [[ -f "${GITHUB_WORKSPACE}/_template/switcher_data.txt" ]]; then
-            package_location="$(pip3 show docconf | grep '^Location:' | \
-              cut -d: -f2 | xargs)"
-            cp "${GITHUB_WORKSPACE}/_template/switcher_data.txt" \
-              "${package_location}/docconf"
-          fi
+          # Retrieve Python package location
+          python_venv="$(pip3 show docconf | grep '^Location:' | \
+            cut -d: -f2 | xargs)"
           deactivate
+          echo "PYTHON_VENV=${python_venv}" >> "$GITHUB_ENV"
 
       - name: Build Documentation
         env:
+          BASEURL: ${{ env.BASEURL }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
+          PYTHON_VENV: ${{ env.PYTHON_VENV }}
         shell: bash
         run: |
           # Restore array
@@ -300,6 +296,11 @@ jobs:
             cp -rf "${GITHUB_WORKSPACE}"/_template/* .
             if [ -f "docs/dictionary_append.txt" ]; then
               cat "docs/dictionary_append.txt" >> "dict.txt"
+            fi
+            # Populate switcher data if switcher.json exists
+            if [[ -f "${GITHUB_WORKSPACE}/_template/switcher.json" ]]; then
+              echo -e "${BASEURL}\n${versions[$index]}" > \
+                "${PYTHON_VENV}/docconf/switcher_data.txt"
             fi
             echo "Building branch: ${branch}"
             make build
