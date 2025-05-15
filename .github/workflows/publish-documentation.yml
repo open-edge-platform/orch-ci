@@ -134,6 +134,14 @@ jobs:
           sparse-checkout-cone-mode: false
           token: ${{ secrets.SYS_ORCH_GITHUB }}
 
+      - name: Copy template
+        shell: bash
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}/_template"
+          cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
+          # Override any existing files with template
+          cp -rf "${GITHUB_WORKSPACE}"/_template/* .
+
       - name: Collect branches and versions
         env:
           PATTERN: ${{ inputs.branch_pattern }}
@@ -215,35 +223,26 @@ jobs:
           BASEURL: ${{ env.BASEURL }}
         shell: bash
         run: |
-          # Template directory exists only when simple mode is active
-          # Create template directory for non-simple mode
-          mkdir -p "${GITHUB_WORKSPACE}/_template"
+          mkdir -p "${GITHUB_WORKSPACE}/_UPLOAD"
           # Restore array
           IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
           count="${#versions[@]}"
           # Create version switcher if more than one version
           if [[ "${count}" -gt 1 ]]; then
-            echo '[' > "${GITHUB_WORKSPACE}/_template/switcher.json"
+            echo '[' > "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
             for version in "${versions[@]}"; do
               echo -e "    {\n      \"name\":\"${version}\"," >> \
-                "${GITHUB_WORKSPACE}/_template/switcher.json"
+                "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
               echo -e "      \"version\":\"${version}\"," >> \
-                "${GITHUB_WORKSPACE}/_template/switcher.json"
+                "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
               echo -e "      \"url\":\"${BASEURL}/${version}/\"\n    }," >> \
-                "${GITHUB_WORKSPACE}/_template/switcher.json"
+                "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
             done
-            echo ']' >> "${GITHUB_WORKSPACE}/_template/switcher.json"
+            echo ']' >> "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
             # Remove trailing comma
             sed -i -zE '$ s/(.*)    },/\1    }/' \
-              "${GITHUB_WORKSPACE}/_template/switcher.json"
+              "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
           fi
-
-      - name: Copy template
-        shell: bash
-        run: |
-          cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
-          # Override any existing files with template
-          cp -rf "${GITHUB_WORKSPACE}"/_template/* .
 
       - name: Install Spark theme
         env:
@@ -298,7 +297,7 @@ jobs:
               cat "docs/dictionary_append.txt" >> "dict.txt"
             fi
             # Populate switcher data if switcher.json exists
-            if [[ -f "${GITHUB_WORKSPACE}/_template/switcher.json" ]]; then
+            if [[ -f "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json" ]]; then
               echo -e "${BASEURL}\n${versions[$index]}" > \
                 "${PYTHON_VENV}/docconf/switcher_data.txt"
             fi
@@ -309,26 +308,18 @@ jobs:
               echo "${branch}"
               exit 1
             fi
-            mkdir -p "${GITHUB_WORKSPACE}/_UPLOAD"
             mv "${OUT_DIR}" "${GITHUB_WORKSPACE}/_UPLOAD/${versions[$index]}"
             make clean || :
           done
 
-      - name: Copy version switcher
+      - name: Replace switcher URL
         env:
           BASEURL: ${{ env.BASEURL }}
-          DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
         shell: bash
         run: |
-          # Restore array
-          IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
-          count="${#versions[@]}"
-          # Copy version switcher if more than one version
-          if [[ "${count}" -gt 1 ]]; then
-            cp "${GITHUB_WORKSPACE}/_template/switcher.json" \
-              "${GITHUB_WORKSPACE}/_UPLOAD"
+          # Replace switcher URL if switcher exists
+          if [[ -f "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json" ]]; then
             cd "${GITHUB_WORKSPACE}/_UPLOAD"
-            # Replace switcher URL, if exists
             pat='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
             for file in $(grep -rl "${pat}"); do
               sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" \
