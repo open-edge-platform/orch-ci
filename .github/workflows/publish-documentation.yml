@@ -217,7 +217,7 @@ jobs:
         run: |
           # Template directory exists only when simple mode is active
           # Create template directory for non-simple mode
-          mkdir -p "${GITHUB_WORKSPACE}/_template/docconf/docconf"
+          mkdir -p "${GITHUB_WORKSPACE}/_template"
           # Restore array
           IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
           count="${#versions[@]}"
@@ -225,7 +225,7 @@ jobs:
           if [[ "${count}" -gt 1 ]]; then
             # Select first version
             echo -e "${BASEURL}\n${versions[0]}" > \
-              "${GITHUB_WORKSPACE}/_template/docconf/docconf/switcher_data.txt"
+              "${GITHUB_WORKSPACE}/_template/switcher_data.txt"
             echo '[' > "${GITHUB_WORKSPACE}/_template/switcher.json"
             for version in "${versions[@]}"; do
               echo -e "    {\n      \"name\":\"${version}\"," >> \
@@ -272,6 +272,13 @@ jobs:
           source "${venv}"
           # Install Spark Sphinx theme
           pip3 install --no-input "${tmpdir}/${theme_wheel}"
+          # Enable version switcher if available
+          if [[ -f "${GITHUB_WORKSPACE}/_template/switcher_data.txt" ]]; then
+            package_location="$(pip3 show docconf | grep '^Location:' | \
+              cut -d: -f2 | xargs)"
+            cp "${GITHUB_WORKSPACE}/_template/switcher_data.txt" \
+              "${package_location}/docconf"
+          fi
           deactivate
 
       - name: Build Documentation
