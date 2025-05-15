@@ -276,9 +276,10 @@ jobs:
 
       - name: Build Documentation
         env:
-          BASEURL: ${{ env.BASEURL }}
+          SIMPLE_MODE: ${{ inputs.simple_mode }}  # Used during make build
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
+          BASEURL: ${{ env.BASEURL }}
           PYTHON_VENV: ${{ env.PYTHON_VENV }}
         shell: bash
         run: |
