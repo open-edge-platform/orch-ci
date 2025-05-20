@@ -161,14 +161,24 @@ jobs:
             exit 1
           fi
           declare -a versions
+          # Replace the strings in ["example"] with the assigned string
+          # Create associative array
+          declare -A REPLACE
+          REPLACE=(
+              ["main"]="dev"
+          )
           for branch in "${branches[@]}"; do
+            value="${branch}"
+            # Replace matches if found
+            if [[ -v REPLACE[$value] ]]; then
+              value="${REPLACE[$value]}"
+            fi
             # Find branches that match patterns:
             # release-#.# or release-#.#.#
             if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
-              versions+=("${branch#*-}")
-            else
-              versions+=("${branch}")
+              value="${branch#*-}"
             fi
+            versions+=("${value}")
           done
           # Convert the array to a string with comma delimeters
           branches=$(IFS=','; echo "${branches[*]}")
