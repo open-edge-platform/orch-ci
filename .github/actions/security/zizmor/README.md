@@ -1,6 +1,8 @@
 # Zizmor (composite)
 
-This composite action executes GitHub Actions workflows scanning using [Zizmor](https://github.com/woodruffw/zizmor), providing configurable security analysis capabilities.
+This composite action executes GitHub Actions workflows scanning using
+[Zizmor](https://github.com/woodruffw/zizmor), 
+providing configurable security analysis capabilities.
 
 ## Usage
 
@@ -26,7 +28,8 @@ jobs:
           fail-on-findings: true
 ```
 
-Example usage in a repository on schedule (checks all scope), uploads results in SARIF format:
+Example usage in a repository on schedule (checks all scope),
+uploads results in SARIF format:
 
 ```yaml
 name: Zizmor scan
@@ -65,9 +68,12 @@ jobs:
 | `fail-on-findings` | boolean | Whether to fail the action if issues are found       | `true`        | No       |
 | `zizmor-version`   | String  | Zizmor version                                       | `1.6.0`       | No       |
 
-If necessary, put zizmor configuration into default location `.github/zizmor.yml` - zizmor will discover and us it.
+If necessary, put zizmor configuration into default 
+location `.github/zizmor.yml` - zizmor will discover and us it.
 
-There's no top-level YAML way to declare a variable scoped to a composite action and available in step options, therefore we use input to pass Zizmor version.
+There's no top-level YAML way to declare a variable scoped to a composite 
+action and available in step options,
+therefore we use input to pass Zizmor version.
 
 ## Outputs
 
@@ -78,4 +84,5 @@ There's no top-level YAML way to declare a variable scoped to a composite action
 
 ## Required permissions
 
-This composite action requires `security-events: write` to upload SARIF results into Security tab.
+This composite action requires `security-events: write` 
+to upload SARIF results into Security tab.
