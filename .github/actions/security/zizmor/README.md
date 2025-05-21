@@ -1,7 +1,7 @@
 # Zizmor (composite)
 
 This composite action executes GitHub Actions workflows scanning using
-[Zizmor](https://github.com/woodruffw/zizmor), 
+[Zizmor](https://github.com/woodruffw/zizmor),
 providing configurable security analysis capabilities.
 
 ## Usage
@@ -55,27 +55,30 @@ jobs:
           confidence-level: LOW
           fail-on-findings: false
 ```
+<!-- markdownlint-disable MD013 -->
 
 ## Inputs
 
-| Name               | Type    | Description                                          | Default Value | Required |
-| ------------------ | ------- | ---------------------------------------------------- | ------------- | -------- |
-| `scan-scope`       | String  | Scope of files to scan                               | `changed`     | No       |
-|                    |         | (all/changed)                                        |               |          |
-| `paths`            | String  | Paths to scan when using all scope                   | `.`           | No       |
-| `severity-level`   | String  | Minimum severity level to report                     | `LOW`         | No       |
-|                    |         | (LOW/MEDIUM/HIGH)                                    |               |          |
-| `confidence-level` | String  | Minimum confidence level to report                   | `LOW`         | No       |
-|                    |         | (LOW/MEDIUM/HIGH)                                    |               |          |
-| `output-format`    | String  | Format for scan results                              | `sarif`       | No       |
-|                    |         | (plain/json/sarif)                                   |               |          |
-| `fail-on-findings` | boolean | Whether to fail the action if issues are found       | `true`        | No       |
-| `zizmor-version`   | String  | Zizmor version                                       | `1.6.0`       | No       |
+| Name               | Type    | Description                                      | Default Value | Required |
+| ------------------ | ------- | ------------------------------------------------ | ------------- | -------- |
+| `scan-scope`       | String  | Scope of files to scan                           | `changed`     | No       |
+|                    |         | (all/changed)                                    |               |          |
+| `paths`            | String  | Paths to scan when using all scope               | `.`           | No       |
+| `severity-level`   | String  | Minimum severity level to report                 | `LOW`         | No       |
+|                    |         | (LOW/MEDIUM/HIGH)                                |               |          |
+| `confidence-level` | String  | Minimum confidence level to report               | `LOW`         | No       |
+|                    |         | (LOW/MEDIUM/HIGH)                                |               |          |
+| `output-format`    | String  | Format for scan results                          | `sarif`       | No       |
+|                    |         | (plain/json/sarif)                               |               |          |
+| `fail-on-findings` | boolean | Whether to fail the action if issues are found   | `true`        | No       |
+| `zizmor-version`   | String  | Zizmor version                                   | `1.6.0`       | No       |
 
-If necessary, put zizmor configuration into default 
+<!-- markdownlint-enable MD013 -->
+
+If necessary, put zizmor configuration into default
 location `.github/zizmor.yml` - zizmor will discover and us it.
 
-There's no top-level YAML way to declare a variable scoped to a composite 
+There's no top-level YAML way to declare a variable scoped to a composite
 action and available in step options,
 therefore we use input to pass Zizmor version.
 
@@ -88,5 +91,5 @@ therefore we use input to pass Zizmor version.
 
 ## Required permissions
 
-This composite action requires `security-events: write` 
+This composite action requires `security-events: write`
 to upload SARIF results into Security tab.
