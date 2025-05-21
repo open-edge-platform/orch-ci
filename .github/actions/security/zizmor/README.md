@@ -60,11 +60,15 @@ jobs:
 
 | Name               | Type    | Description                                          | Default Value | Required |
 | ------------------ | ------- | ---------------------------------------------------- | ------------- | -------- |
-| `scan-scope`       | String  | Scope of files to scan (all/changed)                 | `changed`     | No       |
+| `scan-scope`       | String  | Scope of files to scan                               | `changed`     | No       |
+|                    |         | (all/changed)                                        |               |          |
 | `paths`            | String  | Paths to scan when using all scope                   | `.`           | No       |
-| `severity-level`   | String  | Minimum severity level to report (LOW/MEDIUM/HIGH)   | `LOW`         | No       |
-| `confidence-level` | String  | Minimum confidence level to report (LOW/MEDIUM/HIGH) | `LOW`         | No       |
-| `output-format`    | String  | Format for scan results (plain/json/sarif)           | `sarif`       | No       |
+| `severity-level`   | String  | Minimum severity level to report                     | `LOW`         | No       |
+|                    |         | (LOW/MEDIUM/HIGH)                                    |               |          |
+| `confidence-level` | String  | Minimum confidence level to report                   | `LOW`         | No       |
+|                    |         | (LOW/MEDIUM/HIGH)                                    |               |          |
+| `output-format`    | String  | Format for scan results                              | `sarif`       | No       |
+|                    |         | (plain/json/sarif)                                   |               |          |
 | `fail-on-findings` | boolean | Whether to fail the action if issues are found       | `true`        | No       |
 | `zizmor-version`   | String  | Zizmor version                                       | `1.6.0`       | No       |
 
