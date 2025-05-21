@@ -77,7 +77,8 @@ inputs:
     required: false
     default: "vuln"
   misconfig_scanners:
-    description: "Misconfig scanners to enable (azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan)"
+    description: >-
+      "Misconfig scanners to enable (azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan)"
     required: false
     default: "azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan"
   format:
@@ -165,7 +166,11 @@ runs:
         fi
 
         # Build the base command
-        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE --severity $INPUTS_SEVERITY --format $INPUTS_FORMAT --output ${REPORT_FILE} --timeout $INPUTS_TIMEOUT"
+        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE \
+          --severity $INPUTS_SEVERITY \
+          --format $INPUTS_FORMAT \
+          --output ${REPORT_FILE} \
+          --timeout $INPUTS_TIMEOUT"
 
         # Add scanner-specific flags based on scan type
         if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then
