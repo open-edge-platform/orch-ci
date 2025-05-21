@@ -10,3 +10,4 @@ sphinx~=${SPHINX_VER}
 openapi-spec-validator~=${OPENAPI_SPEC_VALIDATOR_VER}
 yamllint~=${YAMLLINT_VER}
 reuse~=${REUSE_VER}
+bandit[sarif,toml]~=${BANDIT_VER}
