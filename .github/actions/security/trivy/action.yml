@@ -1,3 +1,6 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # Trivy Scanner Action
 #
 # This composite action executes comprehensive security scanning using Trivy,
@@ -74,7 +77,8 @@ inputs:
     required: false
     default: "vuln"
   misconfig_scanners:
-    description: "Misconfig scanners to enable (azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan)"
+    description: >-
+      "Misconfig scanners to enable (azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan)"
     required: false
     default: "azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan"
   format:
@@ -108,7 +112,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
 
     - name: Cache Trivy vulnerability database
       uses: actions/cache@v3
@@ -121,7 +125,8 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.48.0
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | \
+          sh -s -- -b /usr/local/bin v0.48.0
         # Download DB in advance with retry mechanism
         for i in {1..3}; do
           echo "Attempt $i to download vulnerability database..."
@@ -162,7 +167,11 @@ runs:
         fi
 
         # Build the base command
-        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE --severity $INPUTS_SEVERITY --format $INPUTS_FORMAT --output ${REPORT_FILE} --timeout $INPUTS_TIMEOUT"
+        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE \
+          --severity $INPUTS_SEVERITY \
+          --format $INPUTS_FORMAT \
+          --output ${REPORT_FILE} \
+          --timeout $INPUTS_TIMEOUT"
 
         # Add scanner-specific flags based on scan type
         if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then

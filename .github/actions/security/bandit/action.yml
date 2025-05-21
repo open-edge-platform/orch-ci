@@ -1,3 +1,6 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # Bandit Scanner Action
 #
 # This composite action executes Python security scanning using Bandit,
@@ -55,7 +58,7 @@ inputs:
   paths:
     description: "Paths to scan when using all scope"
     required: false
-    default: "." # all scope by default, exclude_dirs are taken from pyproject.toml
+    default: "."  # all scope by default, exclude_dirs are taken from pyproject.toml
   config_file:
     description: "Path to pyproject.toml or custom bandit config"
     required: false
@@ -70,7 +73,7 @@ inputs:
   output-format:
     description: "Format for scan results (json/txt/html/csv/sarif)"
     required: false
-    default: "sarif" # by default to upload into Security tab
+    default: "sarif"  # by default to upload into Security tab
   fail-on-findings:
     description: "Whether to fail the action if issues are found"
     required: false
@@ -88,7 +91,7 @@ runs:
   using: composite
   steps:
     - name: Set up Python
-      uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55 # v5.5.0
+      uses: actions/setup-python@8d9ed9ac5c53483de85588cdf95a591a75ab9f55  # v5.5.0
       with:
         python-version: "3.10"
 
@@ -101,7 +104,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
+      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0  # v46.0.3
       with:
         files: |
           **/*.py
@@ -161,14 +164,14 @@ runs:
 
       # Upload results after full scope analysis
     - name: Upload reports
-      if: hashFiles('bandit-report.*') != '' # if any report is available
+      if: hashFiles('bandit-report.*') != ''  # if any report is available
       uses: actions/upload-artifact@v4
       with:
         name: bandit-results
         path: bandit-report.*
         retention-days: 7
     - name: Upload sarif
-      if: hashFiles('bandit-report.sarif') != '' # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      if: hashFiles('bandit-report.sarif') != ''  # if SARIF is available, upload it
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
         sarif_file: bandit-report.sarif

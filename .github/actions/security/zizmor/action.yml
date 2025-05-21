@@ -1,10 +1,13 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # Zizmor Scanner Action
 #
 # This composite action executes GitHub Actions workflows scanning using zizmor,
 # providing configurable security analysis capabilities.
 #
 # Example Usage:
-#jobs:
+# jobs:
 #  zizmor:
 #    runs-on: ubuntu-latest
 #    steps:
@@ -31,7 +34,7 @@ inputs:
   paths:
     description: "Paths to scan when using all scope"
     required: false
-    default: "." # all scope by default
+    default: "."  # all scope by default
   severity-level:
     description: "Minimum severity level to report (LOW/MEDIUM/HIGH)"
     default: "LOW"
@@ -42,7 +45,7 @@ inputs:
   output-format:
     description: "Format for scan results (plain/json/sarif)"
     required: false
-    default: "sarif" # by default to upload into Security tab
+    default: "sarif"  # by default to upload into Security tab
   fail-on-findings:
     description: "Whether to fail the action if issues are found"
     required: false
@@ -65,7 +68,7 @@ runs:
   using: composite
   steps:
     - name: Install uv
-      uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
+      uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca  # v6.0.1
       with:
         enable-cache: true
         activate-environment: true
@@ -75,7 +78,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
+      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0  # v46.0.3
       with:
         files: .github/**
 
@@ -134,14 +137,14 @@ runs:
 
       # Upload results after full scope analysis
     - name: Upload reports
-      if: hashFiles('zizmor-report.*') != '' # if any report is available
+      if: hashFiles('zizmor-report.*') != ''  # if any report is available
       uses: actions/upload-artifact@v4
       with:
         name: zizmor-results
         path: zizmor-report.*
         retention-days: 7
     - name: Upload sarif
-      if: hashFiles('zizmor-report.sarif') != '' # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      if: hashFiles('zizmor-report.sarif') != ''  # if SARIF is available, upload it
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
         sarif_file: zizmor-report.sarif

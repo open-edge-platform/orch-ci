@@ -1,50 +1,3 @@
-# ClamAV Scanner Action
-#
-# This composite action executes antivirus scanning using ClamAV,
-# providing malware detection and security analysis.
-#
-# Key Features:
-# - Malware detection
-# - Real-time database updates
-# - Configurable scan scope
-# - Exclusion support
-# - Performance optimization
-#
-# Process Stages:
-# 1. Environment Setup:
-#    - ClamAV installation
-#    - Database updates
-#    - Cache configuration
-#
-# 2. Scan Execution:
-#    - Target selection
-#    - Exclusion application
-#    - Threat detection
-#
-# 3. Results Processing:
-#    - Report generation
-#    - Threat analysis
-#    - Finding summary
-#
-# Required Inputs:
-# - scan-scope: Files to scan
-# - exclude_dirs: Directories to skip
-# - max_file_size: Size limit for scanning
-#
-# Outputs:
-# - scan_result: Scan exit code
-# - report_path: Results location
-# - threats_found: Number of threats
-#
-# Example Usage:
-# steps:
-#   - uses: ./.github/actions/security/clamav
-#     with:
-#       scan-scope: "changed"
-#       exclude_dirs: ".git,node_modules"
-#
-# Note: Requires sufficient disk space for virus database
-
 name: "ClamAV Security Scan"
 description: "Runs ClamAV antivirus scanner with configurable options"
 
@@ -91,7 +44,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
 
     - name: Run ClamAV scan
       id: run-clamav
@@ -167,7 +120,7 @@ runs:
           "
       # Upload results
     - name: Upload reports
-      if: hashFiles('security-results/clamav*') != '' # if any report is available
+      if: hashFiles('security-results/clamav*') != ''  # if any report is available
       uses: actions/upload-artifact@v4
       with:
         name: clamav-results
