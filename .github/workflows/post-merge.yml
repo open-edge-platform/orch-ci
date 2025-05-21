@@ -268,9 +268,8 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           persist-credentials: false
-      
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@bandit
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
         with:
           scan-scope: "all"
   run-repo-pipelines:
