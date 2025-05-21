@@ -8,7 +8,7 @@ path = [
     "**/SHA256SUM",
     "**/VERSIONS",
     "**/GOTOOLS_VERSIONS",
-    "*.md",
+    "**/*.md",
     "**/go.mod*",
     "**/go.sum",
     "VERSION",
