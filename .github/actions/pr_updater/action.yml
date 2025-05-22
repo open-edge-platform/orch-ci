@@ -20,13 +20,10 @@ runs:
     - name: Update pull requests
       shell: bash
       run: |
-        PRs=$(gh pr list --json number --jq '.[].number')
+        mapfile -t PRs < <(gh pr list --json number --jq '.[].number')
 
-        for PR in $PRs; do
+        for PR in "${PRs[@]}"; do
           echo "Updating PR #$PR"
-          # Attempt to merge the base branch into the pull request branch
-          gh pr checkout $PR
-          BASE_BRANCH=$(gh pr view $PR --json baseRefName --jq '.baseRefName')
-          git merge origin/$BASE_BRANCH || echo "Failed to merge base branch into PR #$PR"
-          git push || echo "Failed to push updates for PR #$PR"
+          # Update the pull request branch with the latest changes from the base branch
+          gh pr update-branch "$PR" || echo "Failed to update PR #$PR"
         done
