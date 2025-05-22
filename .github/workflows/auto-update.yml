@@ -4,7 +4,7 @@
 
 name: Update All Pull Requests
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
@@ -25,12 +25,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      with:
-        persist-credentials: false
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
 
-    - name: Update pull requests
-      uses: open-edge-platform/orch-ci/.github/actions/pr_updater@main
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update pull requests
+        uses: open-edge-platform/orch-ci/.github/actions/pr_updater@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
