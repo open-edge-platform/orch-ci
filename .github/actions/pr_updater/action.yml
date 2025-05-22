@@ -12,8 +12,10 @@ runs:
   using: 'composite'
   steps:
     - name: Authenticate with GitHub CLI
+      env:
+        github_token: ${{ inputs.github_token }}
       shell: bash
-      run: echo "${{ inputs.github_token }}" | gh auth login --with-token
+      run: echo "${github_token}" | gh auth login --with-token
 
     - name: Update pull requests
       shell: bash
