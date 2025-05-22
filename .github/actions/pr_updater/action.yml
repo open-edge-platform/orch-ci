@@ -20,8 +20,10 @@ runs:
     - name: Update pull requests
       shell: bash
       run: |
+        # Read PR numbers into an array
         mapfile -t PRs < <(gh pr list --json number --jq '.[].number')
 
+        # Iterate over each pull request and update it
         for PR in "${PRs[@]}"; do
           echo "Updating PR #$PR"
           # Update the pull request branch with the latest changes from the base branch
