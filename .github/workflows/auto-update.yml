@@ -19,6 +19,9 @@ permissions: {}
 
 jobs:
   update-pull-requests:
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
 
     steps:
