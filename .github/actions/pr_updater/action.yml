@@ -1,0 +1,23 @@
+name: 'Update Pull Requests'
+description: 'Update all pull requests to the head of their respective base branches'
+inputs:
+  github_token:
+    description: 'GitHub Token'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Authenticate with GitHub CLI
+      shell: bash
+      run: echo "${{ inputs.github_token }}" | gh auth login --with-token
+
+    - name: Update pull requests
+      shell: bash
+      run: |
+        PRs=$(gh pr list --json number --jq '.[].number')
+
+        for PR in $PRs; do
+          echo "Updating PR #$PR"
+          # Attempt to merge the base branch into the pull request branch
+          gh pr merge $PR --auto --squash || echo "Failed to update PR #$PR"
+        done
