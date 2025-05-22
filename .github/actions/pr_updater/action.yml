@@ -20,7 +20,7 @@ runs:
     - name: Update pull requests
       shell: bash
       run: |
-        mapfile -t PRs < <(gh pr list --json number,author --jq '.[] | select(.author.login != "dependabot") | .number')
+        mapfile -t PRs < <(gh pr list --json number,author,autoMergeRequest --jq '.[] | select(.author.login != "dependabot" and .autoMergeRequest != null) | .number')
 
         # Iterate over each pull request and update it
         for PR in "${PRs[@]}"; do
