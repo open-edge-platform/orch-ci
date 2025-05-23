@@ -19,6 +19,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_freeup_ubuntu_space:
+        description: "Freeup space in runner by removing unwanted packages"
+        required: false
+        default: false
+        type: boolean
       run_build:
         description: "Run build"
         required: false
@@ -143,6 +148,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "ubuntu-latest"
         type: string
+      trivy_config_path:
+        description: "Path to trivy configuration file"
+        required: false
+        default: "trivy.yaml"
+        type: string
     secrets:
       SYS_ORCH_GITHUB:
         required: false
@@ -200,7 +210,7 @@ jobs:
           repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
           publish_results: true
       - name: Upload Scorecard Results
-        uses: github/codeql-action/upload-sarif@60168efe1c415ce0f5521ea06d5c2062adbeed1b  # v3.28.17
+        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f  # v3.28.18
         with:
           sarif_file: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Scorecard Results
@@ -208,6 +218,73 @@ jobs:
         with:
           name: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+  trivy-filesystem-scan:
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5  # 0.30.0
+        with:
+          scan-type: 'fs'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          ignore-unfixed: true
+          trivy-config: ${{ inputs.trivy_config_path }}
+          scanners: 'vuln,misconfig,secret'
+          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+      - name: Upload Trivy Scan Report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Upload Trivy Results
+        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f  # v3.28.18
+        with:
+          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+  zizimor-scan:
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    env:
+      ZIZMOR_VERSION: 1.5.2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca  # v6.0.1
+
+      - name: Run zizmor
+        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
+
+      - name: Upload Zizmor Results
+        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f  # v3.28.18
+        with:
+          sarif_file: zizmor_scan_report.sarif
+  bandit:
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
+        with:
+          scan-scope: "all"
   run-repo-pipelines:
     permissions:
       contents: read
@@ -328,6 +405,13 @@ jobs:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
           bootstrap_tools: "cosign"
 
+      - name: Free Ubuntu Disk Space
+        if: ${{ inputs.run_freeup_ubuntu_space }}
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be  # v1.3.1
+        with:
+          android: true
+          dotnet: true
+
       - name: Build Code
         if: ${{ inputs.run_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -431,7 +515,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact || inputs.run_deb_push
-        uses: aws-actions/configure-aws-credentials@f24d7193d98baebaeacc7e2227925dd47cc267f5  # v4.2.0
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
