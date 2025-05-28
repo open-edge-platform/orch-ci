@@ -505,6 +505,85 @@ jobs:
         run: |
           make docker-push
 
+      - name: List Docker Images
+        id: list-images
+        if: ${{ inputs.run_docker_build }}
+        env:
+          TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
+        run: |
+          # list of images to skip
+          skip_images="${TRIVY_IMAGE_SKIP}"
+
+          IFS=',' read -r -a skip_array <<< "$skip_images"
+
+          # all docker images
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -v clamav | jq -R . | jq -s -c .)
+
+          filtered_images=()
+
+          for image in $(echo "$all_images" | jq -r '.[]'); do
+            skip=false
+            for skip_image in "${skip_array[@]}"; do
+              if [[ "$image" == "$skip_image" ]]; then
+                skip=true
+                break
+              fi
+            done
+            if [ "$skip" = false ]; then
+              filtered_images+=("$image")
+            fi
+          done
+
+          images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
+
+          echo "images=$images"
+          echo "images=$images" >> "$GITHUB_OUTPUT"
+
+      - name: Save Docker Images
+        if: ${{ inputs.run_docker_build }}
+        env:
+          IMAGES: ${{ steps.list-images.outputs.images }}
+        run: |
+          set -euxo pipefail
+          docker images
+          mkdir -p docker-images
+          images=${IMAGES}
+          # Remove the brackets and split the string into individual image names
+          formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
+
+          for image in $formatted_images; do
+            sanitized_image=$(echo "$image" | tr -d '"')
+            # Check if the sanitized image name is not empty
+            if [ -n "$sanitized_image" ]; then
+              docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
+            else
+              echo "Skipping empty image name."
+            fi
+          done
+
+      - name: Upload Docker Images
+        if: ${{ inputs.run_docker_build }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: docker-images
+
+      - name: Artifact
+        if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: ${{ inputs.artifacts_path }}
+
+      - name: Clean up
+        if: ${{ always() }}
+        run: |
+          # Figure out if needed
+
+      - name: Send failure email
+        if: ${{ failure() }}
+        run: |
+          echo "Sending failure email..."
       - name: Sign Docker images
         if: ${{ inputs.run_docker_push }}
         env:
@@ -557,3 +636,54 @@ jobs:
         if: ${{ failure() }}
         run: |
           echo "Sending failure email..."
+  scan-images:
+    permissions:
+      contents: read
+    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' && needs.run-repo-pipelines.outputs.images != '[""]' }}
+    needs: [sanitize-project-folder, run-repo-pipelines]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) }}
+    steps:
+      - name: Download Docker Images
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+
+      - name: Load Docker Images
+        run: |
+          for tar in *.tar; do
+            docker load -i "$tar"
+          done
+
+      - name: Sanitize Image Name
+        id: sanitize
+        env:
+          MATRIX_IMAGE: ${{ matrix.image }}
+        run: |
+          # Replace colon with underscore
+          sanitized_image_name="${MATRIX_IMAGE}"
+          sanitized_image_name="${sanitized_image_name//[:\/]/_}"
+          echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
+
+      - name: Scan Image
+        uses: aquasecurity/trivy-action@6c175e9c4083a92bbca2f9724c8a5e33bc2d97a5  # 0.30.0
+        with:
+          image-ref: ${{ matrix.image }}
+          format: 'sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          output: "trivy-${{ env.sanitized_image_name }}.sarif"
+          ignore-unfixed: true
+
+      - name: Calculate MD5 Checksum
+        id: checksum
+        run: |
+          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}.txt" | cut -d " " -f 1)
+          echo "md5sum is $md5sum_value"
+          echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
+
+      - name: Upload Trivy Image Scan Report
+        uses: github/codeql-action/upload-sarif@ff0a06e83cb2de871e5a09832bc6a81e7276941f  # v3.28.18
+        with:
+          sarif_file: trivy_scan_report-${{ env.sanitized_image_name }}.sarif
