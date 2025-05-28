@@ -575,19 +575,6 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Artifact
-        if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
-        with:
-          name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: ${{ inputs.artifacts_path }}
-
-# Removed the `Clean up` step entirely.
-
-      - name: Send failure email
-        if: ${{ failure() }}
-        run: |
-          echo "Sending failure email..."
       - name: Sign Docker images
         if: ${{ inputs.run_docker_push }}
         env:
