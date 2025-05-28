@@ -569,7 +569,6 @@ jobs:
             else
               echo "Skipping empty image name."
             fi
-
           done
 
       - name: Upload Docker Images
