@@ -560,6 +560,10 @@ jobs:
 
           for image in $formatted_images; do
             sanitized_image=$(echo "$image" | tr -d '"')
+            if [[ "$sanitized_image" == "<none>:<none>" ]] || [[ "$sanitized_image" == *"<none>"* ]]; then
+              echo "Skipping image with <none> tag: $sanitized_image"
+              continue
+            fi
             if [ -n "$sanitized_image" ]; then
               docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
             else
