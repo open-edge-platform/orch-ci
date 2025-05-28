@@ -140,6 +140,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "trivy.yaml"
         type: string
+      trivy_image_skip:
+        description: "Images to skip scanning with trivy"
+        required: false
+        default: ""
+        type: string
     secrets:
       SYS_ORCH_GITHUB:
         required: false
