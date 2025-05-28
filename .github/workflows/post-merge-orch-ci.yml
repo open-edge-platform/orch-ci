@@ -7,6 +7,7 @@ on:   # yamllint disable-line rule:truthy
   push:
     branches:
       - main
+      - sec_image_
   workflow_dispatch:
 jobs:
   post-merge:
@@ -20,7 +21,7 @@ jobs:
       run_version_check: false
       run_dep_version_check: false
       run_version_tag: true
-      run_docker_build: false
+      run_docker_build: true
       run_docker_push: false
       run_helm_build: false
       run_helm_push: false

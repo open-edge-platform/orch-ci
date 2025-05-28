@@ -58,3 +58,6 @@ help: ## print help for each target
 	@grep -H -n '^[[:alnum:]%_-]*:.* ##' $(MAKEFILE_LIST) \
     | sort -t ":" -k 3 \
     | awk 'BEGIN  {FS=":"}; {sub(".* ## ", "", $$4)}; {printf "%-20s %-16s %s\n", $$3, $$1 ":" $$2, $$4};'
+
+docker-build: # test stage
+	docker pull hello-world
