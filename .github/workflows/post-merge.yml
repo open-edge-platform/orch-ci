@@ -582,10 +582,7 @@ jobs:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
 
-      - name: Clean up
-        if: ${{ always() }}
-        run: |
-          # Figure out if needed
+# Removed the `Clean up` step entirely.
 
       - name: Send failure email
         if: ${{ failure() }}
