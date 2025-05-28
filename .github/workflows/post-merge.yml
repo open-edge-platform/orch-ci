@@ -277,6 +277,8 @@ jobs:
       contents: read
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
+    outputs:
+      images: ${{ steps.list-images.outputs.images }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
