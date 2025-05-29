@@ -222,8 +222,8 @@
  {
   "RuleID": "private-key",
   "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-  "StartLine": 883,
-  "EndLine": 883,
+  "StartLine": 1013,
+  "EndLine": 1013,
   "StartColumn": 15,
   "EndColumn": 121,
   "Match": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD\\n-----END PRIVATE KEY-----",
@@ -237,13 +237,13 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:883"
+  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:1013"
  },
  {
   "RuleID": "private-key",
   "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-  "StartLine": 888,
-  "EndLine": 888,
+  "StartLine": 1018,
+  "EndLine": 1018,
   "StartColumn": 15,
   "EndColumn": 174,
   "Match": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD\\n-----END PRIVATE KEY-----",
@@ -257,13 +257,13 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:888"
+  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:1018"
  },
  {
   "RuleID": "private-key",
   "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-  "StartLine": 899,
-  "EndLine": 905,
+  "StartLine": 1029,
+  "EndLine": 1035,
   "StartColumn": 15,
   "EndColumn": 33,
   "Match": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD\",\n\t\t\twantErr: true,\n\t\t\terrMsg:  \"TLS key must be in PEM format\",\n\t\t},\n\t\t{\n\t\t\tname:    \"wrong header\",\n\t\t\tinput:   \"-----BEGIN KEY-----",
@@ -277,13 +277,13 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:899"
+  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:1029"
  },
  {
   "RuleID": "private-key",
   "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-  "StartLine": 911,
-  "EndLine": 911,
+  "StartLine": 1041,
+  "EndLine": 1041,
   "StartColumn": 15,
   "EndColumn": 113,
   "Match": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD\\n-----END KEY-----",
@@ -297,13 +297,13 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:911"
+  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:1041"
  },
  {
   "RuleID": "private-key",
   "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-  "StartLine": 917,
-  "EndLine": 923,
+  "StartLine": 1047,
+  "EndLine": 1053,
   "StartColumn": 15,
   "EndColumn": 48,
   "Match": "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD-----END PRIVATE KEY-----\",\n\t\t\twantErr: true,\n\t\t\terrMsg:  \"TLS key must be in PEM format\",\n\t\t},\n\t\t{\n\t\t\tname:    \"extra text before\",\n\t\t\tinput:   \"extra\\n-----BEGIN PRIVATE KEY-----",
@@ -317,13 +317,13 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:917"
+  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:1047"
  },
  {
   "RuleID": "private-key",
   "Description": "Identified a Private Key, which may compromise cryptographic security and sensitive data encryption.",
-  "StartLine": 929,
-  "EndLine": 929,
+  "StartLine": 1059,
+  "EndLine": 1059,
   "StartColumn": 15,
   "EndColumn": 121,
   "Match": "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD\\n-----END PRIVATE KEY-----",
@@ -337,6 +337,6 @@
   "Date": "",
   "Message": "",
   "Tags": [],
-  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:929"
+  "Fingerprint": "new-installer/cmd/config/validate_test.go:private-key:1059"
  }
 ]
