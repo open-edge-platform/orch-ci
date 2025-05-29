@@ -765,8 +765,6 @@ jobs:
           webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
           raw: >-
             {
-              "@type": "MessageCard",
-              "@context": "http://schema.org/extensions",
               "title": "Failure on ${{ github.repository }}",
               "summary": "Failure on ${{ github.workflow }}"
             }
