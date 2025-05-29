@@ -769,18 +769,6 @@ jobs:
               "@context": "http://schema.org/extensions",
               "title": "Failure on ${{ github.repository }}",
               "summary": "Failure on ${{ github.workflow }}",
-              "potentialAction": [
-                {
-                  "@type": "OpenUri",
-                  "name": "Go to failure",
-                  "targets": [
-                    {
-                      "os": "default",
-                      "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-                    }
-                  ]
-                }
-              ]
             }
           job: '{}'
           steps: '{}'
