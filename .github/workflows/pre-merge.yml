@@ -768,7 +768,7 @@ jobs:
               "@type": "MessageCard",
               "@context": "http://schema.org/extensions",
               "title": "Failure on ${{ github.repository }}",
-              "summary": "Failure on ${{ github.workflow }}",
+              "summary": "Failure on ${{ github.workflow }}"
             }
           job: '{}'
           steps: '{}'
