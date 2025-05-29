@@ -11,7 +11,7 @@ inputs:
 outputs:
   changed_files:
     description: "The list of files that have changed"
-    value: ${{ steps.discover-changes.outputs.changed_files }}
+    value: ${{ fromJson(steps.discover-changes.outputs.changed_files) }}
 runs:
   using: "composite"
   steps:
