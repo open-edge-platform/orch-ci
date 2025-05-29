@@ -767,7 +767,7 @@ jobs:
             {
               "@type": "MessageCard",
               "@context": "http://schema.org/extensions",
-              "title": "Failure on ${{ github.workflow }}",
+              "title": "Failure on ${{ github.repository }}",
               "summary": "Failure on ${{ github.workflow }}",
               "sections": [
                 {
@@ -789,3 +789,6 @@ jobs:
                 }
               ]
             }
+          job: '{}'
+          steps: '{}'
+          needs: '{}'
