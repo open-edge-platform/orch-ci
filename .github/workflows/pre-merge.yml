@@ -769,13 +769,6 @@ jobs:
               "@context": "http://schema.org/extensions",
               "title": "Failure on ${{ github.repository }}",
               "summary": "Failure on ${{ github.workflow }}",
-              "sections": [
-                {
-                  "activityTitle": "Failure on ${{ github.workflow }}",
-                  "activitySubtitle": "",
-                  "activityImage": "https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/failure.png"
-                }
-              ],
               "potentialAction": [
                 {
                   "@type": "OpenUri",
