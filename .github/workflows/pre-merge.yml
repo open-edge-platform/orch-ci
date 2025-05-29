@@ -171,6 +171,8 @@ on:  # yamllint disable-line rule:truthy
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
         required: false
+      TEAMS_WEBHOOK:
+        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
@@ -753,3 +755,37 @@ jobs:
         if: ${{ always() }}
         run: |
           cat trivy-${{ env.sanitized_image_name }}-high-critical.txt
+  notify-teams:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Microsoft Teams Notification
+        uses: skitionek/notify-microsoft-teams@11e40c38c3a629ae65a985b582eca4897b01e79e # v1.0.9
+        if: always()
+        with:
+          webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
+          raw: >-
+            {
+              "@type": "MessageCard",
+              "@context": "http://schema.org/extensions",
+              "title": "Failure on ${{ github.workflow }}",
+              "summary": "Failure on ${{ github.workflow }}",
+              "sections": [
+                {
+                  "activityTitle": "Failure on ${{ github.workflow }}",
+                  "activitySubtitle": "",
+                  "activityImage": "https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/failure.png"
+                }
+              ],
+              "potentialAction": [
+                {
+                  "@type": "OpenUri",
+                  "name": "Go to failure",
+                  "targets": [
+                    {
+                      "os": "default",
+                      "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }
