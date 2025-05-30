@@ -756,18 +756,9 @@ jobs:
         run: |
           cat trivy-${{ env.sanitized_image_name }}-high-critical.txt
   notify-teams:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Microsoft Teams Notification
-        uses: skitionek/notify-microsoft-teams@11e40c38c3a629ae65a985b582eca4897b01e79e # v1.0.9
-        if: always()
-        with:
-          webhook_url: ${{ secrets.TEAMS_WEBHOOK }}
-          raw: >-
-            {
-              "title": "Failure on ${{ github.repository }}",
-              "summary": "Failure on ${{ github.workflow }}"
-            }
-          job: '{}'
-          steps: '{}'
-          needs: '{}'
+    if: failure()
+    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@notify_teams
+    with:
+      job: ${{ toJson(job) }}
+      steps: ${{ toJson(steps) }}
+      needs: ${{ toJson(needs) }}
