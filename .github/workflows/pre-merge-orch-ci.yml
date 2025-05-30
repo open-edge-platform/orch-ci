@@ -24,5 +24,3 @@ jobs:
       run_docker_build: false
       bootstrap_tools: "go,gotools,nodejs"
       trivy_config_path: trivy.yaml
-    secrets:
-      TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
