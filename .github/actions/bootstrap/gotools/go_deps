@@ -16,7 +16,7 @@ github.com/googleapis/gnostic-grpc                                 ${GNOSTIC_GRP
 github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway  ${PROTOC_GEN_GRPC_GATEWAY_VER}
 github.com/jstemmer/go-junit-report/v2                             ${GO_JUNIT_REPORT_VER}
 github.com/kollalabs/protoc-gen-openapi                            ${KOLLALABS_PROTOC_GEN_OPENAPI_VER}        protoc-gen-openapi                 protoc-gen-openapi-kollalabs
-github.com/sudorandom/protoc-gen-connect-openapi                   ${PROTOC_GEN_CONNECT_OPENAPI_VER}        protoc-gen-connect-openapi         protoc-gen-connect-openapi
+github.com/sudorandom/protoc-gen-connect-openapi                   ${PROTOC_GEN_CONNECT_OPENAPI_VER}
 github.com/magefile/mage                                           ${MAGE_VER}
 github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen           ${OAPI_CODEGEN_VER}
 github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc            ${PROTO_GEN_DOC_VER}
