@@ -19,8 +19,6 @@ jobs:
           webhook_url: ${{ secrets.MSTEAMS_WEBHOOK }}
           raw: >-
             {
-              "@type": "MessageCard",
-              "@context": "http://schema.org/extensions",
               "title": "Failure on ${{ github.repository }}",
               "summary": "Failure on ${{ github.workflow }}",
               "sections": [
