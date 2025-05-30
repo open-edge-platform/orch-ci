@@ -18,29 +18,26 @@ jobs:
         with:
           webhook_url: ${{ secrets.MSTEAMS_WEBHOOK }}
           raw: >-
-            {
-              "title": "Failure on ${{ github.repository }}",
-              "summary": "Failure on ${{ github.workflow }}",
-              "sections": [
-                {
-                  "activityTitle": "Failure on ${{ github.workflow }}",
-                  "activitySubtitle": "",
-                  "activityImage": "https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/failure.png"
-                }
-              ],
-              "potentialAction": [
-                {
-                  "@type": "OpenUri",
-                  "name": "Go to failure",
-                  "targets": [
+             {
+                "type": "message",
+                "attachments":
+                [
                     {
-                      "os": "default",
-                      "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                        "contentType": "application/vnd.microsoft.card.adaptive",
+                        "content":
+                        {
+                            "type": "AdaptiveCard",
+                            "body":
+                            [
+                                {
+                                    "type": "TextBlock",
+                                    "text": "Test title text"
+                                }
+                            ]
+                        }
                     }
-                  ]
-                }
-              ]
-            }
+                ]
+              }
           job: '{}'
           steps: '{}'
           needs: '{}'
