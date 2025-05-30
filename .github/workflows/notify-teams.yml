@@ -6,7 +6,7 @@ name: Notify Teams
 on:
   workflow_call:
     secrets:
-      MSTEAMS_WEBHOOK:
+      TEAMS_WEBHOOK:
         required: true
 jobs:
   notify:
