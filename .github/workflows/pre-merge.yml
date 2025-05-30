@@ -759,6 +759,6 @@ jobs:
     if: failure()
     uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@notify_teams
     with:
-      job: ${{ toJson(job) }}
-      steps: ${{ toJson(steps) }}
-      needs: ${{ toJson(needs) }}
+      job: ${{ toJson(needs.run-repo-pipelines.result) }}
+      steps: '{}'
+      needs: '{}'
