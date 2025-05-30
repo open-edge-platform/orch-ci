@@ -761,4 +761,4 @@ jobs:
       contains(needs.*.result, 'failure')
     uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@notify_teams
     secrets:
-      TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+      MSTEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
