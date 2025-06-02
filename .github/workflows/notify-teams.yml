@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+---
+name: Notify Teams
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    secrets:
+      MSTEAMS_WEBHOOK:
+        required: true
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Microsoft Teams
+        uses: skitionek/notify-microsoft-teams@9c67757f64d610fb6748d8ff3c11f284355ed7ec  # v1.0.8
+        if: always()
+        with:
+          webhook_url: ${{ secrets.MSTEAMS_WEBHOOK }}
+          raw: >-
+              {
+                "title": "Failure on ${{ github.repository }}",
+                "summary": "Failure on ${{ github.workflow }}",
+                "sections": [
+                  {
+                    "activityTitle": "Failure on ${{ github.workflow }}",
+                    "activitySubtitle": "",
+                    "activityImage": "https://raw.githubusercontent.com/Skitionek/notify-microsoft-teams/master/icons/failure.png"
+                  }
+                ],
+                "potentialAction": [
+                  {
+                    "@type": "OpenUri",
+                    "name": "Go to failure",
+                    "targets": [
+                      {
+                        "os": "default",
+                        "uri": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                      }
+                    ]
+                  }
+                ]
+              }
