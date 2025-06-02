@@ -171,8 +171,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
         required: false
-      TEAMS_WEBHOOK:
-        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
