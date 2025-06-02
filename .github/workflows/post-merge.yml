@@ -156,6 +156,8 @@ on:  # yamllint disable-line rule:truthy
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
         required: false
+      MSTEAMS_WEBHOOK:
+        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
@@ -680,4 +682,4 @@ jobs:
       contains(needs.*.result, 'failure')
     uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@main
     secrets:
-      MSTEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+      MSTEAMS_WEBHOOK: ${{ secrets.MSTEAMS_WEBHOOK }}

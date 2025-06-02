@@ -26,4 +26,4 @@ jobs:
       run_helm_push: false
     secrets:
       SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
-      TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
+      MSTEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}

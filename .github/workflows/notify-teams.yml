@@ -41,6 +41,6 @@ jobs:
                   }
                 ]
               }
-          job: '{}'
-          steps: '{}'
-          needs: '{}'
+          job: '{}'  # skip warning
+          steps: '{}'  # skip warning
+          needs: '{}'  # skip warning
