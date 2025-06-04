@@ -611,7 +611,7 @@ jobs:
           make deb-push
 
       - name: Upload artifacts to Release Service Fileserver
-        if: ${{inputs.run_artifact_push}}
+        if: ${{ inputs.run_artifact_push }}
         working-directory: ${{ inputs.project_folder }}
         run: |
           make fileserver-upload
