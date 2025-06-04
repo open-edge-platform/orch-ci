@@ -75,7 +75,7 @@ on:  # yamllint disable-line rule:truthy
         default: false
         type: boolean
       run_deb_push:
-        description: "Run debian push via make deb-push"
+        description: "Run Debian push via make deb-push"
         required: false
         default: false
         type: boolean
