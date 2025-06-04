@@ -668,7 +668,7 @@ jobs:
         if: ${{ inputs.run_artifact_push }}
         working-directory: ${{ inputs.project_folder }}
         run: |
-          make fileserver-upload
+          make artifact-publish
 
       - name: Version dev
         if: ${{ inputs.run_version_dev }}
