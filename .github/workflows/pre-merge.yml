@@ -10,11 +10,6 @@ name: Pre-Merge CI Pipeline
 on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
-      run_security_scans:
-        description: "Run security scans"
-        required: false
-        default: false
-        type: boolean
       run_version_check:
         description: "Run version check"
         required: false
@@ -31,21 +26,21 @@ on:  # yamllint disable-line rule:truthy
         default: false
         type: boolean
       run_build:
-        description: "Run build"
+        description: "Run build via make build call"
         required: true
         type: boolean
       run_package_build:
-        description: "Build node agent package"
+        description: "Build node agent package via make package"
         required: false
         default: false
         type: boolean
       run_lint:
-        description: "Run lint"
+        description: "Run lint via make lint"
         required: false
         default: true
         type: boolean
       run_test:
-        description: "Run test"
+        description: "Run test via make test"
         required: false
         default: true
         type: boolean
@@ -55,32 +50,32 @@ on:  # yamllint disable-line rule:truthy
         default: false
         type: boolean
       run_docker_build:
-        description: "Run docker build"
+        description: "Run docker build via make docker-build"
         required: false
         default: false
         type: boolean
       run_docker_push:
-        description: "Run docker push"
+        description: "Run docker push via make docker-push"
         required: false
         default: false
         type: boolean
       run_helm_build:
-        description: "Run helm build"
+        description: "Run helm build via make helm-build"
         required: false
         default: false
         type: boolean
       run_helm_push:
-        description: "Run helm push"
+        description: "Run helm push via make helm-push"
         required: false
         default: false
         type: boolean
-      run_scan_containers:
-        description: "Run scan containers"
+      run_artifact_push:
+        description: "Push artifacts to Release Service fileserver"
         required: false
-        default: true
+        default: false
         type: boolean
       run_artifact:
-        description: "Run artifact"
+        description: "Upload artifacts to github"
         required: false
         default: false
         type: boolean
@@ -556,7 +551,7 @@ jobs:
           bash -c "diff -u <(echo -n) <(git diff .)"
 
       - name: Configure AWS credentials
-        if: inputs.run_docker_push || inputs.run_helm_push
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact_push
         uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.0.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
@@ -564,7 +559,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Login to Amazon ECR
-        if: inputs.run_docker_push || inputs.run_helm_push
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact_push
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
         with:
           registries: "080137407410"
@@ -661,22 +656,17 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Artifact
+      - name: Upload artifacts to Release Service Fileserver
+        if: ${{inputs.run_artifact_push}}
+        run: |
+          make fileserver-upload
+
+      - name: Artifact upload to Github
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
-
-      - name: Clean up
-        if: ${{ always() }}
-        run: |
-          # Figure out if needed
-
-      - name: Send failure email
-        if: ${{ failure() }}
-        run: |
-          echo "Sending failure email..."
 
   scan-images:
     permissions:
