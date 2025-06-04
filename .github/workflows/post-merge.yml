@@ -520,13 +520,15 @@ jobs:
         env:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
-          # list of images to skip
+          # List of exact image names to skip (from input)
           skip_images="${TRIVY_IMAGE_SKIP}"
+
+          # List of patterns to exclude (e.g. <none>, clamav, etc.)
+          skip_patterns="<none>|clamav"
 
           IFS=',' read -r -a skip_array <<< "$skip_images"
 
-          # all docker images
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -v clamav | jq -R . | jq -s -c .)
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -Ev "$skip_patterns" | jq -R . | jq -s -c .)
 
           filtered_images=()
 
@@ -558,19 +560,11 @@ jobs:
           mkdir -p docker-images
           images=${IMAGES}
           # Remove the brackets and split the string into individual image names
-          formatted_images=$(echo "$images" | jq -r '.[]')
+          formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
 
           for image in $formatted_images; do
             sanitized_image=$(echo "$image" | tr -d '"')
-            if [[ "$sanitized_image" == "<none>:<none>" ]] || [[ "$sanitized_image" == *"<none>"* ]]; then
-              echo "Skipping image with <none> tag: $sanitized_image"
-              continue
-            fi
-            if [ -n "$sanitized_image" ]; then
-              docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
-            else
-              echo "Skipping empty image name."
-            fi
+            docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
           done
 
       - name: Upload Docker Images
