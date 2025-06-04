@@ -560,7 +560,7 @@ jobs:
           mkdir -p docker-images
           images=${IMAGES}
           # Remove the brackets and split the string into individual image names
-          formatted_images=$(echo "$images" | sed 's/^\[\(.*\)\]$/\1/' | tr ',' '\n')
+          formatted_images=$(echo "$images" | jq -r '.[]')
 
           for image in $formatted_images; do
             sanitized_image=$(echo "$image" | tr -d '"')
