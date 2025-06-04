@@ -662,7 +662,7 @@ jobs:
           path: docker-images
 
       - name: Upload artifacts to Release Service Fileserver
-        if: ${{inputs.run_artifact_push}}
+        if: ${{ inputs.run_artifact_push }}
         run: |
           make fileserver-upload
 
