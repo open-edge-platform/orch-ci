@@ -25,22 +25,22 @@ on:  # yamllint disable-line rule:truthy
         default: false
         type: boolean
       run_build:
-        description: "Run build"
+        description: "Run build via make build call"
         required: false
         default: true
         type: boolean
       run_package_build:
-        description: "Build node agent package"
+        description: "Build node agent package via make package"
         required: false
         default: false
         type: boolean
       run_lint:
-        description: "Run lint"
+        description: "Run lint via make lint"
         required: false
         default: false
         type: boolean
       run_test:
-        description: "Run test"
+        description: "Run test via make test"
         required: false
         default: false
         type: boolean
@@ -50,32 +50,32 @@ on:  # yamllint disable-line rule:truthy
         default: true
         type: boolean
       run_docker_build:
-        description: "Run docker build"
+        description: "Run docker build via make docker-build"
         required: false
         default: false
         type: boolean
       run_docker_push:
-        description: "Run docker push"
+        description: "Run docker push via make docker-push"
         required: false
         default: false
         type: boolean
       run_helm_build:
-        description: "Run helm build"
+        description: "Run helm build via make helm-build"
         required: false
         default: false
         type: boolean
       run_helm_push:
-        description: "Run helm push"
+        description: "Run helm push via make helm-push"
+        required: false
+        default: false
+        type: boolean
+      run_artifact_push:
+        description: "Push artifacts to Release Service fileserver"
         required: false
         default: false
         type: boolean
       run_deb_push:
-        description: "Run debian push"
-        required: false
-        default: false
-        type: boolean
-      run_artifact:
-        description: "Run artifact"
+        description: "Run Debian push via make deb-push"
         required: false
         default: false
         type: boolean
@@ -469,7 +469,7 @@ jobs:
           key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
 
       - name: Configure AWS credentials
-        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact || inputs.run_deb_push
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact_push || inputs.run_deb_push
         uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
@@ -477,7 +477,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Login to Amazon ECR
-        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact || inputs.run_deb_push
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact_push || inputs.run_deb_push
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
         with:
           registries: "080137407410"
@@ -610,11 +610,11 @@ jobs:
         run: |
           make deb-push
 
-      - name: Artifact
-        if: ${{ inputs.run_artifact }}
+      - name: Upload artifacts to Release Service Fileserver
+        if: ${{ inputs.run_artifact_push }}
         working-directory: ${{ inputs.project_folder }}
         run: |
-          make artifact-publish
+          make fileserver-upload
 
       - name: Version dev
         if: ${{ inputs.run_version_dev }}
