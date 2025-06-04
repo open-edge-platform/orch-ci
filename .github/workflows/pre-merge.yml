@@ -664,7 +664,7 @@ jobs:
       - name: Upload artifacts to Release Service Fileserver
         if: ${{ inputs.run_artifact_push }}
         run: |
-          make fileserver-upload
+          make artifact-publish
 
       - name: Artifact upload to GitHub
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
