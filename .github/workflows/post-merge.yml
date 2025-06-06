@@ -79,6 +79,13 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      artifact_to_s3:
+        description: >-
+          "Choose if the Release Service artifact will be pushed to S3. Default is false,
+          meaning it will be an ECR artifact. Credentials will be configured based on it"
+        required: false
+        default: false
+        type: boolean
       run_deb_push:
         description: "Run Debian push via make deb-push"
         required: false
@@ -168,6 +175,10 @@ on:  # yamllint disable-line rule:truthy
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
+        required: false
+      NO_AUTH_S3_PUSH_USERNAME:
+        required: false
+      NO_AUTH_S3_PUSH_PASSWD:
         required: false
       MSTEAMS_WEBHOOK:
         required: false
@@ -523,7 +534,7 @@ jobs:
           key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
 
       - name: Configure AWS credentials
-        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact_push || inputs.run_deb_push
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
         uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
@@ -531,7 +542,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Login to Amazon ECR
-        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_artifact_push || inputs.run_deb_push
+        if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
         with:
           registries: "080137407410"
@@ -664,22 +675,35 @@ jobs:
         run: |
           make deb-push
 
-      - name: Upload artifacts to Release Service Fileserver
+      # Configure AWS credentials for ECR
+      - name: Configure AWS credentials for ECR
+        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      # Configure AWS credentials for S3
+      - name: Configure AWS credentials for S3
+        if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
+        uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        if: ${{ inputs.run_artifact_push }}
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
+        with:
+          registries: "080137407410"
+
+      - name: Upload artifacts to Release Service
         if: ${{ inputs.run_artifact_push }}
         working-directory: ${{ inputs.project_folder }}
         run: |
           make artifact-publish
-
-      - name: Version dev
-        if: ${{ inputs.run_version_dev }}
-        run: |
-          # Add your version dev commands here
-          echo "Versioning dev..."
-
-      - name: Send failure email
-        if: ${{ failure() }}
-        run: |
-          echo "Sending failure email..."
   scan-images:
     permissions:
       security-events: write
