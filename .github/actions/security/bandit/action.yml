@@ -124,7 +124,8 @@ runs:
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
       run: |
         set +e
-        REPORT_FILE="bandit-report.$INPUTS_OUTPUT_FORMAT"
+        RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
+        REPORT_FILE="bandit-report-${RAND_SUFFIX}.${INPUTS_OUTPUT_FORMAT}"
 
         # Convert severity and confidence to lowercase
         SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')
