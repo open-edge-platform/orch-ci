@@ -16,13 +16,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Git identity
+    - name: Set up Git identity and log in
       shell: bash
       env:
         EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
       run: |
         git config --global user.name "github-bot@intel.com "
         git config --global user.email "do-not-reply@intel.com"
+        echo "${{ inputs.gh_token }}" | gh auth login --with-token
 
     - name: Find and update VERSION files
       id: update_versions
