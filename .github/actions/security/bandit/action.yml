@@ -182,6 +182,7 @@ runs:
 
     - name: Fail if Bandit found issues
       if: inputs.fail-on-findings == 'true' && steps.run-bandit.outputs.exit_code != '0'
+      shell: bash
       run: |
         echo "Bandit found issues. Failing the job with exit code ${{ steps.run-bandit.outputs.exit_code }}"
         exit ${{ steps.run-bandit.outputs.exit_code }}
