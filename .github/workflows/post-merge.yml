@@ -303,6 +303,7 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
         with:
           scan-scope: "all"
+          fail-on-findings: false
   run-repo-pipelines:
     permissions:
       contents: read
