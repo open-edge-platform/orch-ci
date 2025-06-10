@@ -287,7 +287,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@test
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
         with:
           scan-scope: "all"
           fail-on-findings: false
