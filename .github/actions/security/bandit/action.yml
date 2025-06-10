@@ -184,4 +184,4 @@ runs:
       if: inputs.fail-on-findings == 'true' && steps.run-bandit.outputs.exit_code != '0'
       run: |
         echo "Bandit found issues. Failing the job with exit code ${{ steps.run-bandit.outputs.exit_code }}"
-        exit ${{ steps.run-bandit.outputs.bandit_exit_code }}
+        exit ${{ steps.run-bandit.outputs.exit_code }}
