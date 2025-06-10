@@ -127,11 +127,9 @@ runs:
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="bandit-report-${RAND_SUFFIX}.${INPUTS_OUTPUT_FORMAT}"
 
-        # Convert severity and confidence to lowercase
         SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')
         CONFIDENCE=$(echo "$INPUTS_CONFIDENCE_LEVEL" | tr '[:upper:]' '[:lower:]')
 
-        # Check if pyproject.toml exists
         if [[ -f "$INPUTS_CONFIG_FILE" ]]; then
           CONFIG_OPTION="-c $INPUTS_CONFIG_FILE"
         else
@@ -139,47 +137,36 @@ runs:
         fi
 
         if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
-          echo "Running Bandit on changed files, output results into workflow log only"
           FILES="${{ steps.changed-files.outputs.all_changed_files }}"
-          bandit \
-            -a file \
-            ${CONFIG_OPTION}  \
-            --severity-level ${SEVERITY} \
-            --confidence-level ${CONFIDENCE} \
-            -r ${FILES}
+          bandit -a file ${CONFIG_OPTION} --severity-level ${SEVERITY} --confidence-level ${CONFIDENCE} -r ${FILES}
           exit_code="$?"
-          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
-
-        elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]] ; then
-          echo "Running Bandit on all files in $INPUTS_PATHS"
-          bandit \
-            ${CONFIG_OPTION}  \
-            --severity-level ${SEVERITY} \
-            --confidence-level ${CONFIDENCE} \
-            -f "$INPUTS_OUTPUT_FORMAT" \
-            -o "${REPORT_FILE}" \
-            -r "$INPUTS_PATHS"
+        elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]]; then
+          bandit ${CONFIG_OPTION} --severity-level ${SEVERITY} --confidence-level ${CONFIDENCE} -f "$INPUTS_OUTPUT_FORMAT" -o "${REPORT_FILE}" -r "$INPUTS_PATHS"
           exit_code="$?"
-          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
           echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
         else
           echo "No files to scan found"
+          exit_code=0
         fi
 
-        if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
-          exit $exit_code
-        fi
+        echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
       # Upload results after full scope analysis
     - name: Upload reports
-      if: hashFiles('bandit-report.*') != ''  # if any report is available
+      if: steps.run-bandit.outputs.report_path != ''  # if any report is available
       uses: actions/upload-artifact@v4
       with:
         name: bandit-results
-        path: bandit-report.*
+        path: ${{ steps.run-bandit.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
-      if: hashFiles('bandit-report.sarif') != ''  # if SARIF is available, upload it
+      if: steps.run-bandit.outputs.report_path != ''  # if SARIF is available, upload it
       uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
-        sarif_file: bandit-report.sarif
+        sarif_file: ${{ steps.run-bandit.outputs.report_path }}
+    
+    - name: Fail if Bandit found issues
+      if: inputs.fail-on-findings == 'true' && steps.run-bandit.outputs.exit_code != '0'
+      run: |
+        echo "Bandit found issues. Failing the job with exit code ${{ steps.run-bandit.outputs.exit_code }}"
+        exit ${{ steps.run-bandit.outputs.bandit_exit_code }}
