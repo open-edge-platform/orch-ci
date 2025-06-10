@@ -123,7 +123,7 @@ runs:
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
       run: |
-        set +e
+        set +xe
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="bandit-report-${RAND_SUFFIX}.${INPUTS_OUTPUT_FORMAT}"
 
