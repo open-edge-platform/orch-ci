@@ -122,6 +122,7 @@ runs:
         INPUTS_CONFIDENCE_LEVEL: ${{ inputs.confidence-level }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+        CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
       run: |
         set +e
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
@@ -138,9 +139,9 @@ runs:
           CONFIG_OPTION=""
         fi
 
-        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
           echo "Running Bandit on changed files, output results into workflow log only"
-          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+          FILES="${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}"
           bandit \
             -a file \
             ${CONFIG_OPTION}  \
