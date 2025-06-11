@@ -152,6 +152,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: ""
         type: string
+      run_ghcr_push:
+        description: "Push artifacts to github container registry"
+        required: false
+        default: false
+        type: boolean
     secrets:
       SYS_ORCH_GITHUB:
         required: false
@@ -651,6 +656,17 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make artifact-publish
+
+      - name: Upload artifacts to ghcr.io
+        if: ${{ inputs.run_ghcr_push }}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          CR_PAT: ${{ secrets.SYS_ORCH_GITHUB }}
+        run: |
+          echo $CR_PAT | docker login ghcr.io -u github-bot@intel.com --password-stdin
+          make ghcr-publish
+          docker logout ghcr.io
+
   scan-images:
     permissions:
       security-events: write
