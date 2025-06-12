@@ -255,16 +255,16 @@ jobs:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
           format: 'spdx-json'
-          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json"
+          output: "trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@fca7ace96b7d713c7035871441bd52efbe39e27e  # v3.28.19
         with:
-          sarif_file: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
+          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   trivy-sbom:
     runs-on: ubuntu-latest
     permissions:
