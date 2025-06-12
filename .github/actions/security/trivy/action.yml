@@ -111,7 +111,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
 
     - name: Cache Trivy vulnerability database
       uses: actions/cache@v3
@@ -124,7 +124,8 @@ runs:
     - name: Install Trivy
       shell: bash
       run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.63.0
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+        | sh -s -- -b /usr/local/bin v0.63.0
         # Download DB in advance with retry mechanism
         for i in {1..3}; do
           echo "Attempt $i to download vulnerability database..."
@@ -224,14 +225,14 @@ runs:
 
       # Upload results after full scope analysis
     - name: Upload reports
-      if: steps.run-trivy.outputs.report_path != '' # if any report is available
+      if: steps.run-trivy.outputs.report_path != ''  # if any report is available
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: trivy-results-${{ steps.run-trivy.outputs.rand_suffix }}
         path: ${{ steps.run-trivy.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
-      if: contains(steps.run-trivy.outputs.report_path, '.sarif') # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      if: contains(steps.run-trivy.outputs.report_path, '.sarif')  # if SARIF is available, upload it
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
         sarif_file: ${{ steps.run-trivy.outputs.report_path }}
