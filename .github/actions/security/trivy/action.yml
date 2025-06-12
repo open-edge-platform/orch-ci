@@ -71,13 +71,14 @@ inputs:
   ignore_unfixed:
     description: "Ignore unpatched/unfixed vulnerabilities"
     required: false
-    default: "false"
+    default: "true"
   scanners:
     description: "Scanners to enable (vuln,secret,config)"
     required: false
     default: "vuln"
   misconfig_scanners:
-    description: "Misconfig scanners to enable (azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan)"
+    description: >-
+      "Misconfig scanners to enable (azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan)"
     required: false
     default: "azure-arm,cloudformation,dockerfile,helm,kubernetes,terraform,terraformplan"
   format:
