@@ -186,5 +186,5 @@ runs:
       if: inputs.fail-on-findings == 'true' && steps.run-semgrep.outputs.exit_code != '0'
       shell: bash
       run: |
-        echo "Bandit found issues. Failing the job with exit code ${{ steps.run-semgrep.outputs.exit_code }}"
+        echo "Semgrep found issues. Failing the job with exit code ${{ steps.run-semgrep.outputs.exit_code }}"
         exit ${{ steps.run-semgrep.outputs.exit_code }}
