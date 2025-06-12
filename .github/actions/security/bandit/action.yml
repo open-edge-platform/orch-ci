@@ -171,7 +171,7 @@ runs:
       # Upload results after full scope analysis
     - name: Upload reports
       if: steps.run-bandit.outputs.report_path != ''   # if any report is available
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: bandit-results-${{ steps.run-bandit.outputs.rand_suffix }}
         path: ${{ steps.run-bandit.outputs.report_path }}
