@@ -148,6 +148,7 @@ runs:
         INPUTS_TIMEOUT: ${{ inputs.timeout }}
         INPUTS_GENERATE_SBOM: ${{ inputs.generate_sbom }}
         INPUTS_SBOM_FORMAT: ${{ inputs.sbom_format }}
+        CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
 
       run: |
         # Create output directory
@@ -158,7 +159,7 @@ runs:
         echo "Output will be saved to: ${REPORT_FILE}"
 
         # Always scan the entire directory but use different paths based on scope
-        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
           echo "Changed files detected, scanning repository"
           SCAN_TARGET="."
         else

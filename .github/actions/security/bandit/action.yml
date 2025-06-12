@@ -122,6 +122,7 @@ runs:
         INPUTS_CONFIDENCE_LEVEL: ${{ inputs.confidence-level }}
         INPUTS_OUTPUT_FORMAT: ${{ inputs.output-format }}
         INPUTS_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+        CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
       run: |
         set +e
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
@@ -138,9 +139,9 @@ runs:
           CONFIG_OPTION=""
         fi
 
-        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+        if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
           echo "Running Bandit on changed files, output results into workflow log only"
-          FILES="${{ steps.changed-files.outputs.all_changed_files }}"
+          FILES="${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}"
           bandit \
             -a file \
             ${CONFIG_OPTION}  \
@@ -166,20 +167,23 @@ runs:
           echo "No files to scan found"
         fi
 
-        if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
-          exit $exit_code
-        fi
-
       # Upload results after full scope analysis
     - name: Upload reports
-      if: hashFiles('bandit-report.*') != ''  # if any report is available
+      if: steps.run-bandit.outputs.report_path != ''   # if any report is available
       uses: actions/upload-artifact@v4
       with:
         name: bandit-results
-        path: bandit-report.*
+        path: ${{ steps.run-bandit.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
-      if: hashFiles('bandit-report.sarif') != ''  # if SARIF is available, upload it
+      if: contains(steps.run-bandit.outputs.report_path, '.sarif')  # if SARIF is available, upload it
       uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
-        sarif_file: bandit-report.sarif
+        sarif_file: ${{ steps.run-bandit.outputs.report_path }}
+
+    - name: Fail if Bandit found issues
+      if: inputs.fail-on-findings == 'true' && steps.run-bandit.outputs.exit_code != '0'
+      shell: bash
+      run: |
+        echo "Bandit found issues. Failing the job with exit code ${{ steps.run-bandit.outputs.exit_code }}"
+        exit ${{ steps.run-bandit.outputs.exit_code }}
