@@ -29,6 +29,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: true
         type: boolean
+      run_upload_assets:
+        description: "Upload assets"
+        required: false
+        default: false
+        type: boolean
       run_package_build:
         description: "Build node agent package via make package"
         required: false
@@ -102,6 +107,14 @@ on:  # yamllint disable-line rule:truthy
           Project subfolder where the job will run, defaults to '.'
         required: false
         default: "."
+        type: string
+      assets_dir:
+        description: >-
+          Specifies the directory containing files and packages to be uploaded as part of the release assets.
+          This directory should include all necessary artifacts that need to be attached to the GitHub release.
+          If provided, the workflow will iterate over the contents of this directory and upload each file to the release.
+        required: false
+        default: ""
         type: string
       orch_ci_repo_ref:
         description: >-
@@ -464,6 +477,47 @@ jobs:
         run: |
           echo "Building the code"
           make build
+
+      - name: Upload Assets
+        if: ${{ inputs.run_upload_assets}}
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          ASSETS_DIR: "${{ inputs.assets_dir }}"
+          PROJECT_FOLDER: "${{ inputs.project_folder }}"
+        run: |
+          # Check if ASSETS_DIR is provided and exists
+          if [ -z "$ASSETS_DIR" ] || [ ! -d "$ASSETS_DIR" ]; then
+            echo "Error: $ASSETS_DIR is not set or does not exist."
+            exit 1
+          fi
+
+          # Check if PROJECT_FOLDER is provided and exists
+          if [ -z "$PROJECT_FOLDER" ] || [ ! -d "$PROJECT_FOLDER" ]; then
+             echo "Error: $PROJECT_FOLDER is not set or does not exist."
+             exit 1
+          fi
+
+          cd "$PROJECT_FOLDER"
+
+          # Fetch the latest tag using the project folder
+          latest_tag=$(git tag --list "${PROJECT_FOLDER}/*" | sort -V | tail -n 1)
+          echo "Latest tag: $latest_tag"
+          echo "Attempting to create a release for tag: $latest_tag"
+
+          # Create a release for the latest tag
+          gh release create "$latest_tag" --title "Release $latest_tag" --notes "Release notes for $latest_tag"
+          echo "Release creation command executed for tag: $latest_tag"
+
+          for file in "$ASSETS_DIR"/*; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file to release assets..."
+              gh release upload "$latest_tag" "$file" --clobber
+              echo "$file uploaded to release assets."
+            else
+              echo "$file not found, skipping upload."
+            fi
+          done
 
       - name: Build Package
         if: ${{ inputs.run_package_build }}
