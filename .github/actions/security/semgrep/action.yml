@@ -134,7 +134,9 @@ runs:
         # Create results directory
         mkdir -p security-results/semgrep
 
-        REPORT_FILE="security-results/semgrep/semgrep-results.$INPUTS_OUTPUT_FORMAT"
+        RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
+        REPORT_FILE="security-results/semgrep/semgrep-results-${RAND_SUFFIX}.$INPUTS_OUTPUT_FORMAT"
+        echo "rand_suffix=$RAND_SUFFIX" >> GITHUB_OUTPUT
 
         if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
           echo "Running Semgrep on changed files, output results into workflow log only"
@@ -166,20 +168,23 @@ runs:
           echo "No files to scan found"
         fi
 
-        if [[ "$INPUTS_FAIL_ON_FINDINGS" == "true" && -n "$exit_code" && "$exit_code" != "0" ]]; then
-          exit $exit_code
-        fi
-
       # Upload results after full scope analysis
     - name: Upload reports
-      if: hashFiles('security-results/semgrep/*') != ''  # if any report is available
-      uses: actions/upload-artifact@v4
+      if: steps.run-semgrep.outputs.report_path != ''  # if any report is available
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
-        name: semgrep-results
-        path: security-results/semgrep
+        name: semgrep-results-${{ steps.run-semgrep.outputs.rand_suffix }}
+        path: ${{ steps.run-semgrep.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
-      if: hashFiles('security-results/semgrep/semgrep-results.sarif') != ''  # if SARIF is available, upload it
+      if: contains(steps.run-semgrep.outputs.report_path, '.sarif')  # if SARIF is available, upload it
       uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
-        sarif_file: security-results/semgrep/semgrep-results.sarif
+        sarif_file: ${{ steps.run-semgrep.outputs.report_path }}
+
+    - name: Fail if Semgrep found issues
+      if: inputs.fail-on-findings == 'true' && steps.run-semgrep.outputs.exit_code != '0'
+      shell: bash
+      run: |
+        echo "Semgrep found issues. Failing the job with exit code ${{ steps.run-semgrep.outputs.exit_code }}"
+        exit ${{ steps.run-semgrep.outputs.exit_code }}

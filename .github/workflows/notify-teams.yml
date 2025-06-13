@@ -8,9 +8,14 @@ on:  # yamllint disable-line rule:truthy
     secrets:
       MSTEAMS_WEBHOOK:
         required: true
+
+permissions: {}
+
 jobs:
   notify:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Notify Microsoft Teams
         uses: skitionek/notify-microsoft-teams@9c67757f64d610fb6748d8ff3c11f284355ed7ec  # v1.0.8
