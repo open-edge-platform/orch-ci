@@ -249,15 +249,30 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+      - name: Run Trivy SBOM
+        uses: aquasecurity/trivy-action@76071ef0d7ec797419534a183b498b4d6366cf37  # 0.31.0
+        with:
+          scan-type: 'fs'
+          format: 'spdx-json'
+          output: "trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@fca7ace96b7d713c7035871441bd52efbe39e27e  # v3.28.19
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+  trivy-sbom:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
   zizimor-scan:
     permissions:
       security-events: write
@@ -293,6 +308,23 @@ jobs:
           persist-credentials: false
       - name: Run Bandit scan
         uses: open-edge-platform/orch-ci/.github/actions/security/bandit@37eef2d2a0909dfe8ff26bb0730ab2f13dfbcaf6  # 0.1.25
+        with:
+          scan-scope: "all"
+          fail-on-findings: false
+  semgrep:
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep@sha256:14e073f6417e5d2d0797aa13f26d569270b86fac9d52052d2358c985f1a4e9f0  # v1.124.0
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Run Semgrep scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@37eef2d2a0909dfe8ff26bb0730ab2f13dfbcaf6  # 0.1.25
         with:
           scan-scope: "all"
           fail-on-findings: false
