@@ -738,6 +738,7 @@ jobs:
     permissions:
       contents: read
     runs-on: ubuntu-latest
+    if: ${{inputs.run_version_dev}}
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
