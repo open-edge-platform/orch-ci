@@ -751,7 +751,7 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@main
+        uses: open-edge-platform/orch-ci/dev-version-update@add_version_dev
         with:
           github_token: ${{ secrets.SYS_ORCH_GITHUB }}
   notify-teams:
