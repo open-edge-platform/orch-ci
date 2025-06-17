@@ -21,6 +21,7 @@ runs:
       env:
         EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
         GITHUB_TOKEN: ${{ inputs.gh_token }}
+        shell: bash -xe
       run: |
         git config --global user.name "github-bot@intel.com "
         git config --global user.email "do-not-reply@intel.com"
