@@ -21,7 +21,7 @@ runs:
       env:
         EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
         github_token: ${{ inputs.github_token }}
-        shell: bash -xe
+        shell: bash
       run: |
         git config --global user.name "github-bot@intel.com "
         git config --global user.email "do-not-reply@intel.com"
@@ -29,7 +29,7 @@ runs:
 
     - name: Find and update VERSION files
       id: update_versions
-      shell: bash -xe
+      shell: bash
       run: |
         source ${{ github.action_path }}/../ci/scripts/tagging-lib.sh
 
