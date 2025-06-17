@@ -23,9 +23,10 @@ runs:
         github_token: ${{ inputs.github_token }}
         shell: bash
       run: |
-        git config --global user.name "github-bot@intel.com "
+        git config --global user.name "github-bot@intel.com"
         git config --global user.email "do-not-reply@intel.com"
         echo "${github_token}" | gh auth login --with-token
+        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:"$github_token" | base64)"
 
     - name: Find and update VERSION files
       id: update_versions
