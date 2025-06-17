@@ -9,7 +9,7 @@ inputs:
     description: "Comma-separated list of path patterns to exclude from search"
     required: false
     default: "*/node_modules/*,*/dist/*,*/build/*,*/vendor/*,*/bin/*,*/pkg/*,*/.git/*"
-  gh_token:
+  github_token:
     required: true
     description: "GitHub token for creating pull request"
 
@@ -20,17 +20,19 @@ runs:
       shell: bash
       env:
         EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
-        GITHUB_TOKEN: ${{ inputs.gh_token }}
+        github_token: ${{ inputs.github_token }}
+        shell: bash
       run: |
-        git config --global user.name "github-bot@intel.com "
+        git config --global user.name "github-bot@intel.com"
         git config --global user.email "do-not-reply@intel.com"
-        echo "${GITHUB_TOKEN}" | gh auth login --with-token
+        echo "${github_token}" | gh auth login --with-token
+        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(echo -n x-access-token:"$github_token" | base64)"
 
     - name: Find and update VERSION files
       id: update_versions
       shell: bash
       run: |
-        source ${{ github.action_path }}/../scripts/tagging-lib.sh
+        source ${{ github.workspace }}/ci/scripts/tagging-lib.sh
 
         CURRENT_DATE=$(date +%d-%m-%Y-%H%M%S)
         BRANCH_NAME="update-versions-${CURRENT_DATE}"
