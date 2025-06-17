@@ -753,7 +753,7 @@ jobs:
       - name: Run Version Update Action
         uses: open-edge-platform/orch-ci/dev-version-update@main
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          github_token: ${{ secrets.SYS_ORCH_GITHUB }}
   notify-teams:
     needs: [run-repo-pipelines]
     if: always() &&

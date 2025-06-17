@@ -9,7 +9,7 @@ inputs:
     description: "Comma-separated list of path patterns to exclude from search"
     required: false
     default: "*/node_modules/*,*/dist/*,*/build/*,*/vendor/*,*/bin/*,*/pkg/*,*/.git/*"
-  gh_token:
+  github_token:
     required: true
     description: "GitHub token for creating pull request"
 
@@ -20,11 +20,12 @@ runs:
       shell: bash
       env:
         EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
-        GITHUB_TOKEN: ${{ inputs.gh_token }}
+        github_token: ${{ inputs.github_token }}
         shell: bash -xe
       run: |
         git config --global user.name "github-bot@intel.com "
         git config --global user.email "do-not-reply@intel.com"
+        echo "${github_token}" | gh auth login --with-token
 
     - name: Find and update VERSION files
       id: update_versions
