@@ -28,7 +28,7 @@ runs:
 
     - name: Find and update VERSION files
       id: update_versions
-      shell: bash
+      shell: bash -xe
       run: |
         source ${{ github.action_path }}/../ci/scripts/tagging-lib.sh
 
