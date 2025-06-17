@@ -12,7 +12,7 @@ on:   # yamllint disable-line rule:truthy
 jobs:
   post-merge:
     permissions:
-      contents: write
+      contents: read
       security-events: write
       id-token: write
     uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@add_version_dev
