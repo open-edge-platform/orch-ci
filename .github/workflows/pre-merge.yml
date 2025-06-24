@@ -184,6 +184,16 @@ on:  # yamllint disable-line rule:truthy
         required: false
 permissions: {}
 jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Check PR Title
+        uses: open-edge-platform/orch-ci/.github/actions/check-pr-title@check_pr_title
+        with:
+          pr_title: ${{ github.event.pull_request.title }}
   sanitize-project-folder:
     permissions:
       contents: read
