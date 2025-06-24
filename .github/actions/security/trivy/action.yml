@@ -104,7 +104,7 @@ outputs:
     value: ${{ steps.run-trivy.outputs.exit_code }}
   report_path:
     description: "Path to the generated report file"
-    value: ${{ steps.run-trivy.outputs.report_path }}
+    value: ${{ steps.run-trivy.outputs.report_path }}  
 
 runs:
   using: composite
@@ -173,7 +173,7 @@ runs:
         mkdir -p security-results/trivy
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="security-results/trivy/trivy-results-${RAND_SUFFIX}.$INPUTS_FORMAT"
-        echo "rand_suffix=$RAND_SUFFIX" >> GITHUB_OUTPUT
+        echo "rand_suffix=${RAND_SUFFIX}" >> GITHUB_OUTPUT
 
         echo "Running Trivy with scan type: $INPUTS_SCAN_TYPE"
         echo "Output will be saved to: ${REPORT_FILE}"
