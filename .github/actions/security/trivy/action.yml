@@ -104,7 +104,7 @@ outputs:
     value: ${{ steps.run-trivy.outputs.exit_code }}
   report_path:
     description: "Path to the generated report file"
-    value: ${{ steps.run-trivy.outputs.report_path }}  
+    value: ${{ steps.run-trivy.outputs.report_path }}
 
 runs:
   using: composite
