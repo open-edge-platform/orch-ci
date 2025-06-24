@@ -173,7 +173,7 @@ runs:
         mkdir -p security-results/trivy
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="security-results/trivy/trivy-results-${RAND_SUFFIX}.$INPUTS_FORMAT"
-        echo "rand_suffix=${RAND_SUFFIX}" >> GITHUB_OUTPUT
+        echo "rand_suffix=${RAND_SUFFIX}" >> $GITHUB_OUTPUT
 
         echo "Running Trivy with scan type: $INPUTS_SCAN_TYPE"
         echo "Output will be saved to: ${REPORT_FILE}"
@@ -231,7 +231,7 @@ runs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: trivy-results-${{ steps.run-trivy.outputs.rand_suffix }}
-        path: ${{ steps.run-trivy.outputs.report_path }}
+        path: ${{ steps.run-zizmor.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
       if: contains(steps.run-trivy.outputs.report_path, '.sarif')  # if SARIF is available, upload it

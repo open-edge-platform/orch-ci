@@ -101,7 +101,9 @@ runs:
 
       run: |
         set +e
-        REPORT_FILE="zizmor-report.$INPUTS_OUTPUT_FORMAT"
+        RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
+        REPORT_FILE="zizmor-report-${RAND_SUFFIX}.$INPUTS_OUTPUT_FORMAT"
+        echo "rand_suffix=${RAND_SUFFIX}" >> $GITHUB_OUTPUT
 
         # Convert severity and confidence to lowercase
         SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')
@@ -138,14 +140,14 @@ runs:
 
       # Upload results after full scope analysis
     - name: Upload reports
-      if: hashFiles('zizmor-report.*') != ''  # if any report is available
+      if: steps.run-zizmor.outputs.report_path != ''   # if any report is available
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
-        name: zizmor-results
-        path: zizmor-report.*
+        name: zizmor-results-${{ steps.run-zizmor.outputs.rand_suffix }}
+        path: ${{ steps.run-zizmor.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
-      if: hashFiles('zizmor-report.sarif') != ''  # if SARIF is available, upload it
+      if: contains(steps.run-zizmor.outputs.report_path, '.sarif')  # if SARIF is available, upload it
       uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
-        sarif_file: zizmor-report.sarif
+        sarif_file: ${{ steps.run-trivy.outputs.report_path }}
