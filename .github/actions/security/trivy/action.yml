@@ -231,7 +231,7 @@ runs:
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: trivy-results-${{ steps.run-trivy.outputs.rand_suffix }}
-        path: ${{ steps.run-zizmor.outputs.report_path }}
+        path: ${{ steps.run-trivy.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
       if: contains(steps.run-trivy.outputs.report_path, '.sarif')  # if SARIF is available, upload it
