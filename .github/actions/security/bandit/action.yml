@@ -127,7 +127,7 @@ runs:
         set +e
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="bandit-report-${RAND_SUFFIX}.${INPUTS_OUTPUT_FORMAT}"
-        echo "rand_suffix=$RAND_SUFFIX" >> GITHUB_OUTPUT
+        echo "rand_suffix=${RAND_SUFFIX}" >> $GITHUB_OUTPUT
 
         # Convert severity and confidence to lowercase
         SEVERITY=$(echo "$INPUTS_SEVERITY_LEVEL" | tr '[:upper:]' '[:lower:]')

@@ -136,7 +136,7 @@ runs:
 
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="security-results/semgrep/semgrep-results-${RAND_SUFFIX}.$INPUTS_OUTPUT_FORMAT"
-        echo "rand_suffix=$RAND_SUFFIX" >> GITHUB_OUTPUT
+        echo "rand_suffix=${RAND_SUFFIX}" >> $GITHUB_OUTPUT
 
         if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
           echo "Running Semgrep on changed files, output results into workflow log only"
