@@ -79,6 +79,10 @@ inputs:
     description: "Whether to fail the action if issues are found"
     required: false
     default: "true"
+  report_suffix:
+    description: "In case of matrix jobs pass a suffix with the job name"
+    required: false
+    default: ""
 
 outputs:
   scan_result:
@@ -170,10 +174,12 @@ runs:
 
       # Upload results after full scope analysis
     - name: Upload reports
+      env:
+        suffix: ${{inputs.report_suffix}}
       if: steps.run-semgrep.outputs.report_path != ''  # if any report is available
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
-        name: semgrep-results-${{ steps.run-semgrep.outputs.rand_suffix }}
+        name: semgrep-results-${{ steps.run-semgrep.outputs.rand_suffix }}${suffix}
         path: ${{ steps.run-semgrep.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
