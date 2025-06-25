@@ -80,7 +80,7 @@ inputs:
     required: false
     default: "true"
   report_suffix:
-    description: "In case of matrix jobs pass a suffix with the job name"
+    description: "In case of matrix jobs pass a suffix with the job name with a -"
     required: false
     default: ""
 
