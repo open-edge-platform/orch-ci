@@ -755,6 +755,7 @@ jobs:
         uses: open-edge-platform/orch-ci/dev-version-update@main
         with:
           github_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          project_folder: ${{ inputs.project_folder }}
   notify-teams:
     needs: [run-repo-pipelines]
     if: always() &&

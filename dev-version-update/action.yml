@@ -12,6 +12,9 @@ inputs:
   github_token:
     required: true
     description: "GitHub token for creating pull request"
+  project_folder:
+    required: false
+    description: "Optional project folder to limit the search for VERSION files"
 
 runs:
   using: "composite"
@@ -107,9 +110,10 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.gh_token }}
         BRANCH_NAME: ${{ steps.update_versions.outputs.branch_name }}
+        INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       run: |
         gh pr create \
-          --title "Version bump to -dev" \
+          --title "Version bump to -dev ${INPUTS_PROJECT_FOLDER}" \
           --body "Automatically bumping the version to the next development iteration (-dev suffix)." \
           --base main \
           --head ${BRANCH_NAME}
