@@ -15,8 +15,8 @@ inputs:
   project_folder:
     required: false
     description: "Optional project folder to limit the search for VERSION files"
-    default: "."
     type: string
+    default: "."
 
 runs:
   using: "composite"
@@ -47,6 +47,10 @@ runs:
         CHANGES_MADE=0
 
         IFS=',' read -ra EXCLUDE_PATHS <<< "${EXCLUDE_PATHS}"
+        INPUTS_PROJECT_FOLDER=$(echo "${INPUTS_PROJECT_FOLDER}" | xargs)
+        if [[ -z "${INPUTS_PROJECT_FOLDER}" ]]; then
+          INPUTS_PROJECT_FOLDER="."
+        fi
         FIND_CMD="find ${INPUTS_PROJECT_FOLDER} -name VERSION -type f"
 
         for EXCLUDE in "${EXCLUDE_PATHS[@]}"; do
@@ -111,8 +115,9 @@ runs:
         INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       run: |
         TITLE="Version bump to -dev"
-        if [ "${INPUTS_PROJECT_FOLDER}" == "." ]; then
-          TITLE="$TITLE for $INPUTS_PROJECT_FOLDER"
+        INPUTS_PROJECT_FOLDER=$(echo "${INPUTS_PROJECT_FOLDER}" | xargs)
+        if [[ -n "${INPUTS_PROJECT_FOLDER}" && "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
+          TITLE="${TITLE} for ${INPUTS_PROJECT_FOLDER}"
         fi
         gh pr create \
           --title "${TITLE}" \
