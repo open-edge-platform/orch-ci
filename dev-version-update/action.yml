@@ -15,6 +15,8 @@ inputs:
   project_folder:
     required: false
     description: "Optional project folder to limit the search for VERSION files"
+    default: "."
+    type: string
 
 runs:
   using: "composite"
@@ -45,11 +47,7 @@ runs:
         CHANGES_MADE=0
 
         IFS=',' read -ra EXCLUDE_PATHS <<< "${EXCLUDE_PATHS}"
-        FIND_CMD="find . -name VERSION -type f"
-
-        if [[ -n "${INPUTS_PROJECT_FOLDER}" ]]; then
-          FIND_CMD="find ${INPUTS_PROJECT_FOLDER} -name VERSION -type f"
-        fi
+        FIND_CMD="find ${INPUTS_PROJECT_FOLDER} -name VERSION -type f"
 
         for EXCLUDE in "${EXCLUDE_PATHS[@]}"; do
           FIND_CMD="$FIND_CMD -not -path \"$EXCLUDE\""
@@ -112,8 +110,12 @@ runs:
         BRANCH_NAME: ${{ steps.update_versions.outputs.branch_name }}
         INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       run: |
+        TITLE="Version bump to -dev"
+        if [ "${INPUTS_PROJECT_FOLDER}" == "." ]; then
+          TITLE="$TITLE for $INPUTS_PROJECT_FOLDER"
+        fi
         gh pr create \
-          --title "Version bump to -dev ${INPUTS_PROJECT_FOLDER}" \
+          --title "${TITLE}" \
           --body "Automatically bumping the version to the next development iteration (-dev suffix)." \
           --base main \
           --head ${BRANCH_NAME}
