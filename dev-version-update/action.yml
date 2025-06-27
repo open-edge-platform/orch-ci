@@ -21,6 +21,7 @@ runs:
       env:
         EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
         github_token: ${{ inputs.github_token }}
+        INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
         shell: bash
       run: |
         git config --global user.name "github-bot@intel.com"
@@ -34,7 +35,7 @@ runs:
       run: |
         source ${{ github.workspace }}/ci/scripts/tagging-lib.sh
 
-        CURRENT_DATE=$(date +%d-%m-%Y-%H%M%S)
+        CURRENT_DATE=$(date +%d-%m-%Y-%H%M%S%N | cut -c1-20)
         BRANCH_NAME="update-versions-${CURRENT_DATE}"
         git checkout -b $BRANCH_NAME
 
@@ -42,6 +43,10 @@ runs:
 
         IFS=',' read -ra EXCLUDE_PATHS <<< "${EXCLUDE_PATHS}"
         FIND_CMD="find . -name VERSION -type f"
+
+        if [[ -n "${INPUTS_PROJECT_FOLDER}" ]]; then
+          FIND_CMD="find ${INPUTS_PROJECT_FOLDER} -name VERSION -type f"
+        fi
 
         for EXCLUDE in "${EXCLUDE_PATHS[@]}"; do
           FIND_CMD="$FIND_CMD -not -path \"$EXCLUDE\""
