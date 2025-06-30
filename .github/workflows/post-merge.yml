@@ -220,7 +220,7 @@ jobs:
           repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
           publish_results: true
       - name: Upload Scorecard Results
-        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858  # v3.29.0
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b  # v3.29.2
         with:
           sarif_file: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Scorecard Results
@@ -261,7 +261,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858  # v3.29.0
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b  # v3.29.2
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   zizimor-scan:
@@ -284,7 +284,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858  # v3.29.0
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b  # v3.29.2
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -731,7 +731,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy Image Scan Report
-        uses: github/codeql-action/upload-sarif@ce28f5bb42b7a9f2c824e633a3f6ee835bab6858  # v3.29.0
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b  # v3.29.2
         with:
           sarif_file: trivy-${{ env.sanitized_image_name }}.sarif
   version-bump:
