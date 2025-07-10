@@ -607,7 +607,7 @@ jobs:
           make docker-build
 
       - name: Push Docker image
-        if: ${{ inputs.run_docker_push }} && github.actor != 'dependabot[bot]'
+        if: ${{ inputs.run_docker_push && github.actor != 'dependabot[bot]' }}
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
@@ -623,7 +623,7 @@ jobs:
           make helm-build
 
       - name: Push Helm chart
-        if: ${{ inputs.run_helm_push }} && github.actor != 'dependabot[bot]'
+        if: ${{ inputs.run_helm_push && github.actor != 'dependabot[bot]' }}
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
