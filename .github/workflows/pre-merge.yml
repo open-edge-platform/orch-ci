@@ -585,7 +585,7 @@ jobs:
           bash -c "diff -u <(echo -n) <(git diff .)"
 
       - name: Configure AWS credentials
-        if: inputs.run_docker_push || inputs.run_helm_push
+        if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
         uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
@@ -593,7 +593,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Login to Amazon ECR
-        if: inputs.run_docker_push || inputs.run_helm_push
+        if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076  # v2.0.1
         with:
           registries: "080137407410"
@@ -607,7 +607,7 @@ jobs:
           make docker-build
 
       - name: Push Docker image
-        if: ${{ inputs.run_docker_push }}
+        if: ${{ inputs.run_docker_push }} && github.actor != 'dependabot[bot]'
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
@@ -623,7 +623,7 @@ jobs:
           make helm-build
 
       - name: Push Helm chart
-        if: ${{ inputs.run_helm_push }}
+        if: ${{ inputs.run_helm_push }} && github.actor != 'dependabot[bot]'
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
