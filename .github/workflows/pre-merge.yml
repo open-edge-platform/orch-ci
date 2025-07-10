@@ -715,7 +715,7 @@ jobs:
           registries: "080137407410"
 
       - name: Upload artifacts to Release Service Fileserver
-        if: ${{ inputs.run_artifact_push && github.actor != 'dependabot[bot]' }} 
+        if: ${{ inputs.run_artifact_push && github.actor != 'dependabot[bot]' }}
         run: |
           make artifact-publish
 
