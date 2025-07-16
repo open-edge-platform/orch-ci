@@ -1,0 +1,12 @@
+[
+  {
+    "description": "generic-api-key",
+    "startLine": 1054,
+    "endLine": 1054,
+    "startColumn": 27,
+    "endColumn": 63,
+    "match": "E5E53D99-708D-4AF5-8378-63880FF62712",
+    "secret": "E5E53D99-708D-4AF5-8378-63880FF62712",
+    "fingerprint": "inventory/internal/store/host_test.go:generic-api-key:1054"
+  }
+]
