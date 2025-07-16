@@ -1,22 +1,22 @@
 [
   {
     "description": "generic-api-key",
-    "startLine": 1054,
-    "endLine": 1054,
+    "startLine": 1052,
+    "endLine": 1052,
     "startColumn": 27,
     "endColumn": 63,
     "match": "E5E53D99-708D-4AF5-8378-63880FF62712",
     "secret": "E5E53D99-708D-4AF5-8378-63880FF62712",
-    "fingerprint": "inventory/internal/store/host_test.go:generic-api-key:1054"
+    "fingerprint": "inventory/internal/store/host_test.go:generic-api-key:1052"
   },
     {
     "description": "generic-api-key",
-    "startLine": 1054,
-    "endLine": 1054,
+    "startLine": 1053,
+    "endLine": 1053,
     "startColumn": 27,
     "endColumn": 63,
     "match": "E5E53D99-708D-4AF5-8378-63880FF62714",
     "secret": "E5E53D99-708D-4AF5-8378-63880FF62714",
-    "fingerprint": "inventory/internal/store/host_test.go:generic-api-key:1054"
+    "fingerprint": "inventory/internal/store/host_test.go:generic-api-key:1053"
   }
 ]
