@@ -264,7 +264,6 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           persist-credentials: false
-          ref: update_secrets
       - name: Scan for secrets
         env:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
