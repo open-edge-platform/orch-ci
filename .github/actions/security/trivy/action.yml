@@ -202,9 +202,11 @@ runs:
         if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then
           # For config scans, use all default misconfig scanners or specified ones
           CMD="$CMD --misconfig-scanners $INPUTS_MISCONFIG_SCANNERS"
-        elif [[ "$INPUTS_SCAN_TYPE" == "fs" ]]; then
+        elif [[ "$INPUTS_SCAN_TYPE" == "fs" || "$INPUTS_SCAN_TYPE" == "repo" ]]; then
           # For filesystem scans, use --scanners
           CMD="$CMD --scanners $INPUTS_SCANNERS --ignore-unfixed=$INPUTS_IGNORE_UNFIXED"
+        elif [[ "$INPUTS_SCAN_TYPE" == "image" ]]; then
+          CMD="$CMD --ignore-unfixed=$INPUTS_IGNORE_UNFIXED"
         fi
 
         # Add the scan target and execute
