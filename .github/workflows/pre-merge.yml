@@ -44,6 +44,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: true
         type: boolean
+      lint_makeflags:
+        description: "MAKEFLAGS for make lint"
+        required: false
+        default: ""
+        type: string
       run_test:
         description: "Run test via make test"
         required: false
@@ -494,6 +499,8 @@ jobs:
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
+        env:
+          MAKEFLAGS: ${{ inputs.lint_makeflags }}
         run: |
           make lint
 
