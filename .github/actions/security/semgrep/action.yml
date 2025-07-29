@@ -63,8 +63,7 @@ inputs:
     description: "Semgrep rules or config to use"
     required: false
     default: >
-      "p/default 
-      p/cwe-top-25 
+      "p/cwe-top-25 
       p/trailofbits 
       p/owasp-top-ten 
       p/r2c-security-audit 
