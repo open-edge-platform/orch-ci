@@ -63,18 +63,18 @@ inputs:
     description: "Semgrep rules or config to use"
     required: false
     default: >
-      "p/cwe-top-25 
-      p/trailofbits 
-      p/owasp-top-ten 
-      p/r2c-security-audit 
-      p/python 
-      p/javascript 
-      p/typescript 
-      p/java 
-      p/go 
-      p/ruby 
-      p/php 
-      p/dockerfile 
+      "p/cwe-top-25
+      p/trailofbits
+      p/owasp-top-ten
+      p/r2c-security-audit
+      p/python
+      p/javascript
+      p/typescript
+      p/java
+      p/go
+      p/ruby
+      p/php
+      p/dockerfile
       p/terraform"
   severity:
     description: "Minimum severity level to report (LOW/MEDIUM/HIGH/CRITICAL)"
