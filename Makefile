@@ -41,7 +41,7 @@ shellcheck: ## lint shell scripts with shellcheck
 
 # https://github.com/DavidAnson/markdownlint-cli2
 markdownlint: ## lint markdown files with markdownlint-cli2
-	markdownlint-cli2 '**/*.md'
+	markdownlint-cli2 '**/*.md' '!venv_ci/**'
 
 actionlint: ## lint github actions
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
