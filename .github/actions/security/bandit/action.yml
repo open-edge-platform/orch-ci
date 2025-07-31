@@ -182,7 +182,7 @@ runs:
         name: bandit-results-${{ steps.run-bandit.outputs.rand_suffix }}${{ env.suffix }}
         path: ${{ steps.run-bandit.outputs.report_path }}
         retention-days: 7
-    
+
     - name: Fix SARIF severity levels  # replace severities with high,medium,low
       if: contains(steps.run-bandit.outputs.report_path, '.sarif')
       shell: bash
