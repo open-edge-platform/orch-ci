@@ -423,7 +423,7 @@ jobs:
       - name: Restore Go cache
         if: ${{ inputs.cache_go }}
         id: restored-project-go-cache
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.3
+        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809  # v4.2.4
         with:
           path: |
             ${{ env.GOCACHE }}
@@ -500,7 +500,7 @@ jobs:
 
       - name: Save Go cache
         if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684  # v4.2.3
+        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809  # v4.2.4
         with:
           path: |
             ${{ env.GOCACHE }}
