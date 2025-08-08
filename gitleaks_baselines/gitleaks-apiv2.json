@@ -1,0 +1,22 @@
+[
+  {
+    "Description": "",
+    "StartLine": 2585,
+    "EndLine": 2585,
+    "StartColumn": 0,
+    "EndColumn": 0,
+    "Match": "S/Ru0Uau47Ap00munEyJzuDR6zcGfeTH46PXb4AzQ84XGs41Pi7xbiJghr5CFzl4Dr1MAv+sF8UP7dYc",
+    "Secret": "S/Ru0Uau47Ap00munEyJzuDR6zcGfeTH46PXb4AzQ84XGs41Pi7xbiJghr5CFzl4Dr1MAv+sF8UP7dYc",
+    "File": "apiv2/pkg/api/v2/edge-infrastructure-manager-openapi-server.gen.go",
+    "SymlinkFile": "",
+    "Commit": "",
+    "Entropy": 5.315311,
+    "Author": "",
+    "Email": "",
+    "Date": "",
+    "Message": "",
+    "Tags": [],
+    "RuleID": "generic-api-key",
+    "Fingerprint": "apiv2/pkg/api/v2/edge-infrastructure-manager-openapi-server.gen.go:generic-api-key:2585"
+  }
+]
