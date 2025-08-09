@@ -299,7 +299,7 @@ jobs:
           for index in "${!branches[@]}"; do
             branch="${branches[$index]}"
             cd "${GITHUB_WORKSPACE}"
-            git reset --hard
+            git reset --hard && git clean -f
             git checkout "${branch}"
             cd "${DOCS_DIR}"
             # Override any existing files with template
