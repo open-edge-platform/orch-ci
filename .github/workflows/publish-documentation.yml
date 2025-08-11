@@ -164,9 +164,9 @@ jobs:
           # Replace the strings in ["example"] with the assigned string
           # Create associative array
           declare -A REPLACE
-          REPLACE=(
-              ["main"]="dev"
-          )
+          #REPLACE=(
+          #    ["main"]="dev"
+          #)
           for branch in "${branches[@]}"; do
             value="${branch}"
             # Replace matches if found
@@ -299,7 +299,7 @@ jobs:
           for index in "${!branches[@]}"; do
             branch="${branches[$index]}"
             cd "${GITHUB_WORKSPACE}"
-            git reset --hard
+            git reset --hard && git clean -f
             git checkout "${branch}"
             cd "${DOCS_DIR}"
             # Override any existing files with template
