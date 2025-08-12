@@ -448,7 +448,7 @@ jobs:
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
 
       - name: Install cosign
-        if: ${{ inputs.run_docker_push }}
+        if: inputs.run_docker_push || inputs.run_package_build
         uses: ./ci/.github/actions/bootstrap
         with:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
