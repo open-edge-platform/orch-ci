@@ -260,6 +260,7 @@ jobs:
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
         shell: bash
         run: |
+          set -x
           # Restore array
           IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
           # Download Spark Sphinx theme
@@ -269,10 +270,8 @@ jobs:
           aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
           # Checkout the first branch to build
           cd "${GITHUB_WORKSPACE}"
-          git stash
-          git diff -- Makefile > Makefile.diff
+          git reset --hard
           git checkout "${branches[0]}"
-          git stash pop
           cd "${DOCS_DIR}"
           # Instantiate Python Virtual Environment
           make check
