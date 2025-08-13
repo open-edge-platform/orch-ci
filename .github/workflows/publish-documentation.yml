@@ -271,9 +271,9 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
           git reset --hard && git clean -f
           git checkout "${branches[0]}"
+          cd "${DOCS_DIR}"
           # Override any existing files with template
           cp -rf "${GITHUB_WORKSPACE}"/_template/* .
-          cd "${DOCS_DIR}"
           # Instantiate Python Virtual Environment
           make check
           venv="$(find . -path '*/bin/activate' -name activate)"
