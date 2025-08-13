@@ -82,7 +82,6 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
           persist-credentials: false
 
       - name: Bootstrap CI environment
@@ -178,5 +177,4 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
           persist-credentials: false
