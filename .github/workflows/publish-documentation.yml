@@ -271,7 +271,7 @@ jobs:
           cd "${GITHUB_WORKSPACE}"
           git stash push
           git checkout "${branches[0]}"
-          git stash pop
+          # git stash pop
           cd "${DOCS_DIR}"
           # Instantiate Python Virtual Environment
           make check
