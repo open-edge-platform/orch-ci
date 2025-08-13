@@ -329,80 +329,80 @@ jobs:
             make clean || :
           done
 
-      - name: Replace switcher URL
-        env:
-          BASEURL: ${{ env.BASEURL }}
-        shell: bash
-        run: |
-          # Replace switcher URL if switcher exists
-          if [[ -f "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json" ]]; then
-            cd "${GITHUB_WORKSPACE}/_UPLOAD"
-            pat='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
-            for file in $(grep -rl "${pat}"); do
-              sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" \
-                "${file}"
-            done
-          fi
+      # - name: Replace switcher URL
+      #   env:
+      #     BASEURL: ${{ env.BASEURL }}
+      #   shell: bash
+      #   run: |
+      #     # Replace switcher URL if switcher exists
+      #     if [[ -f "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json" ]]; then
+      #       cd "${GITHUB_WORKSPACE}/_UPLOAD"
+      #       pat='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
+      #       for file in $(grep -rl "${pat}"); do
+      #         sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" \
+      #           "${file}"
+      #       done
+      #     fi
 
-      - name: Publish documentation
-        env:
-          ENDPOINT: ${{ inputs.endpoint }}
-          DISTID: ${{ inputs.distribution_id }}
-          SUBDIR: ${{ env.SUBDIR }}
-        shell: bash
-        run: |
-          cd "${GITHUB_WORKSPACE}/_UPLOAD"
-          aws s3 rm "${ENDPOINT}/${SUBDIR}" --include "*" --recursive
-          aws s3 cp --include "*" --recursive . "${ENDPOINT}/${SUBDIR}"
-          aws cloudfront create-invalidation \
-            --distribution-id "${DISTID}" --paths "/${SUBDIR}/*"
-          echo "Publishing documentation complete."
-          # Remove ci directory
-          rm -rf "${GITHUB_WORKSPACE}/ci"
+      # - name: Publish documentation
+      #   env:
+      #     ENDPOINT: ${{ inputs.endpoint }}
+      #     DISTID: ${{ inputs.distribution_id }}
+      #     SUBDIR: ${{ env.SUBDIR }}
+      #   shell: bash
+      #   run: |
+      #     cd "${GITHUB_WORKSPACE}/_UPLOAD"
+      #     aws s3 rm "${ENDPOINT}/${SUBDIR}" --include "*" --recursive
+      #     aws s3 cp --include "*" --recursive . "${ENDPOINT}/${SUBDIR}"
+      #     aws cloudfront create-invalidation \
+      #       --distribution-id "${DISTID}" --paths "/${SUBDIR}/*"
+      #     echo "Publishing documentation complete."
+      #     # Remove ci directory
+      #     rm -rf "${GITHUB_WORKSPACE}/ci"
 
-      - name: Get Pull Request Number
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        id: gh-cli
-        shell: bash
-        run: |
-          echo "pr-number-closed=$(gh pr list \
-            --search ${{ github.sha }} --state merged \
-            --json number -q '.[] | .number' || echo "")" >> "$GITHUB_OUTPUT"
+      # - name: Get Pull Request Number
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   id: gh-cli
+      #   shell: bash
+      #   run: |
+      #     echo "pr-number-closed=$(gh pr list \
+      #       --search ${{ github.sha }} --state merged \
+      #       --json number -q '.[] | .number' || echo "")" >> "$GITHUB_OUTPUT"
 
-      - name: Create comment with link in PR
-        env:
-          BASEURL: ${{ env.BASEURL }}
-          DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
-        shell: bash
-        run: |
-          # Restore array
-          IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
-          top="index.html"
-          if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${versions[0]}/${top}" ]; then
-            top="toc.html"
-          fi
-          # Use GitHub API to create a comment on the PR
-          COMMENT="Documentation published at: "
-          COMMENT+="${BASEURL}/${versions[0]}/${top}"
-          COMMENT_URL="/repos/${REPO}/issues/${GITHUB_PR}/comments"
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "${COMMENT_URL}" \
-            -f "body=${COMMENT}" || :
+      # - name: Create comment with link in PR
+      #   env:
+      #     BASEURL: ${{ env.BASEURL }}
+      #     DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     GITHUB_PR: ${{ steps.gh-cli.outputs.pr-number-closed }}
+      #   shell: bash
+      #   run: |
+      #     # Restore array
+      #     IFS=',' read -ra versions <<< "${DOCS_VERSIONS}"
+      #     top="index.html"
+      #     if [ ! -f "${GITHUB_WORKSPACE}/_UPLOAD/${versions[0]}/${top}" ]; then
+      #       top="toc.html"
+      #     fi
+      #     # Use GitHub API to create a comment on the PR
+      #     COMMENT="Documentation published at: "
+      #     COMMENT+="${BASEURL}/${versions[0]}/${top}"
+      #     COMMENT_URL="/repos/${REPO}/issues/${GITHUB_PR}/comments"
+      #     gh api \
+      #       --method POST \
+      #       -H "Accept: application/vnd.github+json" \
+      #       -H "X-GitHub-Api-Version: 2022-11-28" \
+      #       "${COMMENT_URL}" \
+      #       -f "body=${COMMENT}" || :
 
-      # Checkout orch-ci again so the
-      # 'Post Bootstrap CI Environment' step does not fail
-      - name: Checkout action repository
-        if: always()
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-        with:
-          repository: open-edge-platform/orch-ci
-          path: ci
-          ref: ${{ inputs.orch_ci_repo_ref }}
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
-          persist-credentials: false
+      # # Checkout orch-ci again so the
+      # # 'Post Bootstrap CI Environment' step does not fail
+      # - name: Checkout action repository
+      #   if: always()
+      #   uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      #   with:
+      #     repository: open-edge-platform/orch-ci
+      #     path: ci
+      #     ref: ${{ inputs.orch_ci_repo_ref }}
+      #     token: ${{ secrets.SYS_ORCH_GITHUB }}
+      #     persist-credentials: false
