@@ -270,6 +270,7 @@ jobs:
           # Checkout the first branch to build
           cd "${GITHUB_WORKSPACE}"
           # git stash
+          git diff -- Makefile > Makefile.diff
           git checkout "${branches[0]}"
           # git stash pop
           cd "${DOCS_DIR}"
@@ -324,6 +325,13 @@ jobs:
             mv "${OUT_DIR}" "${GITHUB_WORKSPACE}/_UPLOAD/${versions[$index]}"
             make clean || :
           done
+
+      - name: Upload diff file
+        if: always()
+        uses: actions/upload-artifact@v4.2.0  # v4.2.0
+        with:
+          name: Makefile.diff
+          path: Makefile.diff
 
       # - name: Replace switcher URL
       #   env:
