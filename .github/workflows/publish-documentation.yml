@@ -274,9 +274,9 @@ jobs:
           aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
           # Checkout the first branch to build
           cd "${GITHUB_WORKSPACE}"
-          git stash
+          git stash push
           git checkout "${branches[0]}"
-          git pop
+          git stash pop
           cd "${DOCS_DIR}"
           # Instantiate Python Virtual Environment
           make check
