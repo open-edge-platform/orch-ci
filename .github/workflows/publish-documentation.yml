@@ -271,7 +271,7 @@ jobs:
           # Checkout the first branch to build
           cd "${GITHUB_WORKSPACE}"
           cp Makefile Makefile_copy
-          git reset --hard
+          git reset --hard -- Makefile
           git checkout "${branches[0]}"
           mv Makefile_copy Makefile
           cd "${DOCS_DIR}"
