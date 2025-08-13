@@ -141,6 +141,7 @@ jobs:
           cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
           # Override any existing files with template
           cp -rf "${GITHUB_WORKSPACE}"/_template/* .
+          git diff
 
       - name: Collect branches and versions
         env:
@@ -185,6 +186,7 @@ jobs:
           versions=$(IFS=','; echo "${versions[*]}")
           echo "DOCS_BRANCHES=${branches}" >> "$GITHUB_ENV"
           echo "DOCS_VERSIONS=${versions}" >> "$GITHUB_ENV"
+          git diff
 
       - name: Get Subdirectory
         shell: bash
@@ -214,6 +216,7 @@ jobs:
             subdir="${rshort}"
           fi
           echo "SUBDIR=${subdir:-NULL}" >> "$GITHUB_ENV"
+          git diff
 
       - name: Get Base URL
         env:
@@ -226,6 +229,7 @@ jobs:
             jq -r '.DistributionConfig.Aliases.Items[0]')"
           url="https://${domain}/${SUBDIR}"
           echo "BASEURL=${url:-intel.com}" >> "$GITHUB_ENV"
+          git diff
 
       - name: Create version switcher
         env:
@@ -253,6 +257,7 @@ jobs:
             sed -i -zE '$ s/(.*)    },/\1    }/' \
               "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
           fi
+          git diff
 
       - name: Install Spark theme
         env:
@@ -269,6 +274,7 @@ jobs:
           aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
           # Checkout the first branch to build
           cd "${GITHUB_WORKSPACE}"
+          git diff
           git checkout "${branches[0]}"
           cd "${DOCS_DIR}"
           # Instantiate Python Virtual Environment
