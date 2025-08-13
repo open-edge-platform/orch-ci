@@ -269,7 +269,7 @@ jobs:
           aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
           # Checkout the first branch to build
           cd "${GITHUB_WORKSPACE}"
-          git stash push
+          # git stash
           git checkout "${branches[0]}"
           # git stash pop
           cd "${DOCS_DIR}"
