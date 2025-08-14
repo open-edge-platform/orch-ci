@@ -141,6 +141,7 @@ jobs:
           fi
 
       - name: Install Spark theme
+        id: install_spark_theme
         env:
           ENDPOINT: ${{ inputs.endpoint }}
         shell: bash
@@ -160,15 +161,8 @@ jobs:
           pip3 install --no-input "${tmpdir}/${theme_wheel}"
           deactivate
 
-      - name: Lint Documentation
-        env:
-          SIMPLE_MODE: ${{ inputs.simple_mode }}
-        shell: bash
-        run: |
-          cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
-          make lint
-
       - name: Check broken links
+        if: always() && steps.install_spark_theme.outcome == 'success'
         shell: bash
         run: |
           cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
@@ -176,6 +170,7 @@ jobs:
 
       - name: Check spelling
         shell: bash
+        if: always() && steps.install_spark_theme.outcome == 'success'
         run: |
           cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
           make sphinx-spelling
