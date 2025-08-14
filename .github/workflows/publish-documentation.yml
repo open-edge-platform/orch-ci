@@ -169,9 +169,9 @@ jobs:
           fi
           declare -a versions
           # Replace the strings in ["example"] with the assigned string
+          # Create associative array
           declare -A REPLACE
           if [[ "${SWITCH_MAIN_TO_DEV}" == "true" ]]; then
-            # Create associative array
             REPLACE=(
               ["main"]="dev"
             )
