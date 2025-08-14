@@ -164,9 +164,9 @@ jobs:
           # Replace the strings in ["example"] with the assigned string
           # Create associative array
           declare -A REPLACE
-          #REPLACE=(
-          #    ["main"]="dev"
-          #)
+          REPLACE=(
+             ["main"]="dev"
+          )
           for branch in "${branches[@]}"; do
             value="${branch}"
             # Replace matches if found
