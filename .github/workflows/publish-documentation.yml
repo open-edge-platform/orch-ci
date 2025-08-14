@@ -54,6 +54,12 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: "E1QN7TZJG8M0VL"
         type: string
+      switch_main_to_dev:
+        description: >-
+          When true, replaces 'main' branch with 'dev' in version switcher
+        required: false
+        default: false
+        type: boolean
     secrets:
       SYS_ORCH_GITHUB:
         description: "PAT (contents: read) to clone private repos"
@@ -145,6 +151,7 @@ jobs:
       - name: Collect branches and versions
         env:
           PATTERN: ${{ inputs.branch_pattern }}
+          SWITCH_MAIN_TO_DEV: ${{ inputs.switch_main_to_dev }}
         shell: bash
         run: |
           # Remove ci directory
@@ -164,9 +171,11 @@ jobs:
           # Replace the strings in ["example"] with the assigned string
           # Create associative array
           declare -A REPLACE
-          #REPLACE=(
-          #    ["main"]="dev"
-          #)
+          if [[ "${SWITCH_MAIN_TO_DEV}" == "true" ]]; then
+            REPLACE=(
+              ["main"]="dev"
+            )
+          fi
           for branch in "${branches[@]}"; do
             value="${branch}"
             # Replace matches if found
