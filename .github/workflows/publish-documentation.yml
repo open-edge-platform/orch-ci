@@ -187,6 +187,8 @@ jobs:
             if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
               value="${branch#*-}"
             fi
+            # Replace '/' with '-'
+            value="${value////-}"
             versions+=("${value}")
           done
           # Convert the array to a string with comma delimeters
