@@ -48,7 +48,6 @@
 #
 # Note: Requires sufficient disk space for virus database
 
-
 name: "ClamAV Security Scan"
 description: "Runs ClamAV antivirus scanner with configurable options"
 
@@ -181,7 +180,7 @@ runs:
             exit 1
           fi
           "
-
+      # Upload results
     - name: Upload reports
       env:
         suffix: ${{ inputs.report_suffix }}
