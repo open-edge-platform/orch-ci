@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "pkcs12-file",
+  "Description": "Found a PKCS #12 file, which commonly contain bundled private keys.",
+  "StartLine": 1,
+  "EndLine": 1,
+  "StartColumn": 0,
+  "EndColumn": 0,
+  "Match": "file detected: internal/cli/testdata/sample.pfx",
+  "Secret": "",
+  "File": "internal/cli/testdata/sample.pfx",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 0,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": "internal/cli/testdata/sample.pfx:pkcs12-file:1"
+ }
+]
