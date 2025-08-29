@@ -178,6 +178,10 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "trivy.yaml"
         type: string
+      only_service:
+        description: "Used for orch-utils docker image mapping"
+        type: string
+        required: false
     secrets:
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
@@ -610,6 +614,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
+          ONLY_SERVICE: ${{ inputs.only_service }}
         run: |
           make docker-build
 
