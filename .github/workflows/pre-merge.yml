@@ -310,7 +310,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4  # 0.32.0
+        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -340,7 +340,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Critical Filesystem Scan
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4  # 0.32.0
+        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -765,7 +765,7 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Scan Image
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4  # 0.32.0
+        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
         with:
           image-ref: ${{ matrix.image }}
           format: table
@@ -791,7 +791,7 @@ jobs:
           persist-credentials: false
 
       - name: Scan Image for High/Critical Issues
-        uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4  # 0.32.0
+        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
         with:
           image-ref: ${{ matrix.image }}
           format: table
