@@ -614,7 +614,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
-          ONLY_SERVICE:  ${{ inputs.only_service }}
+          ONLY_SERVICE: ${{ inputs.only_service }}
         run: |
           make docker-build
 
