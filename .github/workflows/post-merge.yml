@@ -614,24 +614,6 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Sign Docker images
-        if: ${{ inputs.run_docker_push }}
-        env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-        run: |
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
-          images_json=$(echo "$images" | jq -R . | jq -s -c .)
-          for image in $(echo "$images_json" | jq -r '.[]'); do
-            echo "Signing $image"
-            # Check if the image is not empty
-            if [ -n "$image" ]; then
-              cosign sign -y --key env://COSIGN_PRIVATE_KEY "$image" || echo "Failed to sign $image"
-            else
-              echo "No images found to sign."
-            fi
-          done
-
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -679,6 +661,28 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make artifact-publish
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: us-west-2
+      
+      - name: Sign Docker images using AWS KMS
+        env:
+          KMS_KEY_ARN: ${{ secrets.AWS_KMS_KEY_ARN }}
+        run: |
+          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+          images_json=$(echo "$images" | jq -R . | jq -s -c .)
+          for image in $(echo "$images_json" | jq -r '.[]'); do
+            echo "Signing $image"
+            if [ -n "$image" ]; then
+              cosign sign -y --key "awskms://$KMS_KEY_ARN" "$image" || echo "Failed to sign $image"
+            else
+              echo "No images found to sign."
+            fi
+          done
 
       - name: Upload artifacts to ghcr.io
         if: ${{ inputs.run_ghcr_push }}
