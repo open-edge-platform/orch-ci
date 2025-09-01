@@ -178,6 +178,10 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "trivy.yaml"
         type: string
+      only_service:
+        description: "Used for orch-utils docker image mapping"
+        type: string
+        required: false
     secrets:
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
@@ -223,7 +227,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@e92bafb6253dcd438e0484186d7669ea7a8ca1cc  # v6.4.3
+        uses: astral-sh/setup-uv@4959332f0f014c5280e7eac8b70c90cb574c9f9b  # v6.6.0
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizimor Scan Report
@@ -610,6 +614,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
+          ONLY_SERVICE: ${{ inputs.only_service }}
         run: |
           make docker-build
 
