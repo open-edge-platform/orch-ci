@@ -174,6 +174,14 @@ on:  # yamllint disable-line rule:truthy
         required: false
       MSTEAMS_WEBHOOK:
         required: false
+      AWS_DOCKER_SIGNING_ROLE_ARN:
+        required: false
+      AWS_KMS_DOCKER_SIGNING_KEY_ARN:
+        required: false
+      AWS_BINARY_SIGNING_ROLE_ARN:
+        required: false
+      AWS_KMS_BINARY_SIGNING_KEY_ARN:
+        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
@@ -463,15 +471,17 @@ jobs:
         run: |
           make package
 
+      - name: Configure AWS credentials for binary signing
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        with:
+          role-to-assume: ${{ secrets.AWS_BINARY_SIGNING_ROLE_ARN }}
+          aws-region: us-west-2
+
       - name: Find and Sign Binaries
-        if: ${{ inputs.run_build }}
-        working-directory: ${{ inputs.project_folder }}
         env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          KMS_BINARY_KEY_ARN: ${{ secrets.AWS_KMS_BINARY_SIGNING_KEY_ARN }}
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          # common dirs to search for binaries
           directories=("out" "build" "bin")
 
           for dir in "${directories[@]}"; do
@@ -480,7 +490,7 @@ jobs:
             if [ -d "$full_path" ]; then
               find "$full_path" -type f -executable | while read -r binary; do
                 echo "Signing $binary"
-                cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
+                cosign sign-blob -y --key "awskms://$KMS_BINARY_KEY_ARN" "$binary" || echo "Failed to sign $binary"
               done
             fi
           done
@@ -614,24 +624,6 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Sign Docker images
-        if: ${{ inputs.run_docker_push }}
-        env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
-        run: |
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
-          images_json=$(echo "$images" | jq -R . | jq -s -c .)
-          for image in $(echo "$images_json" | jq -r '.[]'); do
-            echo "Signing $image"
-            # Check if the image is not empty
-            if [ -n "$image" ]; then
-              cosign sign -y --key env://COSIGN_PRIVATE_KEY "$image" || echo "Failed to sign $image"
-            else
-              echo "No images found to sign."
-            fi
-          done
-
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -679,6 +671,27 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make artifact-publish
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        with:
+          role-to-assume: ${{ secrets.AWS_DOCKER_SIGNING_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: Sign Docker images using AWS KMS
+        env:
+          KMS_KEY_ARN: ${{ secrets.AWS_KMS_BINARY_SIGNING_KEY_ARN }}
+        run: |
+          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+          images_json=$(echo "$images" | jq -R . | jq -s -c .)
+          for image in $(echo "$images_json" | jq -r '.[]'); do
+            echo "Signing $image"
+            if [ -n "$image" ]; then
+              cosign sign -y --key "awskms://$KMS_KEY_ARN" "$image" || echo "Failed to sign $image"
+            else
+              echo "No images found to sign."
+            fi
+          done
 
       - name: Upload artifacts to ghcr.io
         if: ${{ inputs.run_ghcr_push }}
