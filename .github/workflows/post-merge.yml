@@ -174,9 +174,9 @@ on:  # yamllint disable-line rule:truthy
         required: false
       MSTEAMS_WEBHOOK:
         required: false
-      AWS_DOCKER_SIGN:
+      AWS_DOCKER_SIGNING_ROLE_ARN:
         required: false
-      AWS_DOCKER_SIGN_ARN:
+      AWS_KMS_DOCKER_SIGNING_KEY_ARN:
         required: false
       AWS_BINARY_SIGNING_ROLE_ARN:
         required: false
