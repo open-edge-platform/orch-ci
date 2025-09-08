@@ -415,7 +415,7 @@ jobs:
         with:
           repository: open-edge-platform/orch-ci
           path: ci
-          ref: ${{ inputs.orch_ci_repo_ref }}
+          ref: fix_helm
           persist-credentials: false
 
       - name: Version Check
