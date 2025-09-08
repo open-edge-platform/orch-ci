@@ -12,7 +12,7 @@ jobs:
   pre-merge:
     permissions:
       contents: read
-    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@main
+    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@fix_helm
     with:
       run_version_check: true
       run_dep_version_check: false
@@ -21,5 +21,5 @@ jobs:
       run_test: false
       run_validate_clean_folder: false
       run_docker_build: false
-      bootstrap_tools: "go,gotools,nodejs"
+      bootstrap_tools: "go,gotools,nodejs,helm"
       trivy_config_path: trivy.yaml
