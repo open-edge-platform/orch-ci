@@ -183,6 +183,8 @@ on:  # yamllint disable-line rule:truthy
         type: string
         required: false
     secrets:
+      SYS_ORCH_GITHUB:
+        required: false  ## temp workaround
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
@@ -511,6 +513,8 @@ jobs:
       - name: Test Code
         if: ${{ inputs.run_test }}
         working-directory: ${{ inputs.project_folder }}
+        env:  ## temp workaround
+          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           make test
           # TO DO find a replacement for cobertura
