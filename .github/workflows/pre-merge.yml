@@ -183,6 +183,8 @@ on:  # yamllint disable-line rule:truthy
         type: string
         required: false
     secrets:
+      SYS_ORCH_GITHUB:
+        required: false  ## temp workaround
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
