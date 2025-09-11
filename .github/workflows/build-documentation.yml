@@ -54,6 +54,13 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: "E1QN7TZJG8M0VL"
         type: string
+      exclude_patterns:
+        description: >-
+          Comma separated list of exclude patterns to use during the build,
+          defaults to empty list
+        required: false
+        default: ""
+        type: string
     secrets:
       SYS_ORCH_GITHUB:
         description: "PAT (contents: read) to clone private repos"
@@ -138,6 +145,24 @@ jobs:
           cp -rf "${GITHUB_WORKSPACE}"/_template/* .
           if [ -f "dictionary_append.txt" ]; then
             cat "dictionary_append.txt" >> "dict.txt"
+          fi
+
+      - name: Add exclude patterns
+        env:
+          SIMPLE_MODE: ${{ inputs.simple_mode }}
+          EXCLUDE: ${{ inputs.exclude_patterns }}
+        shell: bash
+        run: |
+          # Remove any spaces
+          exclude_no_spaces="${EXCLUDE// /}"
+          # Surround patterns with quotes and create Python list
+          exclude_pattern="[\"${exclude_no_spaces//,/\", \"}\"]"
+          if [[ "${SIMPLE_MODE}" == "true" ]]; then
+            echo "exclude_patterns.extend(${exclude_pattern})" >>
+              "${GITHUB_WORKSPACE}/_template/docs/conf.py"
+          else
+            echo "exclude_patterns.extend(${exclude_pattern})" >>
+              "${GITHUB_WORKSPACE}/${DOCS_DIR}/docs/conf.py"
           fi
 
       - name: Install Spark theme
