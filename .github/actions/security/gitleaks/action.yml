@@ -102,11 +102,9 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # Optionally collect changed files for PRs
     - name: Get changed files
       if: inputs["scan-scope"] == 'changed'
       id: changed-files
-      # Pin to a commit SHA for supply-chain hygiene (same style as your Trivy action)
       uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
 
     - name: Install Gitleaks
