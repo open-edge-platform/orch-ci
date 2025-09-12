@@ -12,7 +12,7 @@ jobs:
   pre-merge:
     permissions:
       contents: read
-    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@main
+    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@use_gitleaks_action
     with:
       run_version_check: true
       run_dep_version_check: false
