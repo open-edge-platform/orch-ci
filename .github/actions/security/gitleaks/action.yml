@@ -105,7 +105,7 @@ runs:
     - name: Get changed files
       if: inputs["scan-scope"] == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46.0.5
+      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
 
     - name: Install Gitleaks
       id: install
@@ -127,7 +127,8 @@ runs:
         fi
 
         echo "Installing Gitleaks version: $VER"
-        curl -sSL -o /tmp/gitleaks.tar.gz \
+        curl -sSL \
+          -o /tmp/gitleaks.tar.gz \
           "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz"
         sudo tar xf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
         rm -f /tmp/gitleaks.tar.gz
@@ -176,7 +177,13 @@ runs:
         fi
 
         # Build CLI
-        CMD=( gitleaks detect --source "$SCAN_DIR" --report-format "$INPUT_FORMAT" --report-path "$REPORT_FILE" --exit-code "$INPUT_EXIT_CODE" )
+        CMD=(
+          gitleaks detect
+          --source "$SCAN_DIR"
+          --report-format "$INPUT_FORMAT"
+          --report-path "$REPORT_FILE"
+          --exit-code "$INPUT_EXIT_CODE"
+        )
         [[ -n "${NO_GIT:-}" ]] && CMD+=( "$NO_GIT" )
         [[ "$INPUT_REDACT" == "true" ]] && CMD+=( --redact )
         [[ -n "$INPUT_CONFIG" && -f "$INPUT_CONFIG" ]] && CMD+=( --config "$INPUT_CONFIG" )
@@ -204,7 +211,7 @@ runs:
       if: steps.run-gitleaks.outputs.report_path != ''
       env:
         suffix: ${{ inputs.report_suffix }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
       with:
         name: gitleaks-results-${{ steps.run-gitleaks.outputs.rand_suffix }}${{ env.suffix }}
         path: ${{ steps.run-gitleaks.outputs.report_path }}
@@ -212,6 +219,6 @@ runs:
 
     - name: Upload SARIF (code scanning)
       if: contains(steps.run-gitleaks.outputs.report_path, '.sarif')
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
         sarif_file: ${{ steps.run-gitleaks.outputs.report_path }}
