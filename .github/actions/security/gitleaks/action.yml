@@ -45,7 +45,7 @@
 #     with:
 #       scan-scope: "changed"
 #       source: "./src"
-#       config_path: "./ci/security/gitleaks/.gitleaks.toml"
+#       config_path: "./ci/gitleaks_baselines/<repo-name>-gitleaks.json"
 #       report_format: "sarif"
 #
 # Note: Requires `security-events: write` permission for SARIF upload.
