@@ -103,7 +103,7 @@ runs:
   using: "composite"
   steps:
     - name: Get changed files
-      if: inputs["scan-scope"] == 'changed'
+      if: inputs['scan-scope'] == 'changed'
       id: changed-files
       uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
 
@@ -138,7 +138,7 @@ runs:
       id: run-gitleaks
       shell: bash
       env:
-        INPUT_SCOPE: ${{ inputs["scan-scope"] }}
+        INPUT_SCOPE: ${{ inputs['scan-scope'] }}
         INPUT_SOURCE: ${{ inputs.source }}
         INPUT_CONFIG: ${{ inputs.config_path }}
         INPUT_BASELINE: ${{ inputs.baseline_path }}

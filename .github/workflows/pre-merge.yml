@@ -275,7 +275,7 @@ jobs:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
           config_path: ci/.gitleaks.toml
-          baseline_path: ci/gitleaks_baselines/gitleaks-"${SANITIZIED_PROJECT_NAME}".json
+          baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZIED_PROJECT_NAME }}.json
           report_format: json
           redact: "true"
           report_suffix: "-${{ env.SANITIZIED_PROJECT_NAME }}"
