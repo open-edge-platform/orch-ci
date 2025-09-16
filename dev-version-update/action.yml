@@ -144,14 +144,8 @@ runs:
           TITLE="${TITLE} for ${INPUTS_PROJECT_FOLDER}"
         fi
 
-        BODY="Automatically bumping the version to the next development iteration (-dev suffix)"
-        if [[ -n "${INPUTS_PROJECT_FOLDER}" && "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
-          BODY="${BODY} for project: ${INPUTS_PROJECT_FOLDER}"
-        fi
-        BODY="${BODY}."
-
         gh pr create \
           --title "${TITLE}" \
-          --body "${BODY}" \
+          --body "Automatically bumping the version to the next development iteration (-dev suffix)." \
           --base main \
           --head ${BRANCH_NAME}
