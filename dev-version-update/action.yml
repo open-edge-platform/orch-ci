@@ -61,12 +61,10 @@ runs:
           INPUTS_PROJECT_FOLDER="."
         fi
 
-        # Ensure we only search within the specified project folder
-        # If project_folder is ".", search everywhere, otherwise restrict to that folder
+        # If project_folder is ".", search everywhere, else restrict to that folder/project
         if [[ "${INPUTS_PROJECT_FOLDER}" == "." ]]; then
           FIND_CMD="find . -name VERSION -type f"
         else
-          # Ensure the project folder exists and restrict search to it
           if [[ ! -d "${INPUTS_PROJECT_FOLDER}" ]]; then
             echo "Project folder ${INPUTS_PROJECT_FOLDER} does not exist"
             exit 0
@@ -136,7 +134,7 @@ runs:
       if: steps.update_versions.outputs.changes_made == 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN: ${{ inputs.gh_token }}
         BRANCH_NAME: ${{ steps.update_versions.outputs.branch_name }}
         INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       run: |
