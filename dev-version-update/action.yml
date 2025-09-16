@@ -41,7 +41,16 @@ runs:
         source ${{ github.workspace }}/ci/scripts/tagging-lib.sh
 
         CURRENT_DATE=$(date +%d-%m-%Y-%H%M%S%N | cut -c1-20)
-        BRANCH_NAME="update-versions-${CURRENT_DATE}"
+
+        # Create a more specific branch name when project_folder is specified
+        if [[ "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
+          # Sanitize project folder name for branch naming
+          SANITIZED_PROJECT=$(echo "${INPUTS_PROJECT_FOLDER}" | tr '/' '-' | tr '[:upper:]' '[:lower:]')
+          BRANCH_NAME="update-versions-${SANITIZED_PROJECT}-${CURRENT_DATE}"
+        else
+          BRANCH_NAME="update-versions-${CURRENT_DATE}"
+        fi
+
         git checkout -b $BRANCH_NAME
 
         CHANGES_MADE=0
@@ -51,7 +60,17 @@ runs:
         if [[ -z "${INPUTS_PROJECT_FOLDER}" ]]; then
           INPUTS_PROJECT_FOLDER="."
         fi
-        FIND_CMD="find ${INPUTS_PROJECT_FOLDER} -name VERSION -type f"
+
+        # If project_folder is ".", search everywhere, else restrict to that folder/project
+        if [[ "${INPUTS_PROJECT_FOLDER}" == "." ]]; then
+          FIND_CMD="find . -name VERSION -type f"
+        else
+          if [[ ! -d "${INPUTS_PROJECT_FOLDER}" ]]; then
+            echo "Project folder ${INPUTS_PROJECT_FOLDER} does not exist"
+            exit 0
+          fi
+          FIND_CMD="find ${INPUTS_PROJECT_FOLDER} -name VERSION -type f -path \"${INPUTS_PROJECT_FOLDER}/*\""
+        fi
 
         for EXCLUDE in "${EXCLUDE_PATHS[@]}"; do
           FIND_CMD="$FIND_CMD -not -path \"$EXCLUDE\""
@@ -88,7 +107,12 @@ runs:
         done
 
         if [ $CHANGES_MADE -eq 1 ]; then
-          git commit -m "Update VERSION files to next dev version"
+          # Create a more descriptive commit message
+          if [[ "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
+            git commit -m "Update VERSION files to next dev version for ${INPUTS_PROJECT_FOLDER}"
+          else
+            git commit -m "Update VERSION files to next dev version"
+          fi
 
           echo "------------------------------------------------------"
           echo "Updated files:"
@@ -102,7 +126,7 @@ runs:
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "changes_made=true" >> $GITHUB_OUTPUT
         else
-          echo "No VERSION files found to update"
+          echo "No VERSION files found to update in ${INPUTS_PROJECT_FOLDER}"
           echo "changes_made=false" >> $GITHUB_OUTPUT
         fi
 
@@ -119,6 +143,7 @@ runs:
         if [[ -n "${INPUTS_PROJECT_FOLDER}" && "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
           TITLE="${TITLE} for ${INPUTS_PROJECT_FOLDER}"
         fi
+
         gh pr create \
           --title "${TITLE}" \
           --body "Automatically bumping the version to the next development iteration (-dev suffix)." \
