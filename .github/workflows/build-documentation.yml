@@ -157,11 +157,13 @@ jobs:
           exclude_no_spaces="${EXCLUDE// /}"
           # Surround patterns with quotes and create Python list
           exclude_pattern="[\"${exclude_no_spaces//,/\", \"}\"]"
-          echo "exclude_patterns.extend(${exclude_pattern})" >> "./docs/conf.py"
-          echo "print(exclude_patterns)" >> "./docs/conf.py"
-          echo "exclude_patterns.extend(${exclude_pattern})" >>  "./_template/docs/conf.py"
-          echo "print(exclude_patterns)" >> "./_template/docs/conf.py"
-
+          if [[ "${SIMPLE_MODE}" == "true" ]]; then
+            echo "exclude_patterns.extend(${exclude_pattern})" >>\
+              "${GITHUB_WORKSPACE}/_template/docs/conf.py"
+          else
+            echo "exclude_patterns.extend(${exclude_pattern})" >>\
+              "${GITHUB_WORKSPACE}/${DOCS_DIR}/docs/conf.py"
+          fi
 
       - name: Install Spark theme
         env:
