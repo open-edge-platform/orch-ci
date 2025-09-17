@@ -158,8 +158,9 @@ jobs:
           # Surround patterns with quotes and create Python list
           exclude_pattern="[\"${exclude_no_spaces//,/\", \"}\"]"
           echo "exclude_patterns.extend(${exclude_pattern})" >> "./docs/conf.py"
+          echo "print(exclude_patterns)" >> "./docs/conf.py"
           echo "exclude_patterns.extend(${exclude_pattern})" >>  "./_template/docs/conf.py"
-          find -name 'conf.py' -exec cat {} \;
+          echo "print(exclude_patterns)" >> "./_template/docs/conf.py"
 
 
       - name: Install Spark theme
