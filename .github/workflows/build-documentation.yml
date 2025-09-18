@@ -160,7 +160,6 @@ jobs:
           conf_files=$(find "${GITHUB_WORKSPACE}" -type f -path "*/docs/conf.py")
           for conf_file in $conf_files; do
             echo "exclude_patterns.extend(${exclude_pattern})" >> "$conf_file"
-            echo "print(exclude_patterns)" >> "$conf_file"
           done
 
       - name: Install Spark theme
