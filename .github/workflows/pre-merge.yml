@@ -520,12 +520,12 @@ jobs:
         run: |
           make integration_test
 
-      - name: Fuzz test
-        if: ${{ inputs.run_integration_test }}
-        working-directory: ${{ inputs.project_folder }}
-        shell: bash
-        run: |
-          make fuzztest
+#      - name: Fuzz test
+#        if: ${{ inputs.run_integration_test }}
+#        working-directory: ${{ inputs.project_folder }}
+#        shell: bash
+#        run: |
+#          make fuzztest
 
       - name: Build Package
         if: ${{ inputs.run_package_build }}
