@@ -25,6 +25,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_dp_version_check:
+        description: "Run deployment packages version check"
+        required: false
+        default: false
+        type: boolean
       run_freeup_ubuntu_space:
         description: "Freeup space in runner by removing unwanted packages"
         required: false
@@ -426,6 +431,11 @@ jobs:
           else
             ./ci/scripts/version-check.sh
           fi
+
+      - name: Deployment packages version Check
+        if: ${{ inputs.run_dp_version_check }}
+        run: |
+            ./ci/scripts/version-check-dp-packages.sh
 
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
