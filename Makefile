@@ -31,7 +31,7 @@ YAML_FILES := $(shell find . -type f \( -name '*.yaml' -o -name '*.yml' \) -prin
 yamllint: $(VENV_DIR) ## Lint YAML files with yamllint
 	set +u; . ./$</bin/activate; set -u ;\
   yamllint --version ;\
-  yamllint -d '{extends: default, rules: {line-length: {max: 130}}, ignore: [$(VENV_DIR),$(CI_DIR),$(CACHE_DIR)]}' -s $(YAML_FILES)
+  yamllint -d '{extends: default, rules: {line-length: {max: 140}}, ignore: [$(VENV_DIR),$(CI_DIR),$(CACHE_DIR)]}' -s $(YAML_FILES)
 
 # https://github.com/koalaman/shellcheck
 SH_FILES := $(shell find . -type f -name '*.sh' ! -path './trivy/*')

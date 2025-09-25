@@ -286,8 +286,8 @@ runs:
         tar -xvf /tmp/helm.tgz -C /tmp
         install -m 0755 /tmp/linux-amd64/helm /usr/local/bin/helm
         rm -rf /tmp/helm.tgz /tmp/linux-amd64
-        helm plugin install https://github.com/databus23/helm-diff
-        helm plugin install https://github.com/helm-unittest/helm-unittest
+        helm plugin install https://github.com/databus23/helm-diff --version v${HELM_DIFF}
+        helm plugin install https://github.com/helm-unittest/helm-unittest --version v${HELM_UNIT_TEST}
 
     - name: Install buf
       if: contains(inputs.bootstrap_tools, 'buf') || contains(inputs.bootstrap_tools, 'all')
