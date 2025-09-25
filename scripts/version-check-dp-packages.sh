@@ -35,4 +35,3 @@ for file in $changed_files; do
 done
 
 echo "✅ All changed deployment package versions are new and safe to release."
-exit 0
