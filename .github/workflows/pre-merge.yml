@@ -432,6 +432,11 @@ jobs:
             ./ci/scripts/version-check.sh
           fi
 
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: oras
+
       - name: Deployment packages version Check
         if: ${{ inputs.run_dp_version_check }}
         run: |
