@@ -26,7 +26,7 @@ for file in $changed_files; do
   artifact="${REGISTRY}/${REPO}/${name}:${version}"
   echo "🔍 Checking registry for: $artifact"
 
-  if oras pull "$artifact" --plain-http > /dev/null 2>&1; then
+  if oras pull "$artifact" --debug --plain-http; then
     echo "❌ Registry: Version $version of $name already exists in ORAS registry"
     exit 1
   else
