@@ -24,10 +24,7 @@ runs:
     - name: Set up Git identity and log in
       shell: bash
       env:
-        EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
         github_token: ${{ inputs.github_token }}
-        INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
-        shell: bash
       run: |
         git config --global user.name "github-bot@intel.com"
         git config --global user.email "do-not-reply@intel.com"
@@ -36,6 +33,9 @@ runs:
 
     - name: Find and update VERSION files
       id: update_versions
+      env:
+        EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
+        INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       shell: bash
       run: |
         source ${{ github.workspace }}/ci/scripts/tagging-lib.sh
