@@ -187,6 +187,11 @@ on:  # yamllint disable-line rule:truthy
         description: "Used for orch-utils docker image mapping"
         type: string
         required: false
+      trivyignores_path: 
+        description: "Path to Trivy ignore file"
+        required: false
+        default: ".trivyignore"
+        type: string
     secrets:
       SYS_ORCH_GITHUB:
         required: false  ## temp workaround
@@ -353,6 +358,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
           ignore-unfixed: false
           trivy-config: ${{ inputs.trivy_config_path }}
+          trivyignores: ${{ inputs.trivyignores_path }}
           scanners: 'vuln,misconfig,secret'
           exit-code: 1
   bandit:
@@ -818,6 +824,7 @@ jobs:
           severity: 'HIGH,CRITICAL'
           output: "trivy-${{ env.sanitized_image_name }}-high-critical.txt"
           trivy-config: ${{ inputs.trivy_config_path }}
+          trivyignores: ${{ inputs.trivyignores_path }}
           exit-code: 1
       - name: Display report for High/Critical Issues
         if: ${{ always() }}
