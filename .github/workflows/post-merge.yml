@@ -221,7 +221,7 @@ jobs:
           publish_results: true
       - name: Remove Fuzzing check from SARIF
         run: |
-          jq 'del(.runs[].results[] | select(.ruleId=="Fuzzing")) 
+          jq 'del(.runs[].results[] | select(.ruleId=="Fuzzing"))
               | del(.runs[].tool.driver.rules[] | select(.id=="Fuzzing"))' raw-scorecard.sarif \
             > scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Scorecard Results to Code Scanning
