@@ -240,11 +240,11 @@ jobs:
       - name: Remove Fuzzing check from SARIF
         run: |
           jq 'del(
-                .runs[].results[] 
+                .runs[].results[]
                 | select((.ruleId // "") | test("fuzz"; "i"))
               )
               | del(
-                .runs[].tool.driver.rules[] 
+                .runs[].tool.driver.rules[]
                 | select((.id // "") | test("fuzz"; "i"))
               )' raw-scorecard.sarif \
             > scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
