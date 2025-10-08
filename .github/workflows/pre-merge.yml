@@ -187,6 +187,10 @@ on:  # yamllint disable-line rule:truthy
         description: "Used for orch-utils docker image mapping"
         type: string
         required: false
+      run_code_coverage:
+        description: "Run code coverage on pull request"
+        type: boolean
+        required: false
     secrets:
       SYS_ORCH_GITHUB:
         required: false  ## temp workaround
@@ -527,7 +531,43 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           make test
-          # TO DO find a replacement for cobertura
+
+      - name: Find and Process Code Coverage
+        if: ${{ inputs.run_test && inputs.run_code_coverage }}
+        id: coverage
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          coverage_file=$(find . -name "coverage.xml" -type f | head -n 1)
+
+          if [ -z "$coverage_file" ]; then
+            echo "No coverage.xml file found"
+            echo "coverage_found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found coverage file: $coverage_file"
+            echo "coverage_file=$coverage_file" >> "$GITHUB_OUTPUT"
+            echo "coverage_found=true" >> "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Code Coverage Summary
+        if: ${{ inputs.run_test && steps.coverage.outputs.coverage_found && inputs.run_code_coverage }}
+        uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95  # v1.3.0
+        with:
+          filename: ${{ inputs.project_folder }}/${{ steps.coverage.outputs.coverage_file }}
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Add Coverage PR Comment
+        if: ${{ inputs.run_test && steps.coverage.outputs.coverage_found && inputs.run_code_coverage }}
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31  # v2.9.0
+        with:
+          recreate: true
+          path: code-coverage-results.md
 
       - name: Integration test
         if: ${{ inputs.run_integration_test }}
