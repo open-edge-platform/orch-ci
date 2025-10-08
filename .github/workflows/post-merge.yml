@@ -226,7 +226,7 @@ jobs:
           path: raw-scorecard.sarif
   process-scorecard-results:
     runs-on: ubuntu-latest
-    needs: scorecard
+    needs: scorecard, sanitize-project-folder
     steps:
       - name: Download raw results
         uses: actions/download-artifact@v4
