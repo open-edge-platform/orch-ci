@@ -25,6 +25,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_dp_version_check:
+        description: "Run deployment packages version check"
+        required: false
+        default: false
+        type: boolean
       run_freeup_ubuntu_space:
         description: "Freeup space in runner by removing unwanted packages"
         required: false
@@ -262,29 +267,23 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           persist-credentials: false
-      - name: Install gitleaks
-        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@7d984ef618c17ff5e616879327f19f37b67307ee   # 0.1.46
-        with:
-          bootstrap_tools: "gitleaks"
-      - name: Get current timestamp
-        id: timestamp
-        run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
       - name: Clone CI repo
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           repository: open-edge-platform/orch-ci
           path: ci
           persist-credentials: false
-      - name: Scan for secrets
-        env:
-          PROJECT_FOLDER: ${{ inputs.project_folder }}
-        run: |
-          gitleaks dir "${INPUTS_PROJECT_FOLDER}" -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-"${SANITIZIED_PROJECT_NAME}".json -r gitleaks-"${SANITIZIED_PROJECT_NAME}".json
-      - name: Upload Gitleaks Report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+
+      - name: Gitleaks scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
         with:
-          name: gitleaks-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ steps.timestamp.outputs.time }}
-          path: gitleaks-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
+          scan-scope: changed
+          source: ${INPUTS_PROJECT_FOLDER}
+          config_path: ci/.gitleaks.toml
+          baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZIED_PROJECT_NAME }}.json
+          report_format: json
+          redact: "true"
+          report_suffix: "-${{ env.SANITIZIED_PROJECT_NAME }}"
   clamav-antivirus-scan:
     permissions:
       contents: read
@@ -316,7 +315,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -332,7 +331,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@3c3833e0f8c1c83d449a7478aa59c036a9165498  # v3.29.5
+        uses: github/codeql-action/upload-sarif@303c0aef88fc2fe5ff6d63d3b1596bfd83dfa1f9  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   trivy-critical-scan:
@@ -346,7 +345,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Critical Filesystem Scan
-        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -432,6 +431,17 @@ jobs:
           else
             ./ci/scripts/version-check.sh
           fi
+
+      - name: Bootstrap CI environment with oras
+        if: ${{ inputs.run_dp_version_check }}
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: oras
+
+      - name: Deployment packages version Check
+        if: ${{ inputs.run_dp_version_check }}
+        run: |
+            ./ci/scripts/version-check-dp-packages.sh
 
       - name: Bootstrap CI environment
         uses: ./ci/.github/actions/bootstrap
@@ -774,7 +784,7 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Scan Image
-        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
           image-ref: ${{ matrix.image }}
           format: table
@@ -800,7 +810,7 @@ jobs:
           persist-credentials: false
 
       - name: Scan Image for High/Critical Issues
-        uses: aquasecurity/trivy-action@f9424c10c36e288d5fa79bd3dfd1aeb2d6eae808  # 0.33.0
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
           image-ref: ${{ matrix.image }}
           format: table
