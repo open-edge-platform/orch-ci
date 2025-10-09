@@ -1,0 +1,224 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+# Gitleaks Secret Scanner Action
+#
+# This composite action performs secret scanning using Gitleaks,
+# supporting full repository scans or changed-file-only mode, with SARIF reporting.
+#
+# Key Features:
+# - Detects hardcoded secrets and credentials
+# - Supports custom configuration and baselines
+# - Redaction of sensitive values in logs
+# - SARIF output for GitHub Code Scanning integration
+#
+# Process Stages:
+# 1. Environment Setup:
+#    - Gitleaks installation (specific or latest version)
+#
+# 2. Scan Execution:
+#    - Full repository or changed files only
+#    - Apply custom config and baseline if provided
+#
+# 3. Results Processing:
+#    - Report generation in SARIF/JSON/CSV
+#    - Artifact upload
+#    - Optional SARIF upload to GitHub Security tab
+#
+# Required Inputs:
+# - scan-scope: Scope of scan (all or changed)
+# - source: Path to scan
+#
+# Optional Inputs:
+# - config_path: Path to custom Gitleaks config
+# - baseline_path: Path to baseline file
+# - report_format: sarif, json, or csv (default: sarif)
+# - redact: Redact secrets in output (true/false)
+#
+# Outputs:
+# - exit_code: Gitleaks exit code
+# - report_path: Path to generated report
+#
+# Example Usage:
+# steps:
+#   - uses: ./.github/actions/security/gitleaks
+#     with:
+#       scan-scope: "changed"
+#       source: "./src"
+#       config_path: "./ci/gitleaks_baselines/<repo-name>-gitleaks.json"
+#       report_format: "json"
+#
+# Note: Requires `security-events: write` permission for SARIF upload.
+
+name: "Gitleaks Secret Scanner"
+description: "Detect leaked secrets with Gitleaks. Supports full repo or only-changed files, SARIF upload, baselines, and custom config."
+
+inputs:
+  scan-scope:
+    description: "Scope of files to scan (all/changed)"
+    required: false
+    default: "changed"
+  source:
+    description: "Path to scan (repository root by default)"
+    required: false
+    default: "."
+  version:
+    description: "Gitleaks version: 'latest' or a specific version (e.g., 8.28.0)"
+    required: false
+    default: "latest"
+  config_path:
+    description: "Path to a .gitleaks.toml config (if omitted, Gitleaks uses its defaults)"
+    required: false
+    default: ""
+  baseline_path:
+    description: "Path to a baseline file to ignore previously known leaks"
+    required: false
+    default: ""
+  report_format:
+    description: "Output format (sarif,json,csv)"
+    required: false
+    default: "sarif"
+  redact:
+    description: "Redact secrets in logs/report (true/false)"
+    required: false
+    default: "true"
+  exit_code_on_leak:
+    description: "Exit code to use when leaks are found (0 to never fail, 1 default)"
+    required: false
+    default: "1"
+  report_suffix:
+    description: "Suffix for artifact/report names (e.g., -linux, -windows). Include the leading '-'"
+    required: false
+    default: ""
+
+outputs:
+  exit_code:
+    description: "Exit code from gitleaks detect"
+    value: ${{ steps.run-gitleaks.outputs.exit_code }}
+  report_path:
+    description: "Path to the generated report file"
+    value: ${{ steps.run-gitleaks.outputs.report_path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get changed files
+      if: inputs['scan-scope'] == 'changed'
+      id: changed-files
+      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
+
+    - name: Install Gitleaks
+      id: install
+      shell: bash
+      env:
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        VER="${INPUT_VERSION}"
+
+        if [[ "$VER" == "latest" ]]; then
+          # Resolve latest tag (e.g., v8.28.0) and strip the 'v' for the tarball name
+          VER=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+            | grep -Po '"tag_name":\s*"v\K[0-9.]+' || true)
+          if [[ -z "$VER" ]]; then
+            echo "::error::Failed to resolve latest Gitleaks version"
+            exit 1
+          fi
+        fi
+
+        echo "Installing Gitleaks version: $VER"
+        curl -sSL \
+          -o /tmp/gitleaks.tar.gz \
+          "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz"
+        sudo tar xf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+        rm -f /tmp/gitleaks.tar.gz
+        gitleaks version || (echo "::error::Gitleaks failed to install" && exit 1)
+
+    - name: Run Gitleaks
+      id: run-gitleaks
+      shell: bash
+      env:
+        INPUT_SCOPE: ${{ inputs['scan-scope'] }}
+        INPUT_SOURCE: ${{ inputs.source }}
+        INPUT_CONFIG: ${{ inputs.config_path }}
+        INPUT_BASELINE: ${{ inputs.baseline_path }}
+        INPUT_FORMAT: ${{ inputs.report_format }}
+        INPUT_REDACT: ${{ inputs.redact }}
+        INPUT_EXIT_CODE: ${{ inputs.exit_code_on_leak }}
+        CHANGED_ALL: ${{ steps.changed-files.outputs.all_changed_files }}
+      run: |
+        set -euo pipefail
+
+        mkdir -p security-results/gitleaks
+        RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
+        REPORT_FILE="security-results/gitleaks/gitleaks-results-${RAND_SUFFIX}.${INPUT_FORMAT}"
+        echo "rand_suffix=${RAND_SUFFIX}" >> "$GITHUB_OUTPUT"
+
+        # Build scan directory depending on scope
+        SCAN_DIR="${INPUT_SOURCE}"
+        if [[ "$INPUT_SCOPE" == "changed" ]]; then
+          if [[ -n "${CHANGED_ALL:-}" ]]; then
+            echo "Scanning only changed files"
+            TMPDIR="$(mktemp -d)"
+            # Recreate directory structure and copy only changed files
+            while IFS= read -r f; do
+              # Skip deleted files and ensure directory exists
+              if [[ -f "$f" ]]; then
+                mkdir -p "$TMPDIR/$(dirname "$f")"
+                cp --parents "$f" "$TMPDIR" 2>/dev/null || cp "$f" "$TMPDIR/$(dirname "$f")/"
+              fi
+            done <<< "${CHANGED_ALL}"
+            SCAN_DIR="$TMPDIR"
+            NO_GIT="--no-git"
+          else
+            echo "No changed files detected; scanning full source"
+            NO_GIT=""
+          fi
+        fi
+
+        # Build CLI
+        CMD=(
+          gitleaks detect
+          --source "$SCAN_DIR"
+          --report-format "$INPUT_FORMAT"
+          --report-path "$REPORT_FILE"
+          --exit-code "$INPUT_EXIT_CODE"
+        )
+        [[ -n "${NO_GIT:-}" ]] && CMD+=( "$NO_GIT" )
+        [[ "$INPUT_REDACT" == "true" ]] && CMD+=( --redact )
+        [[ -n "$INPUT_CONFIG" && -f "$INPUT_CONFIG" ]] && CMD+=( --config "$INPUT_CONFIG" )
+        [[ -n "$INPUT_BASELINE" && -f "$INPUT_BASELINE" ]] && CMD+=( --baseline-path "$INPUT_BASELINE" )
+
+        echo "Executing: ${CMD[*]}"
+        set +e
+        "${CMD[@]}"
+        STATUS=$?
+        set -e
+
+        if [[ -f "$REPORT_FILE" ]]; then
+          echo "report_path=$REPORT_FILE" >> "$GITHUB_OUTPUT"
+        else
+          echo "::error::Report file was not generated"
+          exit 1
+        fi
+        echo "exit_code=$STATUS" >> "$GITHUB_OUTPUT"
+        # Don't hard-fail the job; let the caller decide based on outputs.exit_code
+        if [[ "$STATUS" -ne 0 ]]; then
+          echo "::warning::Gitleaks detected leaks (exit code $STATUS)"
+        fi
+
+    - name: Upload report artifact
+      if: steps.run-gitleaks.outputs.report_path != ''
+      env:
+        suffix: ${{ inputs.report_suffix }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      with:
+        name: gitleaks-results-${{ steps.run-gitleaks.outputs.rand_suffix }}${{ env.suffix }}
+        path: ${{ steps.run-gitleaks.outputs.report_path }}
+        retention-days: 7
+
+    - name: Upload SARIF (code scanning)
+      if: contains(steps.run-gitleaks.outputs.report_path, '.sarif')
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
+      with:
+        sarif_file: ${{ steps.run-gitleaks.outputs.report_path }}
