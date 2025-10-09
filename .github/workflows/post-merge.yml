@@ -218,7 +218,7 @@ jobs:
           results_file: raw-scorecard.sarif
           results_format: sarif
           repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
-          publish_results: false
+          publish_results: true
       - name: Upload raw Scorecard Results as Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
