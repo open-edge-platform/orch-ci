@@ -60,6 +60,13 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         required: false
         default: false
         type: boolean
+      exclude_patterns:
+        description: >-
+          Comma separated list of exclude patterns to use during the build,
+          defaults to empty list
+        required: false
+        default: ""
+        type: string
     secrets:
       SYS_ORCH_GITHUB:
         description: "PAT (contents: read) to clone private repos"
@@ -264,6 +271,21 @@ jobs:
             sed -i -zE '$ s/(.*)    },/\1    }/' \
               "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json"
           fi
+
+      - name: Add exclude patterns
+        env:
+          SIMPLE_MODE: ${{ inputs.simple_mode }}
+          EXCLUDE: ${{ inputs.exclude_patterns }}
+        shell: bash
+        run: |
+          # Remove any spaces
+          exclude_no_spaces="${EXCLUDE// /}"
+          # Surround patterns with quotes and create Python list
+          exclude_pattern="[\"${exclude_no_spaces//,/\", \"}\"]"
+          conf_files=$(find "${GITHUB_WORKSPACE}" -type f -path "*/docs/conf.py")
+          for conf_file in $conf_files; do
+            echo "exclude_patterns.extend(${exclude_pattern})" >> "$conf_file"
+          done
 
       - name: Install Spark theme
         env:

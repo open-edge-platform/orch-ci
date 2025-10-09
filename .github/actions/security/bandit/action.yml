@@ -183,17 +183,17 @@ runs:
         path: ${{ steps.run-bandit.outputs.report_path }}
         retention-days: 7
 
-    - name: Fix SARIF severity levels  # replace severities with high,medium,low
+    - name: Fix SARIF severity levels
       if: contains(steps.run-bandit.outputs.report_path, '.sarif')
       shell: bash
       run: |
         jq '
           .runs[0].results |= map(
             .level = (
-              if .properties.issue_severity == "LOW" then 3.0
-              elif .properties.issue_severity == "MEDIUM" then 5.0
-              elif .properties.issue_severity == "HIGH" then 8.0
-              else "note"
+              if .properties.issue_severity == "LOW" then "note"
+              elif .properties.issue_severity == "MEDIUM" then "warning"
+              elif .properties.issue_severity == "HIGH" then "error"
+              else "none"
               end
             )
           )
