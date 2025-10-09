@@ -2,9 +2,9 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: 'Publish Documentation'
+name: "Publish Documentation"
 
-on:  # yamllint disable-line rule:truthy rule:line-length
+on: # yamllint disable-line rule:truthy rule:line-length
   workflow_call:
     inputs:
       docs_directory:
@@ -25,7 +25,7 @@ on:  # yamllint disable-line rule:truthy rule:line-length
           Regex pattern to match against when selecting branches to build for
           version selector, defaults to '^(main|release-.*)$'
         required: false
-        default: '^(main|release-.*)$'
+        default: "^(main|release-.*)$"
         type: string
       simple_mode:
         description: >-
@@ -83,9 +83,9 @@ permissions: {}
 jobs:
   publish-documentation:
     permissions:
-      contents: read          # needed for actions/checkout
-      pull-requests: read     # needed for gh pr list
-      issues: write           # needed to post PR comment
+      contents: read # needed for actions/checkout
+      pull-requests: read # needed for gh pr list
+      issues: write # needed to post PR comment
     runs-on: ubuntu-latest
     env:
       DOCS_DIR: ${{ inputs.docs_directory }}
@@ -94,7 +94,7 @@ jobs:
       REPO: ${{ github.repository }}
     steps:
       - name: Checkout action repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: open-edge-platform/orch-ci
           path: ci
@@ -109,14 +109,14 @@ jobs:
           bootstrap_tools: "aws,jq"
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4.3.1
         with:
           aws-access-key-id: ${{ secrets.DOC_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.DOC_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           # Fetch all history, otherwise sporadic issue with missing tags
           fetch-depth: 0
@@ -130,7 +130,7 @@ jobs:
       # Use edge-manage-docs as a template
       - name: Checkout template
         if: ${{ inputs.simple_mode }}
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: open-edge-platform/edge-manage-docs
           ref: main
@@ -322,7 +322,7 @@ jobs:
 
       - name: Build Documentation
         env:
-          SIMPLE_MODE: ${{ inputs.simple_mode }}  # Used during make build
+          SIMPLE_MODE: ${{ inputs.simple_mode }} # Used during make build
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
           DOCS_VERSIONS: ${{ env.DOCS_VERSIONS }}
           BASEURL: ${{ env.BASEURL }}
@@ -368,10 +368,9 @@ jobs:
           if [[ -f "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json" ]]; then
             cd "${GITHUB_WORKSPACE}/_UPLOAD"
             pat='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
-            for file in $(grep -rl "${pat}"); do
-              sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" \
-                "${file}"
-            done
+            while IFS= read -r -d '' file; do
+              sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" "$file"
+            done < <(grep -rlZ "${pat}")
           fi
 
       - name: Publish documentation
@@ -429,7 +428,7 @@ jobs:
       # 'Post Bootstrap CI Environment' step does not fail
       - name: Checkout action repository
         if: always()
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: open-edge-platform/orch-ci
           path: ci
