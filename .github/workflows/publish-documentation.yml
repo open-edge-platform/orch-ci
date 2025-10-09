@@ -127,25 +127,16 @@ jobs:
           ref: ${{ github.head_ref }}
           persist-credentials: false
 
-      # Use edge-manage-docs as a template
+      # Fetch template from AWS S3 bucket
       - name: Checkout template
         if: ${{ inputs.simple_mode }}
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
-        with:
-          repository: open-edge-platform/edge-manage-docs
-          ref: main
-          path: _template
-          persist-credentials: false
-          sparse-checkout: |
-            docconf
-            Makefile
-            requirements.txt
-            dict.txt
-            docs/conf.py
-            docs/_static/logo.svg
-            docs/substitutions.txt
-          sparse-checkout-cone-mode: false
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
+        env:
+          ENDPOINT: ${{ inputs.endpoint }}
+        shell: bash
+        run: |
+          mkdir -p "${GITHUB_WORKSPACE}"/_template
+          aws s3 cp --recursive "${ENDPOINT}/template" \
+            "${GITHUB_WORKSPACE}"/_template
 
       - name: Copy template
         shell: bash
@@ -288,6 +279,7 @@ jobs:
           done
 
       - name: Install Spark theme
+        if: false # Disable step - Spark theme deprecated
         env:
           ENDPOINT: ${{ inputs.endpoint }}
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
@@ -367,9 +359,9 @@ jobs:
           # Replace switcher URL if switcher exists
           if [[ -f "${GITHUB_WORKSPACE}/_UPLOAD/switcher.json" ]]; then
             cd "${GITHUB_WORKSPACE}/_UPLOAD"
-            pat='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
-            for file in $(grep -rl "${pat}"); do
-              sed -i "s|${pat}.*;$|${pat} '${BASEURL}/switcher.json';|" \
+            path='DOCUMENTATION_OPTIONS.theme_switcher_json_url ='
+            grep -rl "${path}" | while IFS= read -r file; do
+              sed -i "s|${path}.*;$|${path} '${BASEURL}/switcher.json';|" \
                 "${file}"
             done
           fi
