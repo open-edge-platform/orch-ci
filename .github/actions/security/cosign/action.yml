@@ -1,0 +1,94 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+# Bandit Scanner Action
+#
+# This composite action executes Signing binaries or images,
+# using Cosign tool:
+# https://docs.sigstore.dev/quickstart/quickstart-cosign/
+# https://github.com/sigstore/cosign
+
+name: 'Sign Image or Binary with Cosign'
+description: 'Signs container images or binaries using Cosign and a GitHub token.'
+
+inputs:
+  target:
+    description: 'What to sign: "image" or "binary"'
+    required: true
+  artifact:
+    description: 'Full image reference (e.g., ghcr.io/org/app:tag) or binary path (e.g., ./bin/app)'
+    required: true
+  environment:
+    description: 'Environment to sign for (prod or non-prod)'
+    required: false
+    default: 'non-prod'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Cosign
+      uses: sigstore/cosign-installer@v3
+      with:
+        cosign-release: 'latest'
+
+    - name: Sign image or binary with Cosign
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        TARGET="${{ inputs.target }}"
+        ARTIFACT="${{ inputs.artifact }}"
+        ENVIRONMENT="${{ inputs.environment }}"
+
+        if [ "$ENVIRONMENT" = "prod" ]; then
+          TLOG_FLAG=""
+        else
+          TLOG_FLAG="--tlog-upload=false"
+        fi
+
+        echo "🔏 Signing $TARGET: $ARTIFACT"
+
+        if [ "$TARGET" = "image" ]; then
+          cosign sign \
+            --yes \
+            --identity-token "${GH_TOKEN}" \
+            --bundle cosign.bundle.json \
+            --output-signature cosign.sig \
+            --output-certificate cosign.cert \
+            $TLOG_FLAG \
+            "$ARTIFACT"
+        elif [ "$TARGET" = "binary" ]; then
+          if [ ! -f "$ARTIFACT" ]; then
+            echo "❌ Binary not found at path: $ARTIFACT"
+            exit 1
+          fi
+          cosign sign-blob \
+            --yes \
+            --identity-token "${GH_TOKEN}" \
+            --bundle cosign.bundle.json \
+            --output-signature cosign.sig \
+            --output-certificate cosign.cert \
+            $TLOG_FLAG \
+            "$ARTIFACT"
+        else
+          echo "❌ Invalid target: $TARGET (must be image or binary)"
+          exit 1
+        fi
+
+        echo "✅ Signing complete."
+        ls -lh cosign.*
+
+    - name: Verify signature
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        TARGET="${{ inputs.target }}"
+        ARTIFACT="${{ inputs.artifact }}"
+        echo "🧾 Verifying $TARGET: $ARTIFACT"
+
+        if [ "$TARGET" = "image" ]; then
+          cosign verify --identity-token "${GH_TOKEN}" "$ARTIFACT"
+        elif [ "$TARGET" = "binary" ]; then
+          cosign verify-blob --identity-token "${GH_TOKEN}" "$ARTIFACT"
+        fi
