@@ -187,6 +187,10 @@ on:  # yamllint disable-line rule:truthy
         description: "Used for orch-utils docker image mapping"
         type: string
         required: false
+      run_code_coverage:
+        description: "Run code coverage on pull request"
+        type: boolean
+        required: false
     secrets:
       SYS_ORCH_GITHUB:
         required: false  ## temp workaround
@@ -253,7 +257,7 @@ jobs:
         with:
           persist-credentials: false
       - name: REUSE Compliance Check
-        uses: fsfe/reuse-action@bb774aa972c2a89ff34781233d275075cbddf542  # v5.0.0
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5  # v6.0.0
   secrets-gitleaks-scan:
     permissions:
       contents: read
@@ -294,7 +298,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@7d984ef618c17ff5e616879327f19f37b67307ee  # 0.1.46
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@76700c2fb6d547733b9218d9638dca43f5296399  # 0.1.52
         with:
           report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
           project-folder: ${{ inputs.project_folder }}
@@ -366,7 +370,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@7d984ef618c17ff5e616879327f19f37b67307ee  # 0.1.46
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@76700c2fb6d547733b9218d9638dca43f5296399  # 0.1.52
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
@@ -385,7 +389,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@7d984ef618c17ff5e616879327f19f37b67307ee  # 0.1.46
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@76700c2fb6d547733b9218d9638dca43f5296399  # 0.1.52
         with:
           scan-scope: "changed"
           severity: "HIGH"
@@ -486,7 +490,7 @@ jobs:
       - name: Restore Go cache
         if: ${{ inputs.cache_go }}
         id: restored-project-go-cache
-        uses: actions/cache/restore@0400d5f644dc74513175e3cd8d07132dd4860809  # v4.2.4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: |
             ${{ env.GOCACHE }}
@@ -527,7 +531,43 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           make test
-          # TO DO find a replacement for cobertura
+
+      - name: Find and Process Code Coverage
+        if: ${{ inputs.run_test && inputs.run_code_coverage }}
+        id: coverage
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          coverage_file=$(find . -name "coverage.xml" -type f | head -n 1)
+
+          if [ -z "$coverage_file" ]; then
+            echo "No coverage.xml file found"
+            echo "coverage_found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found coverage file: $coverage_file"
+            echo "coverage_file=$coverage_file" >> "$GITHUB_OUTPUT"
+            echo "coverage_found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Code Coverage Summary
+        if: ${{ inputs.run_test && steps.coverage.outputs.coverage_found && inputs.run_code_coverage }}
+        uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95  # v1.3.0
+        with:
+          filename: ${{ inputs.project_folder }}/${{ steps.coverage.outputs.coverage_file }}
+          badge: true
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '60 80'
+
+      - name: Add Coverage PR Comment
+        if: ${{ inputs.run_test && steps.coverage.outputs.coverage_found && inputs.run_code_coverage }}
+        uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31  # v2.9.0
+        with:
+          recreate: true
+          path: code-coverage-results.md
 
       - name: Integration test
         if: ${{ inputs.run_integration_test }}
@@ -575,7 +615,7 @@ jobs:
 
       - name: Save Go cache
         if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809  # v4.2.4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
         with:
           path: |
             ${{ env.GOCACHE }}
@@ -611,7 +651,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838  # v5.0.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -719,7 +759,7 @@ jobs:
       # Configure AWS credentials for ECR
       - name: Configure AWS credentials for ECR
         if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838  # v5.0.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -728,7 +768,7 @@ jobs:
       # Configure AWS credentials for S3
       - name: Configure AWS credentials for S3
         if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a  # v4.3.1
+        uses: aws-actions/configure-aws-credentials@a03048d87541d1d9fcf2ecf528a4a65ba9bd7838  # v5.0.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
