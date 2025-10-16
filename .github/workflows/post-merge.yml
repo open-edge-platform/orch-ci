@@ -217,7 +217,7 @@ jobs:
           ref: ${{ github.head_ref }}
           persist-credentials: false
       - name: Run OpenSSF Scorecard
-        uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde  # v2.4.2
+        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a  # v2.4.3
         with:
           results_file: raw-scorecard.sarif
           results_format: sarif
@@ -238,7 +238,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
       - name: Download raw results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: raw-scorecard-results
       - name: Remove Fuzzing check from SARIF
@@ -776,7 +776,7 @@ jobs:
         image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) }}
     steps:
       - name: Download Docker Images
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
+        uses: actions/download-artifact@4a24838f3d5601fd639834081e118c2995d51e1c  # v5.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
