@@ -34,24 +34,27 @@ runs:
     - name: Sign image or binary with Cosign
       shell: bash
       env:
+        TARGET: ${{ inputs.target }}
+        ARTIFACT: ${{ inputs.artifact }}
+        ENVIRONMENT: ${{ inputs.environment }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        TARGET="${{ inputs.target }}"
-        ARTIFACT="${{ inputs.artifact }}"
-        ENVIRONMENT="${{ inputs.environment }}"
+        set -euo pipefail
 
+        echo "🔏 Signing $TARGET: $ARTIFACT"
+
+        # Determine whether to upload to transparency log
         if [ "$ENVIRONMENT" = "prod" ]; then
           TLOG_FLAG=""
         else
           TLOG_FLAG="--tlog-upload=false"
         fi
 
-        echo "🔏 Signing $TARGET: $ARTIFACT"
-
+        # Perform signing
         if [ "$TARGET" = "image" ]; then
           cosign sign \
             --yes \
-            --identity-token "${GH_TOKEN}" \
+            --identity-token "$GH_TOKEN" \
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
@@ -64,7 +67,7 @@ runs:
           fi
           cosign sign-blob \
             --yes \
-            --identity-token "${GH_TOKEN}" \
+            --identity-token "$GH_TOKEN" \
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
@@ -81,14 +84,21 @@ runs:
     - name: Verify signature
       shell: bash
       env:
+        TARGET: ${{ inputs.target }}
+        ARTIFACT: ${{ inputs.artifact }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: |
-        TARGET="${{ inputs.target }}"
-        ARTIFACT="${{ inputs.artifact }}"
+        set -euo pipefail
+
         echo "🧾 Verifying $TARGET: $ARTIFACT"
 
         if [ "$TARGET" = "image" ]; then
-          cosign verify --identity-token "${GH_TOKEN}" "$ARTIFACT"
+          cosign verify --identity-token "$GH_TOKEN" "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
-          cosign verify-blob --identity-token "${GH_TOKEN}" "$ARTIFACT"
+          cosign verify-blob --identity-token "$GH_TOKEN" "$ARTIFACT"
+        else
+          echo "❌ Invalid target for verification: $TARGET"
+          exit 1
         fi
+
+        echo "🟢 Verification finished successfully."
