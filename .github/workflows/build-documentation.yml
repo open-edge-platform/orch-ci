@@ -138,7 +138,7 @@ jobs:
             cat "dictionary_append.txt" >> "dict.txt"
           fi
 
-      - name: Add exclude patterns
+      - name: Add exclude patterns and mermaid support
         env:
           EXCLUDE: ${{ inputs.exclude_patterns }}
         shell: bash
@@ -150,6 +150,17 @@ jobs:
           conf_files=$(find "${GITHUB_WORKSPACE}" -type f -path "*/docs/conf.py")
           for conf_file in $conf_files; do
             echo "exclude_patterns.extend(${exclude_pattern})" >> "$conf_file"
+            
+            # Add mermaid extension if not already present
+            if ! grep -q "sphinxcontrib.mermaid" "$conf_file"; then
+              echo "" >> "$conf_file"
+              echo "# Add mermaid extension for diagram support" >> "$conf_file"
+              echo "if 'sphinxcontrib.mermaid' not in extensions:" >> "$conf_file"
+              echo "    extensions.append('sphinxcontrib.mermaid')" >> "$conf_file"
+              echo "" >> "$conf_file"
+              echo "# Mermaid configuration" >> "$conf_file"
+              echo "mermaid_version = '10.6.1'" >> "$conf_file"
+            fi
           done
 
       - name: Install Spark theme
