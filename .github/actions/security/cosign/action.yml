@@ -9,7 +9,7 @@
 # https://github.com/sigstore/cosign
 
 name: 'Sign Image or Binary with Cosign'
-description: 'Signs container images or binaries using Cosign and a GitHub token.'
+description: 'Signs container images or binaries using Cosign.'
 
 inputs:
   target:
@@ -23,7 +23,7 @@ inputs:
     required: false
     default: 'non-prod'
   gh_token:
-    description: 'GitHub token used for signing'
+    description: 'GitHub token used for registry auth'
     required: true
 
 runs:
@@ -34,14 +34,20 @@ runs:
       with:
         cosign-release: 'v2.5.2'
 
+    - name: Login to GitHub Container Registry
+      if: ${{ inputs.target == 'image' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.gh_token }}
+      run: |
+        echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
     - name: Sign image or binary with Cosign
       shell: bash
       env:
         TARGET: ${{ inputs.target }}
         ARTIFACT: ${{ inputs.artifact }}
         ENVIRONMENT: ${{ inputs.environment }}
-        GH_TOKEN: ${{ inputs.gh_token }}
-
       run: |
         set -euo pipefail
 
@@ -58,7 +64,6 @@ runs:
         if [ "$TARGET" = "image" ]; then
           cosign sign \
             --yes \
-            --identity-token "$GH_TOKEN" \
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
@@ -71,7 +76,6 @@ runs:
           fi
           cosign sign-blob \
             --yes \
-            --identity-token "$GH_TOKEN" \
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
@@ -90,16 +94,15 @@ runs:
       env:
         TARGET: ${{ inputs.target }}
         ARTIFACT: ${{ inputs.artifact }}
-        GH_TOKEN: ${{ inputs.gh_token }}
       run: |
         set -euo pipefail
 
         echo "🧾 Verifying $TARGET: $ARTIFACT"
 
         if [ "$TARGET" = "image" ]; then
-          cosign verify --identity-token "$GH_TOKEN" "$ARTIFACT"
+          cosign verify "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
-          cosign verify-blob --identity-token "$GH_TOKEN" "$ARTIFACT"
+          cosign verify-blob "$ARTIFACT"
         else
           echo "❌ Invalid target for verification: $TARGET"
           exit 1
