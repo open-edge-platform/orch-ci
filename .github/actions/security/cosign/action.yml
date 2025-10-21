@@ -1,7 +1,7 @@
 ---
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-# Bandit Scanner Action
+# Cosign Action
 #
 # This composite action executes signing binaries or images,
 # using Cosign tool:
