@@ -1,0 +1,79 @@
+---
+name: Test Cosign Signing Action
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - adimoft-patch-2
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  test-sign-binary:
+    name: Test Binary Signing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build sample binary
+        run: |
+          echo "Hello world" > ./test-binary
+          chmod +x ./test-binary
+
+      - name: Run Cosign signing action (binary)
+        uses: ./.github/actions/security/cosign
+        with:
+          target: "binary"
+          artifact: "./test-binary"
+          environment: "non-prod"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Cosign outputs (binary)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosign-binary-artifacts
+          path: |
+            cosign.sig
+            cosign.cert
+            cosign.bundle.json
+          if-no-files-found: warn
+
+  test-sign-image:
+    name: Test Image Signing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: |
+          echo "FROM alpine:3.19" > Dockerfile
+          echo 'CMD ["echo", "Hello world"]' >> Dockerfile
+          docker build -t ghcr.io/${{ github.repository_owner }}/test-image:latest .
+
+      - name: Run Cosign signing action (image)
+        uses: ./.github/actions/security/cosign
+        with:
+          target: "image"
+          artifact: "ghcr.io/${{ github.repository_owner }}/test-image:latest"
+          environment: "non-prod"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Cosign outputs (image)
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosign-image-artifacts
+          path: |
+            cosign.sig
+            cosign.cert
+            cosign.bundle.json
+          if-no-files-found: warn
