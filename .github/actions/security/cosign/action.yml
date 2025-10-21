@@ -22,6 +22,9 @@ inputs:
     description: 'Environment to sign for (prod or non-prod)'
     required: false
     default: 'non-prod'
+  gh_token:
+    description: 'GitHub token used for signing'
+    required: true
 
 runs:
   using: "composite"
@@ -37,7 +40,8 @@ runs:
         TARGET: ${{ inputs.target }}
         ARTIFACT: ${{ inputs.artifact }}
         ENVIRONMENT: ${{ inputs.environment }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        GH_TOKEN: ${{ inputs.gh_token }}
+
       run: |
         set -euo pipefail
 

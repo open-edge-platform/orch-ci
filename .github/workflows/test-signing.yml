@@ -32,8 +32,7 @@ jobs:
           target: "binary"
           artifact: "./test-binary"
           environment: "non-prod"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Cosign outputs (binary)
         uses: actions/upload-artifact@v4
@@ -65,8 +64,7 @@ jobs:
           target: "image"
           artifact: "ghcr.io/${{ github.repository_owner }}/test-image:latest"
           environment: "non-prod"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Cosign outputs (image)
         uses: actions/upload-artifact@v4
