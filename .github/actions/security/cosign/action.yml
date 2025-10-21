@@ -94,15 +94,27 @@ runs:
       env:
         TARGET: ${{ inputs.target }}
         ARTIFACT: ${{ inputs.artifact }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
       run: |
         set -euo pipefail
 
         echo "🧾 Verifying $TARGET: $ARTIFACT"
 
+        CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/github-actions"
+        OIDC_ISSUER="https://token.actions.githubusercontent.com"
+
         if [ "$TARGET" = "image" ]; then
-          cosign verify "$ARTIFACT"
+          cosign verify \
+            --bundle cosign.bundle.json \
+            --certificate-identity-regexp "$CERT_IDENTITY" \
+            --certificate-oidc-issuer "$OIDC_ISSUER" \
+            "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
-          cosign verify-blob "$ARTIFACT"
+          cosign verify-blob \
+            --bundle cosign.bundle.json \
+            --certificate-identity-regexp "$CERT_IDENTITY" \
+            --certificate-oidc-issuer "$OIDC_ISSUER" \
+            "$ARTIFACT"
         else
           echo "❌ Invalid target for verification: $TARGET"
           exit 1
