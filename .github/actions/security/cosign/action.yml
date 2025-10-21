@@ -90,7 +90,6 @@ runs:
 
         echo "🧾 Verifying $TARGET: $ARTIFACT"
 
-        # Keyless verification requires identity and OIDC issuer
         CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/github-actions"
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
@@ -99,14 +98,12 @@ runs:
             --bundle cosign.bundle.json \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
-            --no-tlog \
             "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
           cosign verify-blob \
             --bundle cosign.bundle.json \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
-            --no-tlog \
             "$ARTIFACT"
         else
           echo "❌ Invalid target for verification: $TARGET"
