@@ -32,7 +32,7 @@ runs:
     - name: Set up Cosign
       uses: sigstore/cosign-installer@v3
       with:
-        cosign-release: 'latest'
+        cosign-release: 'v2.5.2'
 
     - name: Sign image or binary with Cosign
       shell: bash
