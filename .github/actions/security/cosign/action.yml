@@ -47,18 +47,10 @@ runs:
       env:
         TARGET: ${{ inputs.target }}
         ARTIFACT: ${{ inputs.artifact }}
-        ENVIRONMENT: ${{ inputs.environment }}
       run: |
         set -euo pipefail
 
         echo "🔏 Signing $TARGET: $ARTIFACT"
-
-        # Determine whether to upload to transparency log
-        if [ "$ENVIRONMENT" = "prod" ]; then
-          TLOG_FLAG=""
-        else
-          TLOG_FLAG="--tlog-upload=false"
-        fi
 
         # Perform signing
         if [ "$TARGET" = "image" ]; then
@@ -67,7 +59,6 @@ runs:
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
-            $TLOG_FLAG \
             "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
           if [ ! -f "$ARTIFACT" ]; then
@@ -79,7 +70,6 @@ runs:
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
-            $TLOG_FLAG \
             "$ARTIFACT"
         else
           echo "❌ Invalid target: $TARGET (must be image or binary)"
@@ -100,6 +90,7 @@ runs:
 
         echo "🧾 Verifying $TARGET: $ARTIFACT"
 
+        # Keyless verification requires identity and OIDC issuer
         CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/github-actions"
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
@@ -108,12 +99,14 @@ runs:
             --bundle cosign.bundle.json \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
+            --no-tlog \
             "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
           cosign verify-blob \
             --bundle cosign.bundle.json \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
+            --no-tlog \
             "$ARTIFACT"
         else
           echo "❌ Invalid target for verification: $TARGET"
