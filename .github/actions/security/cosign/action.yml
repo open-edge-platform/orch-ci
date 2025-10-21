@@ -90,7 +90,7 @@ runs:
       env:
         TARGET: ${{ inputs.target }}
         ARTIFACT: ${{ inputs.artifact }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        GH_TOKEN: ${{ inputs.gh_token }}
       run: |
         set -euo pipefail
 
