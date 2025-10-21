@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Bandit Scanner Action
 #
-# This composite action executes Signing binaries or images,
+# This composite action executes signing binaries or images,
 # using Cosign tool:
 # https://docs.sigstore.dev/quickstart/quickstart-cosign/
 # https://github.com/sigstore/cosign
@@ -53,7 +53,7 @@ runs:
         echo "🔏 Signing $TARGET: $ARTIFACT"
 
         if [ "$TARGET" = "image" ]; then
-          # Keyless signing directly to registry; no bundle or output files
+          # Keyless signing directly to registry
           cosign sign --yes "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
           if [ ! -f "$ARTIFACT" ]; then
@@ -73,7 +73,9 @@ runs:
         fi
 
         echo "✅ Signing complete."
-        ls -lh cosign.*
+        if [ "$TARGET" = "binary" ]; then
+          ls -lh cosign.*
+        fi
 
     - name: Verify signature
       shell: bash
@@ -86,19 +88,17 @@ runs:
 
         echo "🧾 Verifying $TARGET: $ARTIFACT"
 
-        CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.github/workflows/.*\.yml@refs/heads/.*"
+        CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/.*\\.yml@refs/heads/.*"
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
         if [ "$TARGET" = "image" ]; then
-          # Verify image directly from registry
           cosign verify \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
             "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
-          # Verify binary locally using bundle
           cosign verify-blob \
-            --bundle cosign.bundle.json \
+            --bundle "cosign.bundle.json" \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
             "$ARTIFACT"

@@ -58,6 +58,13 @@ jobs:
           echo 'CMD ["echo", "Hello world"]' >> Dockerfile
           docker build -t ghcr.io/${{ github.repository_owner }}/test-image:latest .
 
+      - name: Push test image to registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push ghcr.io/${{ github.repository_owner }}/test-image:latest
+
       - name: Run Cosign signing action (image)
         uses: ./.github/actions/security/cosign
         with:
@@ -66,6 +73,7 @@ jobs:
           environment: "non-prod"
           gh_token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Optionally upload Cosign artifacts for images (bundle/signature/cert)
       - name: Upload Cosign outputs (image)
         uses: actions/upload-artifact@v4
         with:
