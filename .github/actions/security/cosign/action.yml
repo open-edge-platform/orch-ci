@@ -52,19 +52,15 @@ runs:
 
         echo "🔏 Signing $TARGET: $ARTIFACT"
 
-        # Perform signing
         if [ "$TARGET" = "image" ]; then
-          cosign sign \
-            --yes \
-            --bundle cosign.bundle.json \
-            --output-signature cosign.sig \
-            --output-certificate cosign.cert \
-            "$ARTIFACT"
+          # Keyless signing directly to registry; no bundle or output files
+          cosign sign --yes "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
           if [ ! -f "$ARTIFACT" ]; then
             echo "❌ Binary not found at path: $ARTIFACT"
             exit 1
           fi
+          # Sign binary locally and save bundle/signature/certificate
           cosign sign-blob \
             --yes \
             --bundle cosign.bundle.json \
@@ -94,12 +90,13 @@ runs:
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
         if [ "$TARGET" = "image" ]; then
+          # Verify image directly from registry
           cosign verify \
-            --bundle cosign.bundle.json \
             --certificate-identity-regexp "$CERT_IDENTITY" \
             --certificate-oidc-issuer "$OIDC_ISSUER" \
             "$ARTIFACT"
         elif [ "$TARGET" = "binary" ]; then
+          # Verify binary locally using bundle
           cosign verify-blob \
             --bundle cosign.bundle.json \
             --certificate-identity-regexp "$CERT_IDENTITY" \
