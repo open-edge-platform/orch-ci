@@ -238,7 +238,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@3259c6206f993105e3a61b142c2d97bf4b9ef83d  # v7.1.0
+        uses: astral-sh/setup-uv@2ddd2b9cb38ad8efd50337e8ab201519a34c9f24  # v7.1.1
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizimor Scan Report
@@ -298,7 +298,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@76700c2fb6d547733b9218d9638dca43f5296399  # 0.1.52
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@e4fa54613527cfaad83ba8b625fd845a4ab8409d  # 0.1.53
         with:
           report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
           project-folder: ${{ inputs.project_folder }}
@@ -335,7 +335,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@f443b600d91635bebf5b0d9ebc620189c0d6fba5  # v3.29.5
+        uses: github/codeql-action/upload-sarif@16140ae1a102900babc80a33c44059580f687047  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   trivy-critical-scan:
@@ -370,7 +370,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@76700c2fb6d547733b9218d9638dca43f5296399  # 0.1.52
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@e4fa54613527cfaad83ba8b625fd845a4ab8409d  # 0.1.53
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
@@ -389,7 +389,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@76700c2fb6d547733b9218d9638dca43f5296399  # 0.1.52
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@e4fa54613527cfaad83ba8b625fd845a4ab8409d  # 0.1.53
         with:
           scan-scope: "changed"
           severity: "HIGH"
