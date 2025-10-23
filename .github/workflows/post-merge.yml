@@ -161,6 +161,7 @@ on:  # yamllint disable-line rule:truthy
         description: "Run code coverage on pull request"
         type: boolean
         required: false
+        default: false
     secrets:
       SYS_ORCH_GITHUB:
         required: false
