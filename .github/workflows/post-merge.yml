@@ -157,11 +157,6 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
-      run_code_coverage:
-        description: "Run code coverage on pull request"
-        type: boolean
-        required: false
-        default: false
     secrets:
       SYS_ORCH_GITHUB:
         required: false
@@ -533,33 +528,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           make test
-
-      - name: Find and Process Code Coverage
-        if: ${{ inputs.run_test && inputs.run_code_coverage }}
-        id: coverage
-        working-directory: ${{ inputs.project_folder }}
-        run: |
-          coverage_file=$(find . -name "coverage.xml" -type f | head -n 1)
-
-          if [ -z "$coverage_file" ]; then
-            echo "No coverage.xml file found"
-            echo "coverage_found=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "Found coverage file: $coverage_file"
-            echo "coverage_file=$coverage_file" >> "$GITHUB_OUTPUT"
-            echo "coverage_found=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Upload Code Coverage Report
-        if: ${{ inputs.run_test && inputs.run_code_coverage && steps.coverage.outputs.coverage_found }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
-        with:
-          name: code-coverage-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: |
-            code-coverage-results.md
-            code-coverage-results.txt
-            ${{ inputs.project_folder }}/${{ steps.coverage.outputs.coverage_file }}
-
+     
       - name: Save Go cache
         if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
