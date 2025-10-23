@@ -526,8 +526,8 @@ jobs:
         env:  ## temp workaround
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
-          make test      
-
+          make test
+          
       - name: Integration test
         if: ${{ inputs.run_integration_test }}
         working-directory: ${{ inputs.project_folder }}
