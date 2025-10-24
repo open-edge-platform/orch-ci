@@ -1,0 +1,140 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+# Cosign Action
+#
+# This composite action executes signing binaries or images,
+# using Cosign tool:
+# https://docs.sigstore.dev/quickstart/quickstart-cosign/
+# https://github.com/sigstore/cosign-installer
+# https://github.com/sigstore/cosign
+
+name: 'Sign Image or Binary with Cosign'
+description: 'Signs container images or binaries using Cosign.'
+
+inputs:
+  target:
+    description: 'What to sign: "image" or "binary"'
+    required: true
+  artifact:
+    description: 'Full image reference (e.g., ghcr.io/org/app:tag) or binary path (e.g., ./bin/app)'
+    required: true
+  environment:
+    description: 'Environment to sign for (prod or non-prod)'
+    required: false
+    default: 'non-prod'
+  gh_token:
+    description: 'GitHub token used for registry auth'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Cosign
+      uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad  # v4.0.0
+      with:
+        cosign-release: 'v3.0.2'
+
+    - name: Login to GitHub Container Registry
+      if: ${{ inputs.target == 'image' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.gh_token }}
+      run: |
+        echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+    - name: Sign image or binary with Cosign
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+        ARTIFACT: ${{ inputs.artifact }}
+      run: |
+        set -euo pipefail
+        echo "──────────────────────────────"
+        echo "🔏 Signing $TARGET: $ARTIFACT"
+        echo "──────────────────────────────"
+
+        if [ "$TARGET" = "image" ]; then
+          # Keyless signing directly to registry
+          cosign sign --yes "$ARTIFACT"
+        elif [ "$TARGET" = "binary" ]; then
+          if [ ! -f "$ARTIFACT" ]; then
+            echo "❌ Binary not found at path: $ARTIFACT"
+            exit 1
+          fi
+          # Sign binary locally and save bundle/signature/certificate
+          cosign sign-blob \
+            --yes \
+            --bundle cosign.bundle.json \
+            --output-signature cosign.sig \
+            --output-certificate cosign.cert \
+            "$ARTIFACT"
+        else
+          echo "❌ Invalid target: $TARGET (must be image or binary)"
+          exit 1
+        fi
+
+        echo "✅ Signing complete."
+        if [ "$TARGET" = "binary" ]; then
+          ls -lh cosign.* || true
+        fi
+
+    - name: Fetch Cosign artifacts for image
+      if: ${{ inputs.target == 'image' }}
+      shell: bash
+      env:
+        ARTIFACT: ${{ inputs.artifact }}
+      run: |
+        set -euo pipefail
+        echo "📥 Fetching signature/certificate for image: $ARTIFACT"
+        cosign download signature "$ARTIFACT" > cosign.sig || echo "⚠️ No signature found"
+        cosign download certificate "$ARTIFACT" > cosign.cert || echo "⚠️ No certificate found"
+        cosign download attestation "$ARTIFACT" > cosign.att || echo "⚠️ No attestation found"
+
+        echo "✅ Image artifacts downloaded:"
+        ls -lh cosign.* || true
+
+    - name: Verify signature
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+        ARTIFACT: ${{ inputs.artifact }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        echo "──────────────────────────────"
+        echo "🧾 Verifying $TARGET: $ARTIFACT"
+        echo "──────────────────────────────"
+
+        CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/.*\\.yml@refs/heads/.*"
+        OIDC_ISSUER="https://token.actions.githubusercontent.com"
+
+        if [ "$TARGET" = "image" ]; then
+          cosign verify \
+            --certificate-identity-regexp "$CERT_IDENTITY" \
+            --certificate-oidc-issuer "$OIDC_ISSUER" \
+            "$ARTIFACT"
+        elif [ "$TARGET" = "binary" ]; then
+          cosign verify-blob \
+            --bundle "cosign.bundle.json" \
+            --certificate-identity-regexp "$CERT_IDENTITY" \
+            --certificate-oidc-issuer "$OIDC_ISSUER" \
+            "$ARTIFACT"
+        else
+          echo "❌ Invalid target for verification: $TARGET"
+          exit 1
+        fi
+
+        echo "🟢 Verification finished successfully."
+
+    - name: Upload Cosign artifacts
+      if: ${{ inputs.target == 'binary' || inputs.target == 'image' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: cosign-${{ inputs.target }}-artifacts
+        path: |
+          cosign.sig
+          cosign.cert
+          cosign.bundle.json
+          cosign.att
+        if-no-files-found: ignore
