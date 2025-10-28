@@ -220,7 +220,7 @@ jobs:
           repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
           publish_results: true
       - name: Upload raw Scorecard Results as Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: raw-scorecard-results
           path: raw-scorecard.sarif
@@ -234,7 +234,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
       - name: Download raw results
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: raw-scorecard-results
       - name: Remove Fuzzing check from SARIF
@@ -249,12 +249,12 @@ jobs:
               )' raw-scorecard.sarif \
             > scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Scorecard Results to Code Scanning
-        uses: github/codeql-action/upload-sarif@16140ae1a102900babc80a33c44059580f687047  # v3.29.5
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb  # v3.29.5
         with:
           sarif_file: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           wait-for-processing: true
       - name: Upload Scorecard Results as Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
         with:
           name: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -286,12 +286,12 @@ jobs:
           format: 'spdx-json'
           output: "trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json"
       - name: Upload Trivy Scan Report
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
         with:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@16140ae1a102900babc80a33c44059580f687047  # v3.29.5
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   zizimor-scan:
@@ -308,13 +308,13 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@2ddd2b9cb38ad8efd50337e8ab201519a34c9f24  # v7.1.1
+        uses: astral-sh/setup-uv@85856786d1ce8acfbcc2f13a5f3fbd6b938f9f41  # v7.1.2
 
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@16140ae1a102900babc80a33c44059580f687047  # v3.29.5
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -640,7 +640,7 @@ jobs:
 
       - name: Upload Docker Images
         if: ${{ inputs.run_docker_build }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
@@ -732,7 +732,7 @@ jobs:
         image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) }}
     steps:
       - name: Download Docker Images
-        uses: actions/download-artifact@4a24838f3d5601fd639834081e118c2995d51e1c  # v5.0.0
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # v5.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
@@ -762,7 +762,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy Image Scan Report
-        uses: github/codeql-action/upload-sarif@16140ae1a102900babc80a33c44059580f687047  # v3.29.5
+        uses: github/codeql-action/upload-sarif@4e94bd11f71e507f7f87df81788dff88d1dacbfb  # v3.29.5
         with:
           sarif_file: trivy-${{ env.sanitized_image_name }}.sarif
   version-bump:
