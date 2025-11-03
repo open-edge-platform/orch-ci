@@ -81,6 +81,10 @@ runs:
         for VERSION_PATH in $(eval $FIND_CMD 2>/dev/null || echo ""); do
           echo "Processing $VERSION_PATH"
           export VERSIONFILE="$VERSION_PATH"
+          if [ "$VERSION_PATH" == "./ci/VERSION" ]; then
+            # skip the ci folder VERSION file, should only update VERSION files for project
+            continue
+          fi
 
           RELEASE_VERSION=0
           read_version
