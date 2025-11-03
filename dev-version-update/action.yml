@@ -105,9 +105,22 @@ runs:
             fi
 
             echo "$NEXT_VERSION" > "$VERSION_PATH"
-            git add "$VERSION_PATH"
-            CHANGES_MADE=1
           fi
+        done
+
+        # Check the list of updated files and add each to the commit
+        CHANGED_FILES=$(git status -s)
+        for CHANGED_FILE in ${CHANGED_FILES}; do
+          # Skip change type
+          if [[ "${CHANGED_FILE}" == "D" ]] || [[ "${CHANGED_FILE}" == "M" ]] || [[ "${CHANGED_FILE}" == "??" ]]; then
+            continue
+          fi
+          # Skip ci/VERSION if .gitignore for project_folder does not exclude it from status
+          if [[ "${CHANGED_FILE}" == "ci" ]] || [[ "${CHANGED_FILE}" == "ci/" ]]; then
+            continue
+          fi
+          git add ${file}
+          CHANGES_MADE=1
         done
 
         if [ $CHANGES_MADE -eq 1 ]; then
