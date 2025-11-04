@@ -119,7 +119,7 @@ runs:
           if [[ "${CHANGED_FILE}" == "ci" ]] || [[ "${CHANGED_FILE}" == "ci/" ]]; then
             continue
           fi
-          git add ${file}
+          git add ${CHANGED_FILE}
           CHANGES_MADE=1
         done
 
