@@ -160,10 +160,6 @@ on:  # yamllint disable-line rule:truthy
     secrets:
       SYS_ORCH_GITHUB:
         required: false
-      COSIGN_PASSWORD:
-        required: false
-      COSIGN_PRIVATE_KEY:
-        required: false
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
       NO_AUTH_ECR_PUSH_PASSWD:
@@ -464,13 +460,6 @@ jobs:
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
             ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
 
-      - name: Install cosign
-        if: inputs.run_docker_push || inputs.run_package_build
-        uses: ./ci/.github/actions/bootstrap
-        with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-          bootstrap_tools: "cosign"
-
       - name: Free Ubuntu Disk Space
         if: ${{ inputs.run_freeup_ubuntu_space }}
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be  # v1.3.1
@@ -493,24 +482,31 @@ jobs:
         run: |
           make package
 
-      - name: Find and Sign Binaries
+      - name: Find and Sign All Binaries with Cosign Action
         if: ${{ inputs.run_build }}
         working-directory: ${{ inputs.project_folder }}
         env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
-          # common dirs to search for binaries
+          set -euo pipefail
+
+          echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
 
           for dir in "${directories[@]}"; do
-            full_path="$GITHUB_WORKSPACE/${PROJECT_FOLDER}/$dir"
+            full_path="$GITHUB_WORKSPACE/$PROJECT_FOLDER/$dir"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               find "$full_path" -type f -executable | while read -r binary; do
-                echo "Signing $binary"
-                cosign sign-blob -y --key env://COSIGN_PRIVATE_KEY "$binary" || echo "Failed to sign $binary"
+                echo "──────────────────────────────"
+                echo "🔏 Signing binary: $binary"
+                echo "──────────────────────────────"
+                gh workflow run ./ci/.github/actions/security/cosign \
+                  -f target=binary \
+                  -f artifact="$binary" \
+                  -f environment=non-prod \
+                  -f gh_token="$GH_TOKEN"
               done
             fi
           done
@@ -645,22 +641,30 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Sign Docker images
+      - name: Sign All Docker Images with Cosign Action
         if: ${{ inputs.run_docker_push }}
         env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
+          set -euo pipefail
+
+          echo "🔍 Finding pushed ECR images to sign..."
           images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
-          images_json=$(echo "$images" | jq -R . | jq -s -c .)
-          for image in $(echo "$images_json" | jq -r '.[]'); do
-            echo "Signing $image"
-            # Check if the image is not empty
-            if [ -n "$image" ]; then
-              cosign sign -y --key env://COSIGN_PRIVATE_KEY "$image" || echo "Failed to sign $image"
-            else
-              echo "No images found to sign."
-            fi
+
+          if [ -z "$images" ]; then
+            echo "⚠️ No images found to sign."
+            exit 0
+          fi
+
+          for image in $images; do
+            echo "──────────────────────────────"
+            echo "🔏 Signing image: $image"
+            echo "──────────────────────────────"
+            gh workflow run ./ci/.github/actions/security/cosign \
+              -f target=image \
+              -f artifact="$image" \
+              -f environment=prod \
+              -f gh_token="$GH_TOKEN"
           done
 
       - name: Build Helm chart
