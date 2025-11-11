@@ -482,13 +482,6 @@ jobs:
         run: |
           make package
 
-      - name: Checkout orch-ci
-        uses: actions/checkout@v5
-        with:
-          repository: open-edge-platform/orch-ci
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
-          path: orch-ci
-
       - name: Find binaries
         id: find-binaries
         shell: bash
@@ -515,18 +508,6 @@ jobs:
 
           # Output JSON array for matrix
           echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
-
-      - name: Sign binaries
-        if: steps.find-binaries.outputs.binaries != '[]'
-        uses: orch-ci/.github/actions/security/cosign
-        with:
-          target: binary
-          artifact: ${{ matrix.binary }}
-          environment: non-prod
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-        strategy:
-          matrix:
-            binary: ${{ fromJSON(steps.find-binaries.outputs.binaries) }}
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -658,14 +639,6 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Checkout orch-ci for Cosign
-        if: ${{ inputs.run_docker_push }}
-        uses: actions/checkout@v5
-        with:
-          repository: open-edge-platform/orch-ci
-          token: ${{ secrets.SYS_ORCH_GITHUB }}
-          path: orch-ci
-
       - name: Find ECR images
         if: ${{ inputs.run_docker_push }}
         id: find-images
@@ -753,6 +726,58 @@ jobs:
           echo $CR_PAT | docker login ghcr.io -u github-bot@intel.com --password-stdin
           make ghcr-publish
           docker logout ghcr.io
+
+  sign-binaries:
+    needs: run-repo-pipelines
+    if: needs.run-repo-pipelines.outputs.binaries != '[]'
+    runs-on: ${{ inputs.runs_on }}
+    strategy:
+      matrix:
+        binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Checkout orch-ci for Cosign
+        uses: actions/checkout@v5
+        with:
+          repository: open-edge-platform/orch-ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          path: orch-ci
+
+      - name: Sign binary
+        uses: ./orch-ci/.github/actions/security/cosign
+        with:
+          target: binary
+          artifact: ${{ matrix.binary }}
+          environment: non-prod
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+  sign-images:
+    needs: run-repo-pipelines
+    if: ${{ inputs.run_docker_push && needs.run-repo-pipelines.outputs.images != '[]' }}
+    runs-on: ${{ inputs.runs_on }}
+    strategy:
+      matrix:
+        image: ${{ fromJSON(needs.run-repo-pipelines.outputs.images) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Checkout orch-ci for Cosign
+        uses: actions/checkout@v5
+        with:
+          repository: open-edge-platform/orch-ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          path: orch-ci
+
+      - name: Sign image
+        uses: ./orch-ci/.github/actions/security/cosign
+        with:
+          target: image
+          artifact: ${{ matrix.image }}
+          environment: prod
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
   scan-images:
     permissions:
