@@ -482,35 +482,51 @@ jobs:
         run: |
           make package
 
-      - name: Find and Sign All Binaries with Cosign Action
-        if: ${{ inputs.run_build }}
-        working-directory: ${{ inputs.project_folder }}
+      - name: Checkout orch-ci
+        uses: actions/checkout@v5
+        with:
+          repository: open-edge-platform/orch-ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          path: orch-ci
+
+      - name: Find binaries
+        id: find-binaries
+        shell: bash
         env:
-          GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           set -euo pipefail
           echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
+          binaries=()
 
           for dir in "${directories[@]}"; do
             full_path="$GITHUB_WORKSPACE/$PROJECT_FOLDER/$dir"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
-              find "$full_path" -type f -executable | while read -r binary; do
-                echo "──────────────────────────────"
-                echo "🔏 Signing binary: $binary"
-                echo "──────────────────────────────"
-
-                gh api \
-                  -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
-                  -f target=binary \
-                  -f artifact="$binary" \
-                  -f environment=non-prod \
-                  -f gh_token="$GH_TOKEN"
-              done
+              while IFS= read -r file; do
+                binaries+=("$file")
+              done < <(find "$full_path" -type f -executable)
             fi
           done
+
+          echo "Found binaries:"
+          printf '%s\n' "${binaries[@]}"
+
+          # Output JSON array for matrix
+          echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+
+      - name: Sign binaries
+        if: steps.find-binaries.outputs.binaries != '[]'
+        uses: orch-ci/.github/actions/security/cosign
+        with:
+          target: binary
+          artifact: ${{ matrix.binary }}
+          environment: non-prod
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+        strategy:
+          matrix:
+            binary: ${{ fromJSON(steps.find-binaries.outputs.binaries) }}
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -642,10 +658,18 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Sign All Docker Images with Cosign Action
+      - name: Checkout orch-ci for Cosign
         if: ${{ inputs.run_docker_push }}
-        env:
-          GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+        uses: actions/checkout@v5
+        with:
+          repository: open-edge-platform/orch-ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          path: orch-ci
+
+      - name: Find ECR images
+        if: ${{ inputs.run_docker_push }}
+        id: find-images
+        shell: bash
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed ECR images to sign..."
@@ -653,21 +677,24 @@ jobs:
 
           if [ -z "$images" ]; then
             echo "⚠️ No images found to sign."
+            echo "images=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          for image in $images; do
-            echo "──────────────────────────────"
-            echo "🔏 Signing image: $image"
-            echo "──────────────────────────────"
+          # Output JSON array for matrix
+          echo "images=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
-            gh api \
-              -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
-              -f target=image \
-              -f artifact="$image" \
-              -f environment=prod \
-              -f gh_token="$GH_TOKEN"
-          done
+      - name: Sign Docker images
+        if: ${{ inputs.run_docker_push && steps.find-images.outputs.images != '[]' }}
+        uses: orch-ci/.github/actions/security/cosign
+        with:
+          target: image
+          artifact: ${{ matrix.image }}
+          environment: prod
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+        strategy:
+          matrix:
+            image: ${{ fromJSON(steps.find-images.outputs.images) }}
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
