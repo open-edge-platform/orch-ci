@@ -352,6 +352,7 @@ jobs:
     needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
+      ecr_images: ${{ steps.find-images.outputs.images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
@@ -656,7 +657,7 @@ jobs:
           fi
 
           # Output JSON array for matrix
-          echo "images=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          echo "ecr_images=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
@@ -744,11 +745,11 @@ jobs:
 
   sign-images:
     needs: run-repo-pipelines
-    if: ${{ inputs.run_docker_push && needs.run-repo-pipelines.outputs.images != '[]' }}
+    if: ${{ inputs.run_docker_push && needs.run-repo-pipelines.outputs.ecr_images != '[]' }}
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
-        image: ${{ fromJSON(needs.run-repo-pipelines.outputs.images) }}
+        image: ${{ fromJSON(needs.run-repo-pipelines.outputs.ecr_images) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
