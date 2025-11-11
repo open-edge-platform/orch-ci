@@ -501,7 +501,7 @@ jobs:
                 echo "──────────────────────────────"
                 echo "🔏 Signing binary: $binary"
                 echo "──────────────────────────────"
-                
+
                 gh api \
                   -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
                   -f target=binary \
@@ -660,7 +660,7 @@ jobs:
             echo "──────────────────────────────"
             echo "🔏 Signing image: $image"
             echo "──────────────────────────────"
-            
+
             gh api \
               -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
               -f target=image \
