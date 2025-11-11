@@ -490,7 +490,6 @@ jobs:
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           set -euo pipefail
-
           echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
 
@@ -502,11 +501,16 @@ jobs:
                 echo "──────────────────────────────"
                 echo "🔏 Signing binary: $binary"
                 echo "──────────────────────────────"
-                gh workflow run ./ci/.github/actions/security/cosign \
-                  -f target=binary \
-                  -f artifact="$binary" \
-                  -f environment=non-prod \
-                  -f gh_token="$GH_TOKEN"
+                # Call composite action directly
+                gh run-action-cosign() {
+                  gh api \
+                    -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
+                    -f target=binary \
+                    -f artifact="$binary" \
+                    -f environment=non-prod \
+                    -f gh_token="$GH_TOKEN"
+                }
+                gh run-action-cosign
               done
             fi
           done
@@ -647,7 +651,6 @@ jobs:
           GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
         run: |
           set -euo pipefail
-
           echo "🔍 Finding pushed ECR images to sign..."
           images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
 
@@ -660,11 +663,16 @@ jobs:
             echo "──────────────────────────────"
             echo "🔏 Signing image: $image"
             echo "──────────────────────────────"
-            gh workflow run ./ci/.github/actions/security/cosign \
-              -f target=image \
-              -f artifact="$image" \
-              -f environment=prod \
-              -f gh_token="$GH_TOKEN"
+            # Directly call composite action
+            gh run-action-cosign() {
+              gh api \
+                -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
+                -f target=image \
+                -f artifact="$image" \
+                -f environment=prod \
+                -f gh_token="$GH_TOKEN"
+            }
+            gh run-action-cosign
           done
 
       - name: Build Helm chart
