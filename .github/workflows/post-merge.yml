@@ -487,13 +487,14 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:
           GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           set -euo pipefail
           echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
 
           for dir in "${directories[@]}"; do
-            full_path="$GITHUB_WORKSPACE/${{ inputs.project_folder }}/$dir"
+            full_path="$GITHUB_WORKSPACE/$PROJECT_FOLDER/$dir"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               find "$full_path" -type f -executable | while read -r binary; do
