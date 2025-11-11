@@ -352,6 +352,7 @@ jobs:
     needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
+      binaries: ${{ steps.find-binaries.outputs.binaries }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
@@ -656,18 +657,6 @@ jobs:
 
           # Output JSON array for matrix
           echo "images=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
-
-      - name: Sign Docker images
-        if: ${{ inputs.run_docker_push && steps.find-images.outputs.images != '[]' }}
-        uses: orch-ci/.github/actions/security/cosign
-        with:
-          target: image
-          artifact: ${{ matrix.image }}
-          environment: prod
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
-        strategy:
-          matrix:
-            image: ${{ fromJSON(steps.find-images.outputs.images) }}
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
