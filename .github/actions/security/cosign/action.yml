@@ -107,7 +107,7 @@ runs:
         echo "──────────────────────────────"
 
         #CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/.*\\.yml@refs/heads/.*"
-        CERT_IDENTITY="https://github.com/open-edge-platform/.*/.*/.*\\.yml@refs/heads/.*"
+        CERT_IDENTITY="https://github.com/open-edge-platform/.*/.*/.*\\.yml@.*"
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
         if [ "$TARGET" = "image" ]; then
