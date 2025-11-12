@@ -107,7 +107,7 @@ runs:
         echo "──────────────────────────────"
 
         #CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/.*\\.yml@refs/heads/.*"
-        CERT_IDENTITY="https://github.com/open-edge-platform/.*/.*/.*\\.yml@refs/heads/.*"
+        CERT_IDENTITY="https://github.com/open-edge-platform/.*/.*/.*\\.yml@.*"
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
         if [ "$TARGET" = "image" ]; then
@@ -128,11 +128,20 @@ runs:
 
         echo "🟢 Verification finished successfully."
 
+    - name: Prepare Cosign artifacts
+      if: ${{ inputs.target == 'binary' || inputs.target == 'image' }}
+      shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
+      run: |
+        SUFFIX=$(head /dev/urandom | tr -dc a-f0-9 | head -c6)
+        echo "ART_NAME=cosign-${TARGET}-${SUFFIX}" >> $GITHUB_ENV
+
     - name: Upload Cosign artifacts
       if: ${{ inputs.target == 'binary' || inputs.target == 'image' }}
       uses: actions/upload-artifact@v4
       with:
-        name: cosign-${{ inputs.target }}-artifacts
+        name: ${{ env.ART_NAME }}
         path: |
           cosign.sig
           cosign.cert
