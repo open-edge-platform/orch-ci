@@ -511,7 +511,11 @@ jobs:
           else
             echo "Found binaries:"
             printf '%s\n' "${binaries[@]}"
-            binaries_json=$(printf '%s\0' "${binaries[@]}" | jq -Rs 'split("\u0000")[:-1]')
+
+            # Convert array to JSON safely for GitHub Actions
+            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+            # Write to GITHUB_OUTPUT without extra spaces or quotes
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
