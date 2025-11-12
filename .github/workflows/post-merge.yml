@@ -727,6 +727,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5
@@ -734,6 +736,7 @@ jobs:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
+          persist-credentials: false
 
       - name: Sign binary
         uses: ./orch-ci/.github/actions/security/cosign
@@ -753,6 +756,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          persist-credentials: false
 
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5
@@ -760,6 +765,7 @@ jobs:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
+          persist-credentials: false
 
       - name: Sign image
         uses: ./orch-ci/.github/actions/security/cosign
