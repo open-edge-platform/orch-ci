@@ -511,7 +511,7 @@ jobs:
           else
             echo "Found binaries:"
             printf '%s\n' "${binaries[@]}"
-            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -c 'map(select(. != ""))')
+            binaries_json=$(printf '%s\0' "${binaries[@]}" | jq -Rs 'split("\u0000")[:-1]')
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
