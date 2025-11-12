@@ -511,8 +511,8 @@ jobs:
           else
             echo "Found binaries:"
             printf '%s\n' "${binaries[@]}"
-            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'map(select(. != ""))')
-            echo "binaries=${binaries_json//$'\n'/}" >> "$GITHUB_OUTPUT"
+            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -c 'map(select(. != ""))')
+            echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Lint Code
