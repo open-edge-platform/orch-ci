@@ -507,15 +507,15 @@ jobs:
 
           if [ ${#binaries[@]} -eq 0 ]; then
             echo "⚠️ No binaries found to sign."
-            echo "binaries=[]" >> "$GITHUB_OUTPUT"
+            echo "binaries=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "Found binaries:"
           printf '%s\n' "${binaries[@]}"
 
-          jq_array=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n")[:-1]')
-          echo "binaries=$jq_array" >> "$GITHUB_OUTPUT"
+          jq_array=$(printf '%s\n' "${binaries[@]}" | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          echo "binaries=$jq_array" >> $GITHUB_OUTPUT
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -660,15 +660,15 @@ jobs:
 
           if [ -z "$images" ]; then
             echo "⚠️ No ECR images found to sign."
-            echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
+            echo "ecr_images=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "Found images:"
           echo "$images"
 
-          jq_array=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n")[:-1]')
-          echo "ecr_images=$jq_array" >> "$GITHUB_OUTPUT"
+          jq_array=$(printf '%s\n' "$images" | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          echo "ecr_images=$jq_array" >> $GITHUB_OUTPUT
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
@@ -731,9 +731,8 @@ jobs:
   sign-binaries:
     needs: run-repo-pipelines
     if: >
-      needs.run-repo-pipelines.outputs.binaries != '[]' &&
-      needs.run-repo-pipelines.outputs.binaries != '[""]' &&
-      needs.run-repo-pipelines.outputs.binaries != ''
+      startsWith(needs.run-repo-pipelines.outputs.binaries, '[') &&
+      fromJSON(needs.run-repo-pipelines.outputs.binaries | default("[]")) | length > 0
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
@@ -763,9 +762,8 @@ jobs:
   sign-images:
     needs: run-repo-pipelines
     if: >
-      needs.run-repo-pipelines.outputs.ecr_images != '[]' &&
-      needs.run-repo-pipelines.outputs.ecr_images != '[""]' &&
-      needs.run-repo-pipelines.outputs.ecr_images != ''
+      startsWith(needs.run-repo-pipelines.outputs.ecr_images, '[') &&
+      fromJSON(needs.run-repo-pipelines.outputs.ecr_images | default("[]")) | length > 0
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
