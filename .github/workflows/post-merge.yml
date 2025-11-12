@@ -731,6 +731,9 @@ jobs:
           docker logout ghcr.io
 
   sign-binaries:
+    permissions:
+      id-token: write
+      contents: read
     needs: run-repo-pipelines
     if: ${{ needs.run-repo-pipelines.outputs.binaries != '[]' && needs.run-repo-pipelines.outputs.binaries != '[""]' }}
     runs-on: ubuntu-latest
@@ -760,6 +763,9 @@ jobs:
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
   sign-images:
+    permissions:
+      id-token: write
+      contents: read
     needs: run-repo-pipelines
     if: ${{ needs.run-repo-pipelines.outputs.ecr_images != '[]' && needs.run-repo-pipelines.outputs.ecr_images != '[""]' }}
     runs-on: ubuntu-latest
