@@ -106,7 +106,8 @@ runs:
         echo "🧾 Verifying $TARGET: $ARTIFACT"
         echo "──────────────────────────────"
 
-        CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/.*\\.yml@refs/heads/.*"
+        #CERT_IDENTITY="https://github.com/${GITHUB_REPOSITORY}/.*/.*\\.yml@refs/heads/.*"
+        CERT_IDENTITY="https://github.com/open-edge-platform/.*/.*/.*\\.yml@refs/heads/.*"
         OIDC_ISSUER="https://token.actions.githubusercontent.com"
 
         if [ "$TARGET" = "image" ]; then
