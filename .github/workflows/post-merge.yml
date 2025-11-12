@@ -519,6 +519,17 @@ jobs:
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Upload binaries (if any)
+        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-binaries
+          path: |
+            ./out
+            ./build
+            ./bin
+          if-no-files-found: ignore
+
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
@@ -758,11 +769,17 @@ jobs:
           path: orch-ci
           persist-credentials: false
 
+      - name: Download binaries from previous job
+        uses: actions/download-artifact@v4
+        with:
+          name: built-binaries
+          path: ./binaries  # Save into a subfolder
+
       - name: Sign binary
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: binary
-          artifact: ${{ matrix.binary }}
+          artifact: ./binaries/${{ matrix.binary }}  # Include folder path
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
