@@ -507,15 +507,12 @@ jobs:
 
           if [ ${#binaries[@]} -eq 0 ]; then
             echo "⚠️ No binaries found to sign."
-            echo "binaries=[]" >> $GITHUB_OUTPUT
-            exit 0
+            echo "binaries=[]" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found binaries:"
+            printf '%s\n' "${binaries[@]}"
+            echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n")[:-1]')" >> "$GITHUB_OUTPUT"
           fi
-
-          echo "Found binaries:"
-          printf '%s\n' "${binaries[@]}"
-
-          jq_array=$(printf '%s\n' "${binaries[@]}" | sort -u | jq -R -s -c 'split("\n")[:-1]')
-          echo "binaries=$jq_array" >> $GITHUB_OUTPUT
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -661,14 +658,11 @@ jobs:
           if [ -z "$images" ]; then
             echo "⚠️ No ECR images found to sign."
             echo "ecr_images=[]" >> $GITHUB_OUTPUT
-            exit 0
+          else
+            echo "Found images:"
+            echo "$images"
+            echo "ecr_images=$(echo "$images" | sort -u | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
           fi
-
-          echo "Found images:"
-          echo "$images"
-
-          jq_array=$(printf '%s\n' "$images" | sort -u | jq -R -s -c 'split("\n")[:-1]')
-          echo "ecr_images=$jq_array" >> $GITHUB_OUTPUT
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
@@ -732,7 +726,7 @@ jobs:
     needs: run-repo-pipelines
     if: >
       startsWith(needs.run-repo-pipelines.outputs.binaries, '[') &&
-      fromJSON(needs.run-repo-pipelines.outputs.binaries | default("[]")) | length > 0
+      length(fromJSON(needs.run-repo-pipelines.outputs.binaries)) > 0
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
@@ -763,7 +757,7 @@ jobs:
     needs: run-repo-pipelines
     if: >
       startsWith(needs.run-repo-pipelines.outputs.ecr_images, '[') &&
-      fromJSON(needs.run-repo-pipelines.outputs.ecr_images | default("[]")) | length > 0
+      length(fromJSON(needs.run-repo-pipelines.outputs.ecr_images)) > 0
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
