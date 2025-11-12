@@ -132,7 +132,7 @@ runs:
       if: ${{ inputs.target == 'binary' || inputs.target == 'image' }}
       uses: actions/upload-artifact@v4
       with:
-        name: cosign-${{ inputs.target }}-${{ github.sha }}-${{ github.run_number }}-${{ github.run_attempt }}
+        name: cosign-${{ inputs.target }}-${{ github.run_id }}-$(head /dev/urandom | tr -dc a-f0-9 | head -c6)
         path: |
           cosign.sig
           cosign.cert
