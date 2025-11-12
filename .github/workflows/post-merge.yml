@@ -352,6 +352,8 @@ jobs:
     needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
+      ecr_images: ${{ steps.find-images.outputs.ecr_images }}
+      binaries: ${{ steps.find-binaries.outputs.binaries }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
@@ -482,35 +484,51 @@ jobs:
         run: |
           make package
 
-      - name: Find and Sign All Binaries with Cosign Action
-        if: ${{ inputs.run_build }}
-        working-directory: ${{ inputs.project_folder }}
+      - name: Find binaries
+        id: find-binaries
+        shell: bash
         env:
-          GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
           PROJECT_FOLDER: ${{ inputs.project_folder }}
         run: |
           set -euo pipefail
           echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
+          binaries=()
 
           for dir in "${directories[@]}"; do
-            full_path="$GITHUB_WORKSPACE/$PROJECT_FOLDER/$dir"
+            full_path="${PROJECT_FOLDER}/${dir}"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
-              find "$full_path" -type f -executable | while read -r binary; do
-                echo "──────────────────────────────"
-                echo "🔏 Signing binary: $binary"
-                echo "──────────────────────────────"
-
-                gh api \
-                  -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
-                  -f target=binary \
-                  -f artifact="$binary" \
-                  -f environment=non-prod \
-                  -f gh_token="$GH_TOKEN"
-              done
+              while IFS= read -r file; do
+                binaries+=("$file")
+              done < <(find "$full_path" -type f -executable || true)
             fi
           done
+
+          if [ ${#binaries[@]} -eq 0 ]; then
+            echo "⚠️ No binaries found to sign."
+            echo "binaries=[]" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found binaries:"
+            printf '%s\n' "${binaries[@]}"
+
+            # Convert array to JSON safely for GitHub Actions
+            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+            # Write to GITHUB_OUTPUT without extra spaces or quotes
+            echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload binaries (if any)
+        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-binaries
+          path: |
+            ./out
+            ./build
+            ./bin
+          if-no-files-found: ignore
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -642,32 +660,32 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Sign All Docker Images with Cosign Action
-        if: ${{ inputs.run_docker_push }}
-        env:
-          GH_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+      - name: Find ECR images
+        if: always()
+        id: find-images
+        shell: bash
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed ECR images to sign..."
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+
+          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" \
+            | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+
+          images=$(echo "$images" | sed '/^\s*$/d' | sort -u)
 
           if [ -z "$images" ]; then
-            echo "⚠️ No images found to sign."
-            exit 0
+            echo "⚠️ No ECR images found to sign."
+            echo "ecr_images=[]" >> $GITHUB_OUTPUT
+          else
+            ecr_images_json=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            if [ -z "$ecr_images_json" ]; then
+              ecr_images_json='[]'
+            fi
+            echo "Found images:"
+            echo "$images"
+            echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
           fi
 
-          for image in $images; do
-            echo "──────────────────────────────"
-            echo "🔏 Signing image: $image"
-            echo "──────────────────────────────"
-
-            gh api \
-              -X POST "repos/open-edge-platform/orch-ci/actions/workflows/.github/actions/security/cosign/action.yml/dispatches" \
-              -f target=image \
-              -f artifact="$image" \
-              -f environment=prod \
-              -f gh_token="$GH_TOKEN"
-          done
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
@@ -726,6 +744,88 @@ jobs:
           echo $CR_PAT | docker login ghcr.io -u github-bot@intel.com --password-stdin
           make ghcr-publish
           docker logout ghcr.io
+
+  sign-binaries:
+    permissions:
+      id-token: write
+      contents: read
+    needs: run-repo-pipelines
+    if: ${{ needs.run-repo-pipelines.outputs.binaries != '[]' && needs.run-repo-pipelines.outputs.binaries != '[""]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Checkout orch-ci for Cosign
+        uses: actions/checkout@v5
+        with:
+          repository: open-edge-platform/orch-ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          path: orch-ci
+          persist-credentials: false
+
+      - name: Download binaries from previous job
+        uses: actions/download-artifact@v4
+        with:
+          name: built-binaries
+          path: ./binaries  # Save into a subfolder
+
+      - name: Sign binary
+        uses: ./orch-ci/.github/actions/security/cosign
+        with:
+          target: binary
+          artifact: ./binaries/${{ matrix.binary }}  # Include folder path
+          environment: non-prod
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+  sign-images:
+    permissions:
+      id-token: write
+      contents: read
+    needs: run-repo-pipelines
+    if: ${{ needs.run-repo-pipelines.outputs.ecr_images != '[]' && needs.run-repo-pipelines.outputs.ecr_images != '[""]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Checkout orch-ci for Cosign
+        uses: actions/checkout@v5
+        with:
+          repository: open-edge-platform/orch-ci
+          token: ${{ secrets.SYS_ORCH_GITHUB }}
+          path: orch-ci
+          persist-credentials: false
+
+      - name: Configure AWS credentials for ECR
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registries: "080137407410"
+
+      - name: Sign image
+        uses: ./orch-ci/.github/actions/security/cosign
+        with:
+          target: image
+          artifact: ${{ matrix.image }}
+          environment: prod
+          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
   scan-images:
     permissions:
