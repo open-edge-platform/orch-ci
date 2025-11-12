@@ -352,7 +352,7 @@ jobs:
     needs: sanitize-project-folder
     outputs:
       images: ${{ steps.list-images.outputs.images }}
-      ecr_images: ${{ steps.find-images.outputs.images }}
+      ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
@@ -656,7 +656,6 @@ jobs:
           images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" \
             | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
 
-          # Remove empty lines, trim whitespace, deduplicate
           images=$(echo "$images" | sed '/^\s*$/d' | sort -u)
 
           if [ -z "$images" ]; then
@@ -664,10 +663,14 @@ jobs:
             echo "ecr_images=[]" >> $GITHUB_OUTPUT
           else
             ecr_images_json=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            if [ -z "$ecr_images_json" ]; then
+              ecr_images_json='[]'
+            fi
             echo "Found images:"
             echo "$images"
-            echo "ecr_images=${ecr_images_json//$'\n'/}" >> $GITHUB_OUTPUT
+            echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
           fi
+
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
