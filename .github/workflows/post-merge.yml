@@ -662,7 +662,7 @@ jobs:
             echo "⚠️ No ECR images found to sign."
             echo "ecr_images=[]" >> $GITHUB_OUTPUT
           else
-            ecr_images_json=$(printf '%s\n' $images | jq -R -s -c 'split("\n") | map(select(. != ""))')
+            ecr_images_json=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n") | map(select(. != ""))')
             echo "Found images:"
             echo "$images"
             echo "ecr_images=$ecr_images_json" >> $GITHUB_OUTPUT
