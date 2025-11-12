@@ -761,7 +761,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images || "[]") }}
+        image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
