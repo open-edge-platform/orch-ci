@@ -655,13 +655,17 @@ jobs:
           images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" \
             | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
 
+          # Remove empty lines, trim whitespace, deduplicate
+          images=$(echo "$images" | sed '/^\s*$/d' | sort -u)
+
           if [ -z "$images" ]; then
             echo "⚠️ No ECR images found to sign."
             echo "ecr_images=[]" >> $GITHUB_OUTPUT
           else
+            ecr_images_json=$(printf '%s\n' $images | jq -R -s -c 'split("\n") | map(select(. != ""))')
             echo "Found images:"
             echo "$images"
-            echo "ecr_images=$(echo "$images" | sort -u | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+            echo "ecr_images=$ecr_images_json" >> $GITHUB_OUTPUT
           fi
 
       - name: Build Helm chart
@@ -725,7 +729,7 @@ jobs:
   sign-binaries:
     needs: run-repo-pipelines
     if: ${{ needs.run-repo-pipelines.outputs.binaries != '[]' && needs.run-repo-pipelines.outputs.binaries != '[""]' }}
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
@@ -754,10 +758,10 @@ jobs:
   sign-images:
     needs: run-repo-pipelines
     if: ${{ needs.run-repo-pipelines.outputs.ecr_images != '[]' && needs.run-repo-pipelines.outputs.ecr_images != '[""]' }}
-    runs-on: ${{ inputs.runs_on }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJSON(needs.run-repo-pipelines.outputs.ecr_images) }}
+        image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images || "[]") }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
