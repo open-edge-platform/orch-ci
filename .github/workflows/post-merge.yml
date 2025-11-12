@@ -724,9 +724,7 @@ jobs:
 
   sign-binaries:
     needs: run-repo-pipelines
-    if: >
-      startsWith(needs.run-repo-pipelines.outputs.binaries, '[') &&
-      length(fromJSON(needs.run-repo-pipelines.outputs.binaries)) > 0
+    if: ${{ needs.run-repo-pipelines.outputs.binaries != '[]' && needs.run-repo-pipelines.outputs.binaries != '[""]' }}
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
@@ -755,9 +753,7 @@ jobs:
 
   sign-images:
     needs: run-repo-pipelines
-    if: >
-      startsWith(needs.run-repo-pipelines.outputs.ecr_images, '[') &&
-      length(fromJSON(needs.run-repo-pipelines.outputs.ecr_images)) > 0
+    if: ${{ needs.run-repo-pipelines.outputs.ecr_images != '[]' && needs.run-repo-pipelines.outputs.ecr_images != '[""]' }}
     runs-on: ${{ inputs.runs_on }}
     strategy:
       matrix:
