@@ -511,7 +511,8 @@ jobs:
           else
             echo "Found binaries:"
             printf '%s\n' "${binaries[@]}"
-            echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n")[:-1]')" >> "$GITHUB_OUTPUT"
+            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'map(select(. != ""))')
+            echo "binaries=${binaries_json//$'\n'/}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Lint Code
@@ -665,7 +666,7 @@ jobs:
             ecr_images_json=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n") | map(select(. != ""))')
             echo "Found images:"
             echo "$images"
-            echo "ecr_images=$ecr_images_json" >> $GITHUB_OUTPUT
+            echo "ecr_images=${ecr_images_json//$'\n'/}" >> $GITHUB_OUTPUT
           fi
 
       - name: Build Helm chart
