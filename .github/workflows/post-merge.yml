@@ -496,20 +496,24 @@ jobs:
           binaries=()
 
           for dir in "${directories[@]}"; do
-            full_path="$GITHUB_WORKSPACE/$PROJECT_FOLDER/$dir"
+            full_path="${PROJECT_FOLDER}/${dir}"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               while IFS= read -r file; do
                 binaries+=("$file")
-              done < <(find "$full_path" -type f -executable)
+              done < <(find "$full_path" -type f -executable || true)
             fi
           done
 
+          if [ ${#binaries[@]} -eq 0 ]; then
+            echo "⚠️ No binaries found to sign."
+            echo "binaries=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "Found binaries:"
           printf '%s\n' "${binaries[@]}"
-
-          # Output JSON array for matrix
-          echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          echo "binaries=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split(\"\\n\")[:-1]')" >> "$GITHUB_OUTPUT"
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -642,19 +646,25 @@ jobs:
           path: docker-images
 
       - name: Find ECR images
-        if: ${{ inputs.run_docker_push }}
+        if: always()
         id: find-images
         shell: bash
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed ECR images to sign..."
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+
+          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" \
+            | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
 
           if [ -z "$images" ]; then
-            echo "⚠️ No images found to sign."
-            echo "images=[]" >> $GITHUB_OUTPUT
+            echo "⚠️ No ECR images found to sign."
+            echo "ecr_images=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
+
+          echo "Found images:"
+          echo "$images"
+          echo "ecr_images=$(printf '%s\n' "$images" | jq -R -s -c 'split(\"\\n\")[:-1]')" >> $GITHUB_OUTPUT
 
           # Output JSON array for matrix
           echo "ecr_images=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
