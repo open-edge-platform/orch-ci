@@ -10,12 +10,14 @@ on:
   workflow_call:
     inputs:
       project_folder:
-        description: "Project subfolder where the job will run, defaults to '.'"
+        description: >-
+          Project subfolder where the job will run, defaults to '.'
         required: false
         default: "."
         type: string
       orch_ci_repo_ref:
-        description: "Ref of the orch-ci repo (for consistency)"
+        description: >-
+          The ref of the orch-ci repo, including bootstrap action and scripts, defaults to 'main'
         required: false
         default: "main"
         type: string
