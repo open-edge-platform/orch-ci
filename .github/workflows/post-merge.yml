@@ -460,7 +460,7 @@ jobs:
 
       - name: Upload binaries (if any)
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: built-binaries
           path: |
