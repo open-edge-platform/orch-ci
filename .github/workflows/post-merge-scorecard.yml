@@ -6,7 +6,7 @@
 
 name: Post-Merge Scorecard Pipeline
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       project_folder:
@@ -24,6 +24,7 @@ on:
     secrets:
       SYS_ORCH_GITHUB:
         required: true
+  workflow_dispatch:
 
 permissions: {}
 
