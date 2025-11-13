@@ -263,7 +263,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@fd197a9812cf15627d347eac2cf7b41fa8b1c3c2  # 0.1.60
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@50452868e1a7850e3f76e9247e6b6e436a9980e1  # 0.1.61
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -280,7 +280,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@fd197a9812cf15627d347eac2cf7b41fa8b1c3c2  # 0.1.60
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@50452868e1a7850e3f76e9247e6b6e436a9980e1  # 0.1.61
         with:
           scan-scope: "all"
           fail-on-findings: false
