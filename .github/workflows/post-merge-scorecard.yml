@@ -22,7 +22,7 @@ on:
     secrets:
       SYS_ORCH_GITHUB:
         required: true
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions: {}
 
