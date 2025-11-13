@@ -6,7 +6,7 @@
 
 name: Post-Merge Scorecard Pipeline
 
-on:  # Allow reuse and manual runs
+on:
   workflow_call:
     inputs:
       project_folder:
