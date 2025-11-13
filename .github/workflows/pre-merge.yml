@@ -762,7 +762,7 @@ jobs:
         image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) }}
     steps:
       - name: Download Docker Images
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53  # v5.0.0
+        uses: actions/download-artifact@f093f21ca4cfa7c75ccbbc2be54da76a0c7e1f05  # v5.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
