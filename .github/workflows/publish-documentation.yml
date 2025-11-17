@@ -312,6 +312,29 @@ jobs:
           deactivate
           echo "PYTHON_VENV=${python_venv}" >> "$GITHUB_ENV"
 
+      - name: Get Python Virtual Environment
+        env:
+          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
+        shell: bash
+        run: |
+          # Restore array
+          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
+          # Checkout the first branch to build
+          cd "${GITHUB_WORKSPACE}"
+          git reset --hard && git clean -f
+          git checkout "${branches[0]}"
+          cd "${DOCS_DIR}"
+          # Instantiate Python Virtual Environment
+          make check
+          venv="$(find . -path '*/bin/activate' -name activate)"
+          # shellcheck source=/dev/null
+          source "${venv}"
+          # Retrieve Python package location
+          python_venv="$(pip3 show docconf | grep '^Location:' | \
+            cut -d: -f2 | xargs)"
+          deactivate
+          echo "PYTHON_VENV=${python_venv}" >> "$GITHUB_ENV"
+
       - name: Build Documentation
         env:
           SIMPLE_MODE: ${{ inputs.simple_mode }}  # Used during make build
