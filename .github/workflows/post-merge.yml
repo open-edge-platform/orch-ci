@@ -464,10 +464,11 @@ jobs:
         with:
           name: built-binaries
           path: |
-            ${{ inputs.project_folder }}/out
-            ${{ inputs.project_folder }}/build
-            ${{ inputs.project_folder }}/bin
+            ${{ inputs.project_folder }}/out/**
+            ${{ inputs.project_folder }}/build/**
+            ${{ inputs.project_folder }}/bin/**
           if-no-files-found: ignore
+          strip-components: 1
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
