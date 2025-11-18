@@ -200,7 +200,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
@@ -238,7 +238,7 @@ jobs:
       ZIZMOR_VERSION: 1.5.2
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: false
 
@@ -259,7 +259,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: false
       - name: Run Bandit scan
@@ -276,7 +276,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: false
       - name: Run Semgrep scan
@@ -298,7 +298,7 @@ jobs:
       PROJECT_NAME: ${{ github.repository }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           # Do not persist credentials by default, otherwise they
           # will clash with credentials set by bootstrap action
@@ -311,7 +311,7 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Checkout action repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           repository: open-edge-platform/orch-ci
           ref: ${{ inputs.orch_ci_repo_ref }}
@@ -697,7 +697,7 @@ jobs:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
     steps:
       - name: Checkout orch-ci for Cosign
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.0.1
         with:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_ORCH_GITHUB }}
@@ -745,12 +745,12 @@ jobs:
         image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.0.1
         with:
           persist-credentials: false
 
       - name: Checkout orch-ci for Cosign
-        uses: actions/checkout@v5
+        uses: actions/checkout@v5.0.1
         with:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_ORCH_GITHUB }}
@@ -828,11 +828,11 @@ jobs:
     if: ${{inputs.run_version_dev}}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: false
       - name: Checkout action repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           repository: open-edge-platform/orch-ci
           path: ci
