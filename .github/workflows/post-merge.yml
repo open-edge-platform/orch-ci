@@ -460,11 +460,33 @@ jobs:
 
       - name: Upload binaries (if any)
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
+        run: |
+          binaries=$(echo '${{ steps.find-binaries.outputs.binaries }}' | jq -r '.[]')
+          
+          if [ -z "$binaries" ]; then
+            echo "No binaries to upload."
+            exit 0
+          fi
+
+          TEMP_DIR=$(mktemp -d)
+          echo "Copying binaries to temporary folder: $TEMP_DIR"
+
+          for bin in $binaries; do
+            mkdir -p "$TEMP_DIR/$(dirname "$bin")"
+            cp -a "$bin" "$TEMP_DIR/$bin"
+          done
+
+          echo "All binaries copied to $TEMP_DIR"
+          echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
+
+      - name: Upload binaries artifact
+        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         uses: actions/upload-artifact@v5
         with:
           name: built-binaries
-          path: ${{ steps.find-binaries.outputs.binaries }}
+          path: ${{ env.TEMP_DIR }}
           if-no-files-found: ignore
+
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
