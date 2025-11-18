@@ -454,7 +454,7 @@ jobs:
             # Convert array to JSON safely for GitHub Actions
             binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
-            # Write to GITHUB_OUTPUT without extra spaces or quotes
+            # Write to GITHUB_OUTPUT
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
@@ -463,12 +463,8 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: built-binaries
-          path: |
-            ${{ inputs.project_folder }}/out/**
-            ${{ inputs.project_folder }}/build/**
-            ${{ inputs.project_folder }}/bin/**
+          path: ${{ steps.find-binaries.outputs.binaries }}
           if-no-files-found: ignore
-          strip-components: 1
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
