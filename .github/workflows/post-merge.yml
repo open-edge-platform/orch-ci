@@ -696,11 +696,6 @@ jobs:
       matrix:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5
         with:
@@ -709,17 +704,28 @@ jobs:
           path: orch-ci
           persist-credentials: false
 
-      - name: Download binaries from previous job
+      - name: Download built binaries
         uses: actions/download-artifact@v6
         with:
           name: built-binaries
-          path: ./binaries  # Save into a subfolder
+          path: ./binaries  # all artifacts go here
+
+      - name: Resolve actual binary path
+        id: resolve-path
+        run: |
+          # Map the matrix binary to the actual downloaded artifact
+          FILE_PATH="./binaries/${{ matrix.binary }}"
+          if [ ! -f "$FILE_PATH" ]; then
+            echo "Error: binary not found: $FILE_PATH"
+            exit 1
+          fi
+          echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Sign binary
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: binary
-          artifact: ./binaries/${{ matrix.binary }}  # Include folder path
+          artifact: ${{ steps.resolve-path.outputs.binary_path }}
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
