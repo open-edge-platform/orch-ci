@@ -198,6 +198,8 @@ on:  # yamllint disable-line rule:truthy
         required: false
       NO_AUTH_S3_PUSH_PASSWD:
         required: false
+      ORCH_DEFAULT_PASSWORD:
+        required: false
 permissions: {}
 jobs:
   sanitize-project-folder:
@@ -525,6 +527,7 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         env:  ## temp workaround
           GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          ORCH_DEFAULT_PASSWORD: ${{ secrets.ORCH_DEFAULT_PASSWORD }}
         run: |
           make test
 
