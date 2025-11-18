@@ -713,10 +713,14 @@ jobs:
       - name: Resolve actual binary path
         id: resolve-path
         run: |
-          # Map the matrix binary to the actual downloaded artifact
-          FILE_PATH="./binaries/${{ matrix.binary }}"
-          if [ ! -f "$FILE_PATH" ]; then
-            echo "Error: binary not found: $FILE_PATH"
+          # The artifact root
+          ARTIFACT_ROOT="./binaries"
+          # Take only the filename from matrix.binary
+          BIN_NAME=$(basename "${{ matrix.binary }}")
+          # Find the actual file inside downloaded artifact
+          FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
+          if [ -z "$FILE_PATH" ]; then
+            echo "Error: binary not found in artifact: $BIN_NAME"
             exit 1
           fi
           echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
