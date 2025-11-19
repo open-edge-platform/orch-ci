@@ -650,7 +650,6 @@ jobs:
             echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
           fi
 
-
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -737,11 +736,10 @@ jobs:
       - name: Resolve actual binary path
         id: resolve-path
         run: |
-          # The artifact root
           ARTIFACT_ROOT="./binaries"
-          # Take only the filename from matrix.binary
           BIN_NAME=$(basename "${{ matrix.binary }}")
-          # Find the actual file inside downloaded artifact
+
+          # Find the binary
           FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
           if [ -z "$FILE_PATH" ]; then
             echo "Error: binary not found in artifact: $BIN_NAME"
@@ -749,13 +747,28 @@ jobs:
           fi
           echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
 
-      - name: Sign binary
+          # Sanitize binary name for artifact
+          SANITIZED_BASENAME=$(echo "$BIN_NAME" | tr '/:' '_')
+
+          # Add short hash of full path to guarantee uniqueness
+          PATH_HASH=$(echo -n "${FILE_PATH}" | sha1sum | awk '{print $1}')
+          SANITIZED_NAME="${SANITIZED_BASENAME}-${PATH_HASH:0:8}"  # first 8 chars
+          echo "sanitized_name=$SANITIZED_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Sign binary with Cosign
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: binary
           artifact: ${{ steps.resolve-path.outputs.binary_path }}
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Upload signed binary artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}-${{ steps.resolve-path.outputs.sanitized_name }}
+          path: ${{ steps.resolve-path.outputs.binary_path }}
+          if-no-files-found: error
 
   sign-images:
     permissions:
@@ -772,7 +785,6 @@ jobs:
         uses: actions/checkout@v5.0.1
         with:
           persist-credentials: false
-
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5.0.1
         with:
@@ -780,19 +792,16 @@ jobs:
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
           persist-credentials: false
-
       - name: Configure AWS credentials for ECR
         uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
           aws-region: us-west-2
-
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registries: "080137407410"
-
       - name: Sign image
         uses: ./orch-ci/.github/actions/security/cosign
         with:
