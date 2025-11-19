@@ -461,33 +461,31 @@ jobs:
       - name: Prepare artifact name
         id: artifact-name
         run: |
-          binaries_json='${{ steps.find-binaries.outputs.binaries }}'
-          # Compute a hash of the binaries JSON
+          binaries_json="${{ steps.find-binaries.outputs.binaries }}"
           artifact_hash=$(echo "$binaries_json" | sha1sum | awk '{print $1}')
           artifact_name="built-binaries-$artifact_hash"
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
 
-        - name: Copy binaries to temp folder
+      - name: Copy binaries to temp folder
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         run: |
-          binaries=$(echo '${{ steps.find-binaries.outputs.binaries }}' | jq -r '.[]')
+          binaries=$(echo "${{ steps.find-binaries.outputs.binaries }}" | jq -r '.[]')
           TEMP_DIR=$(mktemp -d)
           echo "Copying binaries to temporary folder: $TEMP_DIR"
-
           for bin in $binaries; do
             mkdir -p "$TEMP_DIR/$(dirname "$bin")"
             cp -a "$bin" "$TEMP_DIR/$bin"
           done
-
           echo "All binaries copied to $TEMP_DIR"
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
 
       - name: Upload binaries artifact
+        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.artifact-name.outputs.artifact_name }}
-        path: ${{ env.TEMP_DIR }}
-        if-no-files-found: ignore
+          path: ${{ env.TEMP_DIR }}
+          if-no-files-found: ignore
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
