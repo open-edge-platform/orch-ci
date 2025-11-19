@@ -431,10 +431,8 @@ jobs:
         run: |
           set -euo pipefail
           echo "🔍 Searching for binaries to sign..."
-
           directories=("out" "build" "bin")
           binaries=()
-
           for dir in "${directories[@]}"; do
             full_path="${PROJECT_FOLDER}/${dir}"
             echo "Checking path: $full_path"
@@ -448,7 +446,6 @@ jobs:
             fi
           done
 
-          # Deduplicate by basename (if multiple copies exist, pick the first one)
           unique_binaries=()
           seen_names=()
           for f in "${binaries[@]}"; do
@@ -468,11 +465,8 @@ jobs:
 
             # Convert array to JSON safely for GitHub Actions
             binaries_json=$(printf '%s\n' "${unique_binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-
-            # Write to GITHUB_OUTPUT
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
-
 
       - name: Prepare artifact name
         id: artifact-name
@@ -486,19 +480,13 @@ jobs:
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         run: |
           set -euo pipefail
-
-          # Read the JSON array of binaries
           binaries_json='${{ steps.find-binaries.outputs.binaries }}'
-
-          # Use jq to iterate safely over filenames, handling spaces correctly
           TEMP_DIR=$(mktemp -d)
           echo "Copying binaries to temporary folder: $TEMP_DIR"
-
           echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
             mkdir -p "$TEMP_DIR/$(dirname "$bin")"
             cp -a "$bin" "$TEMP_DIR/$bin"
           done
-
           echo "All binaries copied to $TEMP_DIR"
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
 
@@ -743,32 +731,24 @@ jobs:
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
           persist-credentials: false
-
       - name: Download built binaries
         uses: actions/download-artifact@v6
         with:
           name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
           path: ./binaries
-
       - name: Resolve actual binary path
         id: resolve-path
         run: |
           set -euo pipefail
           ARTIFACT_ROOT="./binaries"
           BIN_NAME=$(basename "${{ matrix.binary }}")
-
-          # Find the binary
           FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
           if [ -z "$FILE_PATH" ]; then
             echo "Error: binary not found in artifact: $BIN_NAME"
             exit 1
           fi
           echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
-
-          # Sanitize binary name for artifact
           SANITIZED_BASENAME=$(echo "$BIN_NAME" | tr '/:' '_')
-
-          # Unique suffix: hash of path + matrix index
           PATH_HASH=$(echo -n "$FILE_PATH" | sha1sum | awk '{print $1}')
           SANITIZED_NAME="${SANITIZED_BASENAME}-${PATH_HASH:0:8}-${{ matrix._index }}"
           echo "sanitized_name=$SANITIZED_NAME" >> "$GITHUB_OUTPUT"
