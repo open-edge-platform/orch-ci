@@ -431,6 +431,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "🔍 Searching for binaries to sign..."
+
           directories=("out" "build" "bin")
           binaries=()
 
@@ -439,24 +440,39 @@ jobs:
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               while IFS= read -r file; do
-                binaries+=("$file")
-              done < <(find "$full_path" -type f -executable || true)
+                # Only include executable files and exclude package metadata (e.g., DEBIAN folder)
+                if [[ -x "$file" ]] && [[ "$file" != *"/DEBIAN/"* ]]; then
+                  binaries+=("$file")
+                fi
+              done < <(find "$full_path" -type f || true)
             fi
           done
 
-          if [ ${#binaries[@]} -eq 0 ]; then
+          # Deduplicate by basename (if multiple copies exist, pick the first one)
+          unique_binaries=()
+          seen_names=()
+          for f in "${binaries[@]}"; do
+            bn=$(basename "$f")
+            if [[ ! " ${seen_names[*]} " =~ " $bn " ]]; then
+              unique_binaries+=("$f")
+              seen_names+=("$bn")
+            fi
+          done
+
+          if [ ${#unique_binaries[@]} -eq 0 ]; then
             echo "⚠️ No binaries found to sign."
             echo "binaries=[]" >> "$GITHUB_OUTPUT"
           else
             echo "Found binaries:"
-            printf '%s\n' "${binaries[@]}"
+            printf '%s\n' "${unique_binaries[@]}"
 
             # Convert array to JSON safely for GitHub Actions
-            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            binaries_json=$(printf '%s\n' "${unique_binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
 
             # Write to GITHUB_OUTPUT
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
+
 
       - name: Prepare artifact name
         id: artifact-name
@@ -765,11 +781,18 @@ jobs:
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
-      - name: Upload signed binary artifact
+      - name: Prepare Cosign artifacts for upload
+        shell: bash
+        run: |
+          mkdir -p ./cosign-artifacts
+          mv cosign.* ./cosign-artifacts/
+          echo "ART_NAME=${{ needs.run-repo-pipelines.outputs.artifact_name }}-${{ steps.resolve-path.outputs.sanitized_name }}" >> $GITHUB_ENV
+
+      - name: Upload Cosign artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}-${{ steps.resolve-path.outputs.sanitized_name }}
-          path: ${{ steps.resolve-path.outputs.binary_path }}
+          name: ${{ env.ART_NAME }}
+          path: ./cosign-artifacts
           if-no-files-found: error
 
   sign-images:
