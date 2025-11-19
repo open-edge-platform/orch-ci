@@ -718,6 +718,7 @@ jobs:
     strategy:
       matrix:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
+        _index: [0]  # ensures matrix uniqueness
     steps:
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5.0.1
@@ -736,6 +737,7 @@ jobs:
       - name: Resolve actual binary path
         id: resolve-path
         run: |
+          set -euo pipefail
           ARTIFACT_ROOT="./binaries"
           BIN_NAME=$(basename "${{ matrix.binary }}")
 
@@ -750,9 +752,9 @@ jobs:
           # Sanitize binary name for artifact
           SANITIZED_BASENAME=$(echo "$BIN_NAME" | tr '/:' '_')
 
-          # Add short hash of full path to guarantee uniqueness
-          PATH_HASH=$(echo -n "${FILE_PATH}" | sha1sum | awk '{print $1}')
-          SANITIZED_NAME="${SANITIZED_BASENAME}-${PATH_HASH:0:8}"  # first 8 chars
+          # Unique suffix: hash of path + matrix index
+          PATH_HASH=$(echo -n "$FILE_PATH" | sha1sum | awk '{print $1}')
+          SANITIZED_NAME="${SANITIZED_BASENAME}-${PATH_HASH:0:8}-${{ matrix._index }}"
           echo "sanitized_name=$SANITIZED_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Sign binary with Cosign
