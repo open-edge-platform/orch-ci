@@ -469,13 +469,20 @@ jobs:
       - name: Copy binaries to temp folder
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         run: |
-          binaries=$(echo "${{ steps.find-binaries.outputs.binaries }}" | jq -r '.[]')
+          set -euo pipefail
+
+          # Read the JSON array of binaries
+          binaries_json='${{ steps.find-binaries.outputs.binaries }}'
+
+          # Use jq to iterate safely over filenames, handling spaces correctly
           TEMP_DIR=$(mktemp -d)
           echo "Copying binaries to temporary folder: $TEMP_DIR"
-          for bin in $binaries; do
+
+          echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
             mkdir -p "$TEMP_DIR/$(dirname "$bin")"
             cp -a "$bin" "$TEMP_DIR/$bin"
           done
+
           echo "All binaries copied to $TEMP_DIR"
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
 
