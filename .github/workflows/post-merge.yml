@@ -263,7 +263,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@da08a06e8aec70621e50ed4aec2fac5599839f45  # 0.1.62
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@7d7ad575fb688f0071836ece55a8e4a170445bf5  # 0.1.63
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -280,7 +280,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@da08a06e8aec70621e50ed4aec2fac5599839f45  # 0.1.62
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@7d7ad575fb688f0071836ece55a8e4a170445bf5  # 0.1.63
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -464,10 +464,11 @@ jobs:
         with:
           name: built-binaries
           path: |
-            ./out
-            ./build
-            ./bin
+            ${{ inputs.project_folder }}/out/**
+            ${{ inputs.project_folder }}/build/**
+            ${{ inputs.project_folder }}/bin/**
           if-no-files-found: ignore
+          strip-components: 1
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -695,11 +696,6 @@ jobs:
       matrix:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5
         with:
@@ -708,17 +704,32 @@ jobs:
           path: orch-ci
           persist-credentials: false
 
-      - name: Download binaries from previous job
+      - name: Download built binaries
         uses: actions/download-artifact@v6
         with:
           name: built-binaries
-          path: ./binaries  # Save into a subfolder
+          path: ./binaries  # all artifacts go here
+
+      - name: Resolve actual binary path
+        id: resolve-path
+        run: |
+          # The artifact root
+          ARTIFACT_ROOT="./binaries"
+          # Take only the filename from matrix.binary
+          BIN_NAME=$(basename "${{ matrix.binary }}")
+          # Find the actual file inside downloaded artifact
+          FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
+          if [ -z "$FILE_PATH" ]; then
+            echo "Error: binary not found in artifact: $BIN_NAME"
+            exit 1
+          fi
+          echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Sign binary
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: binary
-          artifact: ./binaries/${{ matrix.binary }}  # Include folder path
+          artifact: ${{ steps.resolve-path.outputs.binary_path }}
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
 
