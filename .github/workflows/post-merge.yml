@@ -293,6 +293,7 @@ jobs:
       images: ${{ steps.list-images.outputs.images }}
       ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
+      artifact_name: ${{ steps.artifact-name.outputs.artifact_name }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
