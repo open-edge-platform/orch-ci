@@ -293,6 +293,7 @@ jobs:
       images: ${{ steps.list-images.outputs.images }}
       ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
+      artifact_name: ${{ steps.artifact-name.outputs.artifact_name }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
@@ -433,42 +434,57 @@ jobs:
           echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
           binaries=()
-
           for dir in "${directories[@]}"; do
             full_path="${PROJECT_FOLDER}/${dir}"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               while IFS= read -r file; do
-                binaries+=("$file")
-              done < <(find "$full_path" -type f -executable || true)
+                # Only include executable files and exclude package metadata (e.g., DEBIAN folder)
+                if [[ -x "$file" ]] && [[ "$file" != *"/DEBIAN/"* ]]; then
+                  binaries+=("$file")
+                fi
+              done < <(find "$full_path" -type f || true)
             fi
           done
 
-          if [ ${#binaries[@]} -eq 0 ]; then
+          unique_binaries=()
+          seen_names=()
+          for f in "${binaries[@]}"; do
+            bn=$(basename "$f")
+            if [[ ! " ${seen_names[*]} " =~ " $bn " ]]; then
+              unique_binaries+=("$f")
+              seen_names+=("$bn")
+            fi
+          done
+
+          if [ ${#unique_binaries[@]} -eq 0 ]; then
             echo "⚠️ No binaries found to sign."
             echo "binaries=[]" >> "$GITHUB_OUTPUT"
           else
             echo "Found binaries:"
-            printf '%s\n' "${binaries[@]}"
+            printf '%s\n' "${unique_binaries[@]}"
 
             # Convert array to JSON safely for GitHub Actions
-            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-
-            # Write to GITHUB_OUTPUT
+            binaries_json=$(printf '%s\n' "${unique_binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload binaries (if any)
+      - name: Prepare artifact name
+        id: artifact-name
+        run: |
+          binaries_json="${{ steps.find-binaries.outputs.binaries }}"
+          artifact_hash=$(echo "$binaries_json" | sha1sum | awk '{print $1}')
+          artifact_name="built-binaries-$artifact_hash"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Copy binaries to temp folder
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         run: |
-          binaries=$(echo '${{ steps.find-binaries.outputs.binaries }}' | jq -r '.[]')
-          if [ -z "$binaries" ]; then
-            echo "No binaries to upload."
-            exit 0
-          fi
+          set -euo pipefail
+          binaries_json='${{ steps.find-binaries.outputs.binaries }}'
           TEMP_DIR=$(mktemp -d)
           echo "Copying binaries to temporary folder: $TEMP_DIR"
-          for bin in $binaries; do
+          echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
             mkdir -p "$TEMP_DIR/$(dirname "$bin")"
             cp -a "$bin" "$TEMP_DIR/$bin"
           done
@@ -479,7 +495,7 @@ jobs:
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         uses: actions/upload-artifact@v5
         with:
-          name: built-binaries
+          name: ${{ steps.artifact-name.outputs.artifact_name }}
           path: ${{ env.TEMP_DIR }}
           if-no-files-found: ignore
 
@@ -639,7 +655,6 @@ jobs:
             echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
           fi
 
-
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -708,6 +723,7 @@ jobs:
     strategy:
       matrix:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
+        _index: [0]  # ensures matrix uniqueness
     steps:
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5.0.1
@@ -716,35 +732,49 @@ jobs:
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
           persist-credentials: false
-
       - name: Download built binaries
         uses: actions/download-artifact@v6
         with:
-          name: built-binaries
-          path: ./binaries  # all artifacts go here
-
+          name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
+          path: ./binaries
       - name: Resolve actual binary path
         id: resolve-path
         run: |
-          # The artifact root
+          set -euo pipefail
           ARTIFACT_ROOT="./binaries"
-          # Take only the filename from matrix.binary
           BIN_NAME=$(basename "${{ matrix.binary }}")
-          # Find the actual file inside downloaded artifact
           FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
           if [ -z "$FILE_PATH" ]; then
             echo "Error: binary not found in artifact: $BIN_NAME"
             exit 1
           fi
           echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
+          SANITIZED_BASENAME=$(echo "$BIN_NAME" | tr '/:' '_')
+          PATH_HASH=$(echo -n "$FILE_PATH" | sha1sum | awk '{print $1}')
+          SANITIZED_NAME="${SANITIZED_BASENAME}-${PATH_HASH:0:8}-${{ matrix._index }}"
+          echo "sanitized_name=$SANITIZED_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Sign binary
+      - name: Sign binary with Cosign
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: binary
           artifact: ${{ steps.resolve-path.outputs.binary_path }}
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Prepare Cosign artifacts for upload
+        shell: bash
+        run: |
+          mkdir -p ./cosign-artifacts
+          mv cosign.* ./cosign-artifacts/
+          echo "ART_NAME=${{ needs.run-repo-pipelines.outputs.artifact_name }}-${{ steps.resolve-path.outputs.sanitized_name }}" >> $GITHUB_ENV
+
+      - name: Upload Cosign artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.ART_NAME }}
+          path: ./cosign-artifacts
+          if-no-files-found: error
 
   sign-images:
     permissions:
@@ -761,7 +791,6 @@ jobs:
         uses: actions/checkout@v5.0.1
         with:
           persist-credentials: false
-
       - name: Checkout orch-ci for Cosign
         uses: actions/checkout@v5.0.1
         with:
@@ -769,19 +798,16 @@ jobs:
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
           persist-credentials: false
-
       - name: Configure AWS credentials for ECR
         uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
           aws-region: us-west-2
-
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registries: "080137407410"
-
       - name: Sign image
         uses: ./orch-ci/.github/actions/security/cosign
         with:
