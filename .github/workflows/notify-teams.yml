@@ -9,7 +9,8 @@ on:  # yamllint disable-line rule:truthy
       MSTEAMS_WEBHOOK:
         required: true
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   notify:

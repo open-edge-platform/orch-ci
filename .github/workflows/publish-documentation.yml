@@ -78,7 +78,8 @@ on:  # yamllint disable-line rule:truthy rule:line-length
         description: AWS secret access key for docs bucket
         required: true
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   publish-documentation:
