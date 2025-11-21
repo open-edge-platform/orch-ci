@@ -26,7 +26,8 @@ on:  # yamllint disable-line rule:truthy
         required: true
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
 
 jobs:
   sanitize-project-folder:

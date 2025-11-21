@@ -170,7 +170,8 @@ on:  # yamllint disable-line rule:truthy
         required: false
       MSTEAMS_WEBHOOK:
         required: false
-permissions: {}
+permissions:
+  contents: read
 jobs:
   sanitize-project-folder:
     runs-on: ubuntu-latest

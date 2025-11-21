@@ -153,7 +153,7 @@ jobs:
           done
 
       - name: Install Spark theme
-        if: false  # Disable step - Spark theme deprecated
+        if: ${{ false }}  # Disable step - Spark theme deprecated
         env:
           ENDPOINT: ${{ inputs.endpoint }}
         shell: bash

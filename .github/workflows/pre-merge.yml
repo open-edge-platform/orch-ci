@@ -198,7 +198,8 @@ on:  # yamllint disable-line rule:truthy
         required: false
       NO_AUTH_S3_PUSH_PASSWD:
         required: false
-permissions: {}
+permissions:
+  contents: read
 jobs:
   sanitize-project-folder:
     permissions:
