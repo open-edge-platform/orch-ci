@@ -84,7 +84,7 @@ jobs:
       REPO: ${{ github.repository }}
     steps:
       - name: Checkout action repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           repository: open-edge-platform/orch-ci
           path: ci
@@ -105,7 +105,7 @@ jobs:
           aws-region: us-west-2
 
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           # Fetch all history, otherwise sporadic issue with missing tags
           fetch-depth: 0
@@ -153,7 +153,7 @@ jobs:
           done
 
       - name: Install Spark theme
-        if: false  # Disable step - Spark theme deprecated
+        if: ${{ false }}  # Disable step - Spark theme deprecated
         env:
           ENDPOINT: ${{ inputs.endpoint }}
         shell: bash
@@ -185,7 +185,7 @@ jobs:
       # 'Post Bootstrap CI Environment' step does not fail
       - name: Checkout action repository
         if: always()
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           repository: open-edge-platform/orch-ci
           path: ci

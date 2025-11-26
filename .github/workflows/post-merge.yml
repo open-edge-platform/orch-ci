@@ -170,7 +170,8 @@ on:  # yamllint disable-line rule:truthy
         required: false
       MSTEAMS_WEBHOOK:
         required: false
-permissions: {}
+permissions:
+  contents: read
 jobs:
   sanitize-project-folder:
     runs-on: ubuntu-latest
@@ -200,7 +201,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
@@ -226,7 +227,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@014f16e7ab1402f30e7c3329d33797e7948572db  # v3.29.5
+        uses: github/codeql-action/upload-sarif@e12f0178983d466f2f6028f5cc7a6d786fd97f4b  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   zizimor-scan:
@@ -238,18 +239,18 @@ jobs:
       ZIZMOR_VERSION: 1.5.2
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@5a7eac68fb9809dea845d802897dc5c723910fa3  # v7.1.3
+        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244  # v7.1.4
 
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@014f16e7ab1402f30e7c3329d33797e7948572db  # v3.29.5
+        uses: github/codeql-action/upload-sarif@e12f0178983d466f2f6028f5cc7a6d786fd97f4b  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -259,11 +260,11 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@da08a06e8aec70621e50ed4aec2fac5599839f45  # 0.1.62
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@490a8651344e504bba68a208b1104254046dacd5  # 0.1.65
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -276,11 +277,11 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@da08a06e8aec70621e50ed4aec2fac5599839f45  # 0.1.62
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@490a8651344e504bba68a208b1104254046dacd5  # 0.1.65
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -293,12 +294,13 @@ jobs:
       images: ${{ steps.list-images.outputs.images }}
       ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
+      artifact_name: ${{ steps.artifact-name.outputs.artifact_name }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
       PROJECT_NAME: ${{ github.repository }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           # Do not persist credentials by default, otherwise they
           # will clash with credentials set by bootstrap action
@@ -311,7 +313,7 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Checkout action repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           repository: open-edge-platform/orch-ci
           ref: ${{ inputs.orch_ci_repo_ref }}
@@ -433,42 +435,70 @@ jobs:
           echo "🔍 Searching for binaries to sign..."
           directories=("out" "build" "bin")
           binaries=()
-
           for dir in "${directories[@]}"; do
             full_path="${PROJECT_FOLDER}/${dir}"
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               while IFS= read -r file; do
-                binaries+=("$file")
-              done < <(find "$full_path" -type f -executable || true)
+                # Only include executable files and exclude package metadata (e.g., DEBIAN folder)
+                if [[ -x "$file" ]] && [[ "$file" != *"/DEBIAN/"* ]]; then
+                  binaries+=("$file")
+                fi
+              done < <(find "$full_path" -type f || true)
             fi
           done
 
-          if [ ${#binaries[@]} -eq 0 ]; then
+          unique_binaries=()
+          seen_names=()
+          for f in "${binaries[@]}"; do
+            bn=$(basename "$f")
+            if [[ ! " ${seen_names[*]} " =~ " $bn " ]]; then
+              unique_binaries+=("$f")
+              seen_names+=("$bn")
+            fi
+          done
+
+          if [ ${#unique_binaries[@]} -eq 0 ]; then
             echo "⚠️ No binaries found to sign."
             echo "binaries=[]" >> "$GITHUB_OUTPUT"
           else
             echo "Found binaries:"
-            printf '%s\n' "${binaries[@]}"
+            printf '%s\n' "${unique_binaries[@]}"
 
             # Convert array to JSON safely for GitHub Actions
-            binaries_json=$(printf '%s\n' "${binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-
-            # Write to GITHUB_OUTPUT without extra spaces or quotes
+            binaries_json=$(printf '%s\n' "${unique_binaries[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload binaries (if any)
+      - name: Prepare artifact name
+        id: artifact-name
+        run: |
+          binaries_json="${{ steps.find-binaries.outputs.binaries }}"
+          artifact_hash=$(echo "$binaries_json" | sha1sum | awk '{print $1}')
+          artifact_name="built-binaries-$artifact_hash"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Copy binaries to temp folder
+        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
+        run: |
+          set -euo pipefail
+          binaries_json='${{ steps.find-binaries.outputs.binaries }}'
+          TEMP_DIR=$(mktemp -d)
+          echo "Copying binaries to temporary folder: $TEMP_DIR"
+          echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
+            mkdir -p "$TEMP_DIR/$(dirname "$bin")"
+            cp -a "$bin" "$TEMP_DIR/$bin"
+          done
+          echo "All binaries copied to $TEMP_DIR"
+          echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
+
+      - name: Upload binaries artifact
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         uses: actions/upload-artifact@v5
         with:
-          name: built-binaries
-          path: |
-            ${{ inputs.project_folder }}/out/**
-            ${{ inputs.project_folder }}/build/**
-            ${{ inputs.project_folder }}/bin/**
+          name: ${{ steps.artifact-name.outputs.artifact_name }}
+          path: ${{ env.TEMP_DIR }}
           if-no-files-found: ignore
-          strip-components: 1
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -626,7 +656,6 @@ jobs:
             echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
           fi
 
-
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
         working-directory: ${{ inputs.project_folder }}
@@ -695,43 +724,58 @@ jobs:
     strategy:
       matrix:
         binary: ${{ fromJSON(needs.run-repo-pipelines.outputs.binaries) }}
+        _index: [0]  # ensures matrix uniqueness
     steps:
       - name: Checkout orch-ci for Cosign
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.0
         with:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
           persist-credentials: false
-
       - name: Download built binaries
         uses: actions/download-artifact@v6
         with:
-          name: built-binaries
-          path: ./binaries  # all artifacts go here
-
+          name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
+          path: ./binaries
       - name: Resolve actual binary path
         id: resolve-path
         run: |
-          # The artifact root
+          set -euo pipefail
           ARTIFACT_ROOT="./binaries"
-          # Take only the filename from matrix.binary
           BIN_NAME=$(basename "${{ matrix.binary }}")
-          # Find the actual file inside downloaded artifact
           FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
           if [ -z "$FILE_PATH" ]; then
             echo "Error: binary not found in artifact: $BIN_NAME"
             exit 1
           fi
           echo "binary_path=$FILE_PATH" >> "$GITHUB_OUTPUT"
+          SANITIZED_BASENAME=$(echo "$BIN_NAME" | tr '/:' '_')
+          PATH_HASH=$(echo -n "$FILE_PATH" | sha1sum | awk '{print $1}')
+          SANITIZED_NAME="${SANITIZED_BASENAME}-${PATH_HASH:0:8}-${{ matrix._index }}"
+          echo "sanitized_name=$SANITIZED_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Sign binary
+      - name: Sign binary with Cosign
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: binary
           artifact: ${{ steps.resolve-path.outputs.binary_path }}
           environment: non-prod
           gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+
+      - name: Prepare Cosign artifacts for upload
+        shell: bash
+        run: |
+          mkdir -p ./cosign-artifacts
+          mv cosign.* ./cosign-artifacts/
+          echo "ART_NAME=${{ needs.run-repo-pipelines.outputs.artifact_name }}-${{ steps.resolve-path.outputs.sanitized_name }}" >> $GITHUB_ENV
+
+      - name: Upload Cosign artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.ART_NAME }}
+          path: ./cosign-artifacts
+          if-no-files-found: error
 
   sign-images:
     permissions:
@@ -745,30 +789,26 @@ jobs:
         image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.0
         with:
           persist-credentials: false
-
       - name: Checkout orch-ci for Cosign
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6.0.0
         with:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_ORCH_GITHUB }}
           path: orch-ci
           persist-credentials: false
-
       - name: Configure AWS credentials for ECR
         uses: aws-actions/configure-aws-credentials@v5
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
           aws-region: us-west-2
-
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registries: "080137407410"
-
       - name: Sign image
         uses: ./orch-ci/.github/actions/security/cosign
         with:
@@ -818,7 +858,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy Image Scan Report
-        uses: github/codeql-action/upload-sarif@014f16e7ab1402f30e7c3329d33797e7948572db  # v3.29.5
+        uses: github/codeql-action/upload-sarif@e12f0178983d466f2f6028f5cc7a6d786fd97f4b  # v3.29.5
         with:
           sarif_file: trivy-${{ env.sanitized_image_name }}.sarif
   version-bump:
@@ -828,11 +868,11 @@ jobs:
     if: ${{inputs.run_version_dev}}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           persist-credentials: false
       - name: Checkout action repository
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3  # v6.0.0
         with:
           repository: open-edge-platform/orch-ci
           path: ci
