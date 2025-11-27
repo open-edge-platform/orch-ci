@@ -297,7 +297,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@490a8651344e504bba68a208b1104254046dacd5  # 0.1.65
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@79c4381f9be567527d8782094317b0282493e45a  # 0.1.66
         with:
           report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
           project-folder: ${{ inputs.project_folder }}
@@ -334,7 +334,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@e12f0178983d466f2f6028f5cc7a6d786fd97f4b  # v3.29.5
+        uses: github/codeql-action/upload-sarif@fdbfb4d2750291e159f0156def62b853c2798ca2  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   trivy-critical-scan:
@@ -369,7 +369,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@490a8651344e504bba68a208b1104254046dacd5  # 0.1.65
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@79c4381f9be567527d8782094317b0282493e45a  # 0.1.66
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
@@ -388,7 +388,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@490a8651344e504bba68a208b1104254046dacd5  # 0.1.65
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@79c4381f9be567527d8782094317b0282493e45a  # 0.1.66
         with:
           scan-scope: "changed"
           severity: "HIGH"
@@ -786,13 +786,14 @@ jobs:
           sanitized_image_name="${sanitized_image_name//[:\/]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
-      - name: Scan Image
+      - name: Scan Image (Docker CIS benchmark)
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
           image-ref: ${{ matrix.image }}
           format: table
           output: "trivy-${{ env.sanitized_image_name }}.txt"
           ignore-unfixed: true
+          compliance: "docker-cis-1.6.0"
 
       - name: Calculate MD5 Checksum
         id: checksum
@@ -812,7 +813,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Scan Image for High/Critical Issues
+      - name: Scan Image for High/Critical Issues (Trivy)
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
           image-ref: ${{ matrix.image }}
