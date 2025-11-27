@@ -101,6 +101,10 @@ inputs:
     description: "In case of matrix jobs pass a suffix with the job name with a -"
     required: false
     default: ""
+  compliance:
+    description: "Compliance benchmark to use (e.g., docker-cis-1.6.0)"
+    required: false
+    default: ""
 
 outputs:
   scan_result:
@@ -152,6 +156,7 @@ runs:
         INPUTS_TIMEOUT: ${{ inputs.timeout }}
         INPUTS_GENERATE_SBOM: ${{ inputs.generate_sbom }}
         INPUTS_SBOM_FORMAT: ${{ inputs.sbom_format }}
+        INPUTS_COMPLIANCE: ${{ inputs.compliance }}
         CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
 
       # zizmor ignore: all_changed_files is tj-actions/changed-files output
@@ -209,10 +214,17 @@ runs:
           CMD="$CMD --ignore-unfixed=$INPUTS_IGNORE_UNFIXED"
         fi
 
+        # Add compliance flag if user sets input
+        if [[ -n "$INPUTS_COMPLIANCE" ]]; then
+          CMD="$CMD --compliance $INPUTS_COMPLIANCE"
+        fi
+
         # Add the scan target and execute
         CMD="$CMD ${SCAN_TARGET}"
         echo "Executing command: $CMD"
         eval $CMD || echo "::warning::Trivy scan completed with findings"
+        EXIT_CODE=$?
+        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
 
         if [ -f "${REPORT_FILE}" ]; then
           echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
