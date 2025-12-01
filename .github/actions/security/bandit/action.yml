@@ -58,7 +58,7 @@ inputs:
   paths:
     description: "Paths to scan when using all scope"
     required: false
-    default: "."  # all scope by default, exclude_dirs are taken from pyproject.toml
+    default: "." # all scope by default, exclude_dirs are taken from pyproject.toml
   config_file:
     description: "Path to pyproject.toml or custom bandit config"
     required: false
@@ -73,7 +73,7 @@ inputs:
   output-format:
     description: "Format for scan results (json/txt/html/csv/sarif)"
     required: false
-    default: "sarif"  # by default to upload into Security tab
+    default: "sarif" # by default to upload into Security tab
   fail-on-findings:
     description: "Whether to fail the action if issues are found"
     required: false
@@ -95,7 +95,7 @@ runs:
   using: composite
   steps:
     - name: Set up Python
-      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
       with:
         python-version: "3.10"
 
@@ -108,7 +108,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0  # v46.0.3
+      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0 # v46.0.3
       with:
         files: |
           **/*.py
@@ -176,15 +176,15 @@ runs:
     - name: Upload reports
       env:
         suffix: ${{inputs.report_suffix}}
-      if: steps.run-bandit.outputs.report_path != ''   # if any report is available
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      if: always() && steps.run-bandit.outputs.report_path != '' # if any report is available
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: bandit-results-${{ steps.run-bandit.outputs.rand_suffix }}${{ env.suffix }}
         path: ${{ steps.run-bandit.outputs.report_path }}
         retention-days: 7
 
     - name: Fix SARIF severity levels
-      if: contains(steps.run-bandit.outputs.report_path, '.sarif')
+      if: always() && contains(steps.run-bandit.outputs.report_path, '.sarif')
       shell: bash
       run: |
         jq '
@@ -201,13 +201,13 @@ runs:
         mv fixed-report.sarif "${{ steps.run-bandit.outputs.report_path }}"
 
     - name: Upload sarif
-      if: contains(steps.run-bandit.outputs.report_path, '.sarif')  # if SARIF is available, upload it
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
+      if: always() && contains(steps.run-bandit.outputs.report_path, '.sarif') # if SARIF is available, upload it
+      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841 # v3.28.8
       with:
         sarif_file: ${{ steps.run-bandit.outputs.report_path }}
 
     - name: Fail if Bandit found issues
-      if: inputs.fail-on-findings == 'true' && steps.run-bandit.outputs.exit_code != '0'
+      if: always() && inputs.fail-on-findings == 'true' && steps.run-bandit.outputs.exit_code != '0'
       shell: bash
       run: |
         echo "Bandit found issues. Failing the job with exit code ${{ steps.run-bandit.outputs.exit_code }}"
