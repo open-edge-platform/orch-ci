@@ -1,0 +1,67 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: Test Cosign Signing Action
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  push:
+    branches:
+      - adimoft-patch-2
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  test-sign-binary:
+    name: Test Binary Signing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build sample binary
+        run: |
+          echo "Hello world" > ./test-binary
+          chmod +x ./test-binary
+
+      - name: Run Cosign signing action (binary)
+        uses: ./.github/actions/security/cosign
+        with:
+          target: "binary"
+          artifact: "./test-binary"
+          environment: "non-prod"
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  test-sign-image:
+    name: Test Image Signing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: |
+          echo "FROM alpine:3.19" > Dockerfile
+          echo 'CMD ["echo", "Hello world"]' >> Dockerfile
+          docker build -t ghcr.io/${{ github.repository_owner }}/test-image:latest .
+
+      - name: Push test image to registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push ghcr.io/${{ github.repository_owner }}/test-image:latest
+
+      - name: Run Cosign signing action (image)
+        uses: ./.github/actions/security/cosign
+        with:
+          target: "image"
+          artifact: "ghcr.io/${{ github.repository_owner }}/test-image:latest"
+          environment: "non-prod"
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
