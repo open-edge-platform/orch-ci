@@ -183,7 +183,7 @@ jobs:
             fi
             # Find branches that match patterns:
             # release-#.# or release-#.#.#
-            if echo "${branch}" | grep -qP '^release-\d(\.\d){1,2}$'; then
+            if echo "${branch}" | grep -qP '^release-\d+(\.\d+){1,2}$'; then
               value="${branch#*-}"
             fi
             # Replace '/' with '-'

@@ -227,7 +227,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@fdbfb4d2750291e159f0156def62b853c2798ca2  # v3.29.5
+        uses: github/codeql-action/upload-sarif@fe4161a26a8629af62121b670040955b330f9af2  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   zizimor-scan:
@@ -250,7 +250,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@fdbfb4d2750291e159f0156def62b853c2798ca2  # v3.29.5
+        uses: github/codeql-action/upload-sarif@fe4161a26a8629af62121b670040955b330f9af2  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -264,7 +264,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@79c4381f9be567527d8782094317b0282493e45a  # 0.1.66
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@d3fe218ea585fb390b73c87f9e482cbe1424829c  # 0.1.68
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -281,7 +281,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@79c4381f9be567527d8782094317b0282493e45a  # 0.1.66
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@d3fe218ea585fb390b73c87f9e482cbe1424829c  # 0.1.68
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -858,7 +858,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy Image Scan Report
-        uses: github/codeql-action/upload-sarif@fdbfb4d2750291e159f0156def62b853c2798ca2  # v3.29.5
+        uses: github/codeql-action/upload-sarif@fe4161a26a8629af62121b670040955b330f9af2  # v3.29.5
         with:
           sarif_file: trivy-${{ env.sanitized_image_name }}.sarif
   version-bump:
