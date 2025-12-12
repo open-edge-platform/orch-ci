@@ -65,6 +65,7 @@ runs:
           # Sign binary locally and save bundle/signature/certificate
           cosign sign-blob \
             --yes \
+            --signature-format raw \
             --bundle cosign.bundle.json \
             --output-signature cosign.sig \
             --output-certificate cosign.cert \
