@@ -54,6 +54,7 @@ runs:
         git checkout -b $BRANCH_NAME
 
         CHANGES_MADE=0
+        NEXT_VERSION_GLOBAL=""
 
         IFS=',' read -ra EXCLUDE_PATHS <<< "${EXCLUDE_PATHS}"
         INPUTS_PROJECT_FOLDER=$(echo "${INPUTS_PROJECT_FOLDER}" | xargs)
@@ -92,6 +93,9 @@ runs:
 
           if [ $RELEASE_VERSION -eq 1 ]; then
             NEXT_VERSION=$(get_next_version "$NEW_VERSION" "-dev")
+            if [[ -z "${NEXT_VERSION_GLOBAL}" ]]; then
+              NEXT_VERSION_GLOBAL="${NEXT_VERSION}"
+            fi
             echo "Updating $VERSION_PATH from $NEW_VERSION to $NEXT_VERSION"
 
             # Check if .update-version.sh exists in the same directory and execute it
@@ -126,9 +130,9 @@ runs:
         if [ $CHANGES_MADE -eq 1 ]; then
           # Create a more descriptive commit message
           if [[ "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
-            git commit -m "Update VERSION files to next dev version for ${INPUTS_PROJECT_FOLDER}"
+            git commit -m "Update VERSION files to ${NEXT_VERSION_GLOBAL} for ${INPUTS_PROJECT_FOLDER}"
           else
-            git commit -m "Update VERSION files to next dev version"
+            git commit -m "Update VERSION files to ${NEXT_VERSION_GLOBAL}"
           fi
 
           echo "------------------------------------------------------"
@@ -141,6 +145,7 @@ runs:
           git push origin $BRANCH_NAME
 
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "next_version=${NEXT_VERSION_GLOBAL}" >> $GITHUB_OUTPUT
           echo "changes_made=true" >> $GITHUB_OUTPUT
         else
           echo "No VERSION files found to update in ${INPUTS_PROJECT_FOLDER}"
@@ -151,11 +156,12 @@ runs:
       if: steps.update_versions.outputs.changes_made == 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.gh_token }}
+        GH_TOKEN: ${{ inputs.github_token }}
         BRANCH_NAME: ${{ steps.update_versions.outputs.branch_name }}
+        NEXT_VERSION: ${{ steps.update_versions.outputs.next_version }}
         INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       run: |
-        TITLE="Version bump to -dev"
+        TITLE="Version bump to ${NEXT_VERSION}"
         INPUTS_PROJECT_FOLDER=$(echo "${INPUTS_PROJECT_FOLDER}" | xargs)
         if [[ -n "${INPUTS_PROJECT_FOLDER}" && "${INPUTS_PROJECT_FOLDER}" != "." ]]; then
           TITLE="${TITLE} for ${INPUTS_PROJECT_FOLDER}"
