@@ -241,7 +241,7 @@ jobs:
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizimor Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
@@ -303,7 +303,7 @@ jobs:
           project-folder: ${{ inputs.project_folder }}
 
       - name: Upload ClamAV Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: ${{ env.CLAMAV_ARTIFACT_NAME }}
           path: ${{ env.SANITIZED_CLAMAV_REPORT_PATH }}
@@ -329,7 +329,7 @@ jobs:
           scanners: 'vuln,misconfig,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
       - name: Upload Trivy Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -714,7 +714,7 @@ jobs:
 
       - name: Upload Docker Images
         if: ${{ inputs.run_docker_build }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
@@ -750,7 +750,7 @@ jobs:
 
       - name: Artifact upload to GitHub
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
@@ -803,7 +803,7 @@ jobs:
           echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
 
       - name: Upload Trivy Image Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: trivy-scan-report-${{ env.sanitized_image_name }}-${{ env.md5sum_value }}
           path: trivy-${{ env.sanitized_image_name }}.txt
