@@ -823,21 +823,31 @@ jobs:
           sanitized_image_name="${sanitized_image_name//[:\/]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
-      - name: Scan Image (Docker CIS benchmark)
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.4
         with:
-          image-ref: ${{ matrix.image }}
-          format: table
-          output: "trivy-${{ env.sanitized_image_name }}.txt"
-          ignore-unfixed: true
-          compliance: "docker-cis-1.8.0"
+          version: 'latest'
+
+      - name: Scan Image for Docker CIS compliance
+        run: |
+          trivy image \
+            --compliance docker-cis-1.8.0 \
+            --format table \
+            --output "trivy-${{ env.sanitized_image_name }}-cis.txt" \
+            ${{ matrix.image }}
 
       - name: Calculate MD5 Checksum
         id: checksum
         run: |
-          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}.txt" | cut -d " " -f 1)
+          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}-cis.txt" | cut -d " " -f 1)
           echo "md5sum is $md5sum_value"
           echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
+
+      - name: Upload CIS Scan Report
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: trivy-cis-${{ env.sanitized_image_name }}
+          path: trivy-${{ env.sanitized_image_name }}-cis.txt
 
       - name: Upload Trivy Image Scan Report
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
@@ -851,7 +861,7 @@ jobs:
           persist-credentials: false
 
       - name: Scan Image for High/Critical Issues (Trivy)
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           image-ref: ${{ matrix.image }}
           format: table
@@ -860,9 +870,10 @@ jobs:
           output: "trivy-${{ env.sanitized_image_name }}-high-critical.txt"
           trivy-config: ${{ inputs.trivy_config_path }}
           exit-code: 1
+
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: trivy-image-vuln-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}-high-critical.txt
