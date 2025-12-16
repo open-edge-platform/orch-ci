@@ -22,7 +22,7 @@ on:  # yamllint disable-line rule:truthy
         default: "main"
         type: string
     secrets:
-      SYS_ORCH_GITHUB:
+      SYS_EMF_GH_TOKEN:
         required: true
   workflow_dispatch:
 
@@ -69,7 +69,7 @@ jobs:
         with:
           results_file: raw-scorecard.sarif
           results_format: sarif
-          repo_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          repo_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           publish_results: true
 
       - name: Upload raw Scorecard Results as Artifact
