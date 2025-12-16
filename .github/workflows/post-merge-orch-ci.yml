@@ -29,5 +29,5 @@ jobs:
       run_helm_push: false
       run_version_dev: true
     secrets:
-      SYS_ORCH_GITHUB: ${{ secrets.SYS_ORCH_GITHUB }}
+      SYS_EMF_GH_TOKEN: ${{ secrets.SYS_EMF_GH_TOKEN }}
       MSTEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}

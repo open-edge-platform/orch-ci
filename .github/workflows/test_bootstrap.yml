@@ -24,7 +24,7 @@ jobs:
       - name: Test bootstrap action
         uses: ./.github/actions/bootstrap
         with:
-          gh_token: ${{ secrets.SYS_ORCH_GITHUB }}
+          gh_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           bootstrap_tools: "all"
       - name: Test golang
         run: |

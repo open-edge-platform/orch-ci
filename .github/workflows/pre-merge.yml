@@ -188,7 +188,7 @@ on:  # yamllint disable-line rule:truthy
         type: string
         required: false
     secrets:
-      SYS_ORCH_GITHUB:
+      SYS_EMF_GH_TOKEN:
         required: false  ## temp workaround
       NO_AUTH_ECR_PUSH_USERNAME:
         required: false
@@ -564,7 +564,7 @@ jobs:
         if: ${{ inputs.run_test }}
         working-directory: ${{ inputs.project_folder }}
         env:  ## temp workaround
-          GITHUB_TOKEN: ${{ secrets.SYS_ORCH_GITHUB }}
+          GITHUB_TOKEN: ${{ secrets.SYS_EMF_GH_TOKEN }}
           ORCH_DEFAULT_PASSWORD: ${{ secrets.ORCH_DEFAULT_PASSWORD }}
         run: |
           make test
