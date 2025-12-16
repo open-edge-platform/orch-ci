@@ -385,7 +385,7 @@ jobs:
           output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -844,7 +844,7 @@ jobs:
           echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
 
       - name: Upload CIS Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v6.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: trivy-cis-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}-cis.txt
@@ -866,14 +866,14 @@ jobs:
           exit-code: 1
 
       - name: Upload Trivy Critical FS Report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: trivy-critical-scan-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}-high-critical.txt
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: trivy-image-vuln-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}-high-critical.txt
