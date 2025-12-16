@@ -849,12 +849,6 @@ jobs:
           name: trivy-cis-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}-cis.txt
 
-      - name: Upload Trivy Image Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
-        with:
-          name: trivy-scan-report-${{ env.sanitized_image_name }}-${{ env.md5sum_value }}
-          path: trivy-${{ env.sanitized_image_name }}.txt
-
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
         with:
@@ -874,8 +868,8 @@ jobs:
       - name: Upload Trivy Critical FS Report
         uses: actions/upload-artifact@v5
         with:
-          name: trivy-critical-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy-critical-scan.txt
+          name: trivy-critical-scan-${{ env.sanitized_image_name }}
+          path: trivy-${{ env.sanitized_image_name }}-high-critical.txt
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
