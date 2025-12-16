@@ -237,11 +237,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a  # v7.1.5
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867  # v7.1.6
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizimor Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
@@ -308,7 +308,7 @@ jobs:
           project-folder: ${{ inputs.project_folder }}
 
       - name: Upload ClamAV Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: ${{ env.CLAMAV_ARTIFACT_NAME }}
           path: ${{ env.SANITIZED_CLAMAV_REPORT_PATH }}
@@ -334,7 +334,7 @@ jobs:
           scanners: 'vuln,misconfig,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
       - name: Upload Trivy Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -526,7 +526,7 @@ jobs:
       - name: Restore Go cache
         if: ${{ inputs.cache_go }}
         id: restored-project-go-cache
-        uses: actions/cache/restore@a7833574556fa59680c1b7cb190c1735db73ebf0  # v5.0.0
+        uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb  # v5.0.1
         with:
           path: |
             ${{ env.GOCACHE }}
@@ -615,7 +615,7 @@ jobs:
 
       - name: Save Go cache
         if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
-        uses: actions/cache/save@a7833574556fa59680c1b7cb190c1735db73ebf0  # v5.0.0
+        uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb  # v5.0.1
         with:
           path: |
             ${{ env.GOCACHE }}
@@ -751,7 +751,7 @@ jobs:
 
       - name: Upload Docker Images
         if: ${{ inputs.run_docker_build }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
@@ -787,7 +787,7 @@ jobs:
 
       - name: Artifact upload to GitHub
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v5.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
@@ -844,7 +844,7 @@ jobs:
           echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
 
       - name: Upload CIS Scan Report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4  # v6.0.0
         with:
           name: trivy-cis-${{ env.sanitized_image_name }}
           path: trivy-${{ env.sanitized_image_name }}-cis.txt
