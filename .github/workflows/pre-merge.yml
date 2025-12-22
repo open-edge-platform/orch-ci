@@ -278,7 +278,7 @@ jobs:
           persist-credentials: false
 
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@20b640842e63420b06b3ff4247e608228e14c74a  # 2026.0.1
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
