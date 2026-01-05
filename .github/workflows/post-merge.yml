@@ -879,7 +879,7 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@main
+        uses: open-edge-platform/orch-ci/dev-version-update@20b640842e63420b06b3ff4247e608228e14c74a  # 2026.0.1
         with:
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
@@ -887,6 +887,6 @@ jobs:
     needs: [run-repo-pipelines]
     if: always() &&
       contains(needs.*.result, 'failure')
-    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@main
+    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@20b640842e63420b06b3ff4247e608228e14c74a  # 2026.0.1
     secrets:
       MSTEAMS_WEBHOOK: ${{ secrets.MSTEAMS_WEBHOOK }}
