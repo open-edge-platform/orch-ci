@@ -279,40 +279,6 @@ jobs:
             echo "exclude_patterns.extend(${exclude_pattern})" >> "$conf_file"
           done
 
-      - name: Install Spark theme
-        if: ${{ false  }}  # Disable step - Spark theme deprecated
-        env:
-          ENDPOINT: ${{ inputs.endpoint }}
-          DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}
-        shell: bash
-        run: |
-          # Restore array
-          IFS=',' read -ra branches <<< "${DOCS_BRANCHES}"
-          # Download Spark Sphinx theme
-          tmpdir="$(mktemp -d)"
-          aws s3 cp "${ENDPOINT}/theme/current" "${tmpdir}"
-          theme_wheel="$(cat "${tmpdir}/current")"
-          aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
-          # Checkout the first branch to build
-          cd "${GITHUB_WORKSPACE}"
-          git reset --hard && git clean -f
-          git checkout "${branches[0]}"
-          cd "${DOCS_DIR}"
-          # Override any existing files with template
-          cp -rf "${GITHUB_WORKSPACE}"/_template/* .
-          # Instantiate Python Virtual Environment
-          make check
-          venv="$(find . -path '*/bin/activate' -name activate)"
-          # shellcheck source=/dev/null
-          source "${venv}"
-          # Install Spark Sphinx theme
-          pip3 install --no-input "${tmpdir}/${theme_wheel}"
-          # Retrieve Python package location
-          python_venv="$(pip3 show docconf | grep '^Location:' | \
-            cut -d: -f2 | xargs)"
-          deactivate
-          echo "PYTHON_VENV=${python_venv}" >> "$GITHUB_ENV"
-
       - name: Get Python Virtual Environment
         env:
           DOCS_BRANCHES: ${{ env.DOCS_BRANCHES }}

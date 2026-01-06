@@ -152,27 +152,6 @@ jobs:
             echo "exclude_patterns.extend(${exclude_pattern})" >> "$conf_file"
           done
 
-      - name: Install Spark theme
-        if: ${{ false }}  # Disable step - Spark theme deprecated
-        env:
-          ENDPOINT: ${{ inputs.endpoint }}
-        shell: bash
-        run: |
-          # Download Spark Sphinx theme
-          tmpdir="$(mktemp -d)"
-          aws s3 cp "${ENDPOINT}/theme/current" "${tmpdir}"
-          theme_wheel="$(cat "${tmpdir}/current")"
-          aws s3 cp "${ENDPOINT}/theme/${theme_wheel}" "${tmpdir}"
-          # Instantiate Python Virtual Environment
-          cd "${GITHUB_WORKSPACE}/${DOCS_DIR}"
-          make check
-          venv="$(find . -path '*/bin/activate' -name activate)"
-          # shellcheck source=/dev/null
-          source "${venv}"
-          # Install Spark Sphinx theme
-          pip3 install --no-input "${tmpdir}/${theme_wheel}"
-          deactivate
-
       - name: Build Documentation
         env:
           SIMPLE_MODE: ${{ inputs.simple_mode }}
