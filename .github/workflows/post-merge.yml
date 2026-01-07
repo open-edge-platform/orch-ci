@@ -264,7 +264,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@aca1e7ad41fcb49f5da7cd31cecdca46822b25fa  # 2026.0.2
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@9ddc46c90c2cfeab4a3fd38a07284ec9a61bc3d8  # 2026.0.3
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -281,7 +281,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@aca1e7ad41fcb49f5da7cd31cecdca46822b25fa  # 2026.0.2
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@9ddc46c90c2cfeab4a3fd38a07284ec9a61bc3d8  # 2026.0.3
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -879,7 +879,7 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@aca1e7ad41fcb49f5da7cd31cecdca46822b25fa  # 2026.0.2
+        uses: open-edge-platform/orch-ci/dev-version-update@9ddc46c90c2cfeab4a3fd38a07284ec9a61bc3d8  # 2026.0.3
         with:
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
