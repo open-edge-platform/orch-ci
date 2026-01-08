@@ -9,6 +9,9 @@ name: Run Dependabot
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   dependabot:
     permissions:
