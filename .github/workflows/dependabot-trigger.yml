@@ -1,0 +1,17 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# yamllint disable rule:line-length
+
+name: Run Dependabot
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Dependabot
+        uses: dependabot/fetch-metadata@v2
