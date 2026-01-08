@@ -11,6 +11,8 @@ on:
 
 jobs:
   dependabot:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Dependabot
