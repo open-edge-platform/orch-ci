@@ -40,7 +40,7 @@ done < go_deps
 
 # Create go_install.sh file
 cat <<EOF > go_install.sh
-#!/bin/bash
+#!/bin/bash -x
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
