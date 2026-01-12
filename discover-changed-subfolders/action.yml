@@ -1,6 +1,8 @@
 ---
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# too many long URLs in this file
+# yamllint disable rule:line-length
 
 name: 'Discover Changed Subfolder'
 inputs:
