@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
+# too many long URLs in this file
+# yamllint disable rule:line-length
 ---
 name: Increment to Next -dev Version
 description: Updates VERSION files to next dev version after a release
