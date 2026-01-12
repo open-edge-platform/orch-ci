@@ -255,7 +255,7 @@ runs:
         sudo du -sh $(go env GOCACHE)
         sudo du -sh $(go env GOMODCACHE)
 
-      - name: Install golangci-lint
+    - name: Install golangci-lint
       if: contains(inputs.bootstrap_tools, 'golang-lint') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
