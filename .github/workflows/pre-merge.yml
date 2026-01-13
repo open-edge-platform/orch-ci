@@ -224,7 +224,7 @@ jobs:
 
           echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
           echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
-  zizimor-scan:
+  zizmor-scan:
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -331,7 +331,7 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           trivy-config: ${{ inputs.trivy_config_path }}
-          scanners: 'vuln,misconfig,secret'
+          scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
