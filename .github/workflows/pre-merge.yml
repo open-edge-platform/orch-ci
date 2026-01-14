@@ -336,8 +336,10 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].tool.driver.rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_fs"]))
+            .runs[].rules |=
+            map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" }) |
+            .runs[].results |=
+            map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" })
           ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -395,11 +397,13 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].tool.driver.rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_config"]))
-          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+            .runs[].rules |=
+            map(.properties.tags |= ((. // []) + ["Trivy_config"] | unique)) |
+            .runs[].results |=
+            map(.properties.tags |= ((. // []) + ["Trivy_config"] | unique))
+          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
@@ -856,11 +860,14 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].tool.driver.rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_cis"]))
+            .runs[].rules |=
+            map(.properties.tags |= ((. // []) + ["Trivy_cis"] | unique)) |
+            .runs[].results |=
+            map(.properties.tags |= ((. // []) + ["Trivy_cis"] | unique))
           ' trivy_cis-${{ env.sanitized_image_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_cis-${{ env.sanitized_image_name }}.sarif
+
       - name: Calculate MD5 Checksum
         id: checksum
         run: |
@@ -896,11 +903,14 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].tool.driver.rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_image"]))
+            .runs[].rules |=
+            map(.properties.tags |= ((. // []) + ["Trivy_image"] | unique)) |
+            .runs[].results |=
+            map(.properties.tags |= ((. // []) + ["Trivy_image"] | unique))
           ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
+
       - name: Upload Trivy Image Results
         uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
         with:
