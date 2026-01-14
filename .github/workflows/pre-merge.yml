@@ -336,10 +336,10 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-          .runs |= map(
-            .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" })) |
-            .results |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" }))
-          )
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_fs"]) })) |
+              .results |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_fs"]) }))
+            )
           ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -398,8 +398,8 @@ jobs:
         run: |
           jq '
             .runs |= map(
-              .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_config" })) |
-              .results |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_config" }))
+              .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_config"]) })) |
+              .results |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_config"]) }))
             )
           ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
@@ -859,11 +859,11 @@ jobs:
             ${{ matrix.image }}
       - name: Tag Trivy SARIF results
         run: |
-         jq '
-          .runs |= map(
-            .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_cis" })) |
-            .results |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_cis" }))
-          )
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_cis"]) })) |
+              .results |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_cis"]) }))
+            )
           ' trivy_cis-${{ env.sanitized_image_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_cis-${{ env.sanitized_image_name }}.sarif
@@ -904,8 +904,8 @@ jobs:
         run: |
           jq '
             .runs |= map(
-              .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_image" })) |
-              .results |= (. // [] | map(.properties |= (. // {}) + { "scan_tag": "Trivy_image" }))
+              .tool.driver.rules |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_image"]) })) |
+              .results |= (. // [] | map(.properties |= (. // {}) + { tags: (.tags // [] + ["Trivy_image"]) }))
             )
           ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
           > trivy_tagged.sarif \
