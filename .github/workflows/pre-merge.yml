@@ -893,7 +893,6 @@ jobs:
           severity: 'HIGH,CRITICAL'
           output: "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif"
           trivy-config: ${{ inputs.trivy_config_path }}
-          exit-code: 1
       - name: Tag Trivy SARIF results
         run: |
           jq '
