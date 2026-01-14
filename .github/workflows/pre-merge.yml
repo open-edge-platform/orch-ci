@@ -336,10 +336,12 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].rules |=
-            map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" }) |
-            .runs[].results |=
-            map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" })
+            if .runs != null then
+              .runs[].rules |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" }) |
+              .runs[].results |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_fs" })
+            else
+              .
+            end
           ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -397,10 +399,12 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_config"] | unique)) |
-            .runs[].results |=
-            map(.properties.tags |= ((. // []) + ["Trivy_config"] | unique))
+            if .runs != null then
+              .runs[].rules |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_config" }) |
+              .runs[].results |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_config" })
+            else
+              .
+            end
           ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -860,10 +864,12 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_cis"] | unique)) |
-            .runs[].results |=
-            map(.properties.tags |= ((. // []) + ["Trivy_cis"] | unique))
+            if .runs != null then
+              .runs[].rules |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_cis" }) |
+              .runs[].results |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_cis" })
+            else
+              .
+            end
           ' trivy_cis-${{ env.sanitized_image_name }}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_cis-${{ env.sanitized_image_name }}.sarif
@@ -903,10 +909,12 @@ jobs:
       - name: Tag Trivy SARIF results
         run: |
           jq '
-            .runs[].rules |=
-            map(.properties.tags |= ((. // []) + ["Trivy_image"] | unique)) |
-            .runs[].results |=
-            map(.properties.tags |= ((. // []) + ["Trivy_image"] | unique))
+            if .runs != null then
+              .runs[].rules |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_image" }) |
+              .runs[].results |= map(.properties |= (. // {}) + { "scan_tag": "Trivy_image" })
+            else
+              .
+            end
           ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
