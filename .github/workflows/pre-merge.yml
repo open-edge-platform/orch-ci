@@ -862,40 +862,22 @@ jobs:
         run: |
           trivy image \
             --compliance docker-cis-1.6.0 \
-            --format 'sarif' \
-            --output "trivy_cis-${{ env.sanitized_image_name }}.sarif" \
+            --format table \
+            --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
-      - name: Tag Trivy SARIF results
-        run: |
-          jq '
-            .runs |= map(
-              .tool.driver.rules |= (. // [] | map(
-                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_cis"] | unique) }
-              )) |
-              .results |= (. // [] | map(
-                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_cis"] | unique) }
-              ))
-            )
-          ' trivy_cis-${{ env.sanitized_image_name }}.sarif \
-          > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_cis-${{ env.sanitized_image_name }}.sarif
+      #  Trivy Compliance doesn't support sarif format, so results can't be uploated to GitHub Security tab  
 
       - name: Calculate MD5 Checksum
         id: checksum
         run: |
-          md5sum_value=$(md5sum "trivy_cis-${{ env.sanitized_image_name }}.sarif" | cut -d " " -f 1)
+          md5sum_value=$(md5sum "trivy_cis-${{ env.sanitized_image_name }}.txt" | cut -d " " -f 1)
           echo "md5sum is $md5sum_value"
           echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
       - name: Upload CIS Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: trivy-cis-${{ env.sanitized_image_name }}
-          path: trivy_cis-${{ env.sanitized_image_name }}.sarif
-      - name: Upload Trivy CIS Results
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
-        with:
-          sarif_file: trivy_tagged.sarif trivy_cis-${{ env.sanitized_image_name }}.sarif
-          category: Trivy_cis
+          path: trivy_cis-${{ env.sanitized_image_name }}.txt
 
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
