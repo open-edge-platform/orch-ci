@@ -338,14 +338,10 @@ jobs:
           jq '
             .runs |= map(
               .tool.driver.rules |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_fs"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               )) |
               .results |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_fs"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               ))
             )
           ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
@@ -407,14 +403,10 @@ jobs:
           jq '
             .runs |= map(
               .tool.driver.rules |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_config"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
               )) |
               .results |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_config"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
               ))
             )
           ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
@@ -878,14 +870,10 @@ jobs:
           jq '
             .runs |= map(
               .tool.driver.rules |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_cis"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_cis"] | unique) }
               )) |
               .results |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_cis"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_cis"] | unique) }
               ))
             )
           ' trivy_cis-${{ env.sanitized_image_name }}.sarif \
@@ -929,14 +917,10 @@ jobs:
           jq '
             .runs |= map(
               .tool.driver.rules |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_image"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
               )) |
               .results |= (. // [] | map(
-                .properties |= (. // {}) 
-                  | .tags = ((.tags // []) + ["Trivy_image"] | unique) 
-                  | del(.scan_tag)
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
               ))
             )
           ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
