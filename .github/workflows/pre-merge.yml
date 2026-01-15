@@ -824,7 +824,7 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.4
+        uses: aquasecurity/setup-trivy@v0.2.5
         with:
           version: 'latest'
 
