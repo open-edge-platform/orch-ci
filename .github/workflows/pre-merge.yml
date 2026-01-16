@@ -853,6 +853,14 @@ jobs:
           sanitized_image_name="${sanitized_image_name//[:\/@]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
+      - name: Prepare Trivy CIS artifact name
+        id: trivy-artifact
+        run: |
+          IMAGE="${{ matrix.image }}"
+          IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          ARTIFACT_NAME="trivy-cis-${IMAGE_HASH:0:8}"
+          echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
+
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@v0.2.5
         with:
@@ -870,7 +878,7 @@ jobs:
       - name: Upload CIS Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
-          name: trivy-cis-${{ env.sanitized_image_name }}-${{ github.run_attempt }}
+          name: ${{ steps.trivy-artifact.outputs.artifact_name }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
 
       - name: Checkout code
