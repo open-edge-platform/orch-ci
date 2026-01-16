@@ -830,11 +830,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) }}
-        _index: [0]
+        image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) | map(select(contains("dependabot") | not)) }}
+
     steps:
       - name: Download Docker Images
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
@@ -849,7 +849,6 @@ jobs:
         env:
           MATRIX_IMAGE: ${{ matrix.image }}
         run: |
-          # Replace colon with underscore
           sanitized_image_name="${MATRIX_IMAGE//[:\/@]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
@@ -860,6 +859,7 @@ jobs:
           IMAGE="${{ matrix.image }}"
           SANITIZED_NAME=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
           IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          # Include both sanitized image name and hash to guarantee uniqueness
           ARTIFACT_NAME="trivy-cis-${SANITIZED_NAME}-${IMAGE_HASH:0:8}"
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
@@ -875,7 +875,6 @@ jobs:
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
-      # Trivy Compliance doesn't support sarif format, so results can't be uploaded to GitHub Security tab
 
       - name: Upload CIS Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
