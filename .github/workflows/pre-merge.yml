@@ -858,12 +858,8 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE="${{ matrix.image }}"
-          IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")
-          if [ -z "$IMAGE_DIGEST" ]; then
-            IMAGE_DIGEST="$IMAGE"
-          fi
-          IMAGE_HASH=$(echo -n "$IMAGE_DIGEST" | sha1sum | awk '{print $1}')
-          ARTIFACT_NAME="trivy-cis-${IMAGE_HASH:0:8}"
+          IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          ARTIFACT_NAME="trivy-cis-${IMAGE_HASH:0:8}-${{ matrix._index }}"
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install Trivy
@@ -885,6 +881,7 @@ jobs:
         with:
           name: ${{ steps.trivy-artifact.outputs.artifact_name }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
+
 
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
