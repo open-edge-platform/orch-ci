@@ -850,7 +850,7 @@ jobs:
         run: |
           # Replace colon with underscore
           sanitized_image_name="${MATRIX_IMAGE}"
-          sanitized_image_name="${sanitized_image_name//[:\/]/_}"
+          sanitized_image_name="${sanitized_image_name//[:\/@]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Install Trivy
@@ -865,18 +865,12 @@ jobs:
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
-      #  Trivy Compliance doesn't support sarif format, so results can't be uploated to GitHub Security tab
+      #  Trivy Compliance doesn't support sarif format, so results can't be uploaded to GitHub Security tab
 
-      - name: Calculate MD5 Checksum
-        id: checksum
-        run: |
-          md5sum_value=$(md5sum "trivy_cis-${{ env.sanitized_image_name }}.txt" | cut -d " " -f 1)
-          echo "md5sum is $md5sum_value"
-          echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
       - name: Upload CIS Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
-          name: trivy-cis-${{ env.sanitized_image_name }}
+          name: trivy-cis-${{ env.sanitized_image_name }}-${{ strategy.job-index }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
 
       - name: Checkout code
