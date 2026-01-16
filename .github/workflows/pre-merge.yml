@@ -858,8 +858,9 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE="${{ matrix.image }}"
+          SANITIZED_NAME=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
           IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
-          ARTIFACT_NAME="trivy-cis-${IMAGE_HASH:0:8}-${{ matrix._index }}"
+          ARTIFACT_NAME="trivy-cis-${SANITIZED_NAME}-${IMAGE_HASH:0:8}"
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install Trivy
@@ -877,11 +878,10 @@ jobs:
       # Trivy Compliance doesn't support sarif format, so results can't be uploaded to GitHub Security tab
 
       - name: Upload CIS Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: ${{ steps.trivy-artifact.outputs.artifact_name }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
-
 
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
