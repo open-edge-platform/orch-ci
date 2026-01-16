@@ -837,7 +837,7 @@ jobs:
         run: |
           images='${{ needs.run-repo-pipelines.outputs.images }}'
           # Filter out images containing "dependabot"
-          filtered=$(echo "$images" | jq '[.[] | select(contains("dependabot") | not)]')
+          filtered=$(echo "$images" | jq -c '[.[] | select(contains("dependabot") | not)]')
           echo "Filtered images: $filtered"
           echo "filtered=$filtered" >> "$GITHUB_OUTPUT"
 
