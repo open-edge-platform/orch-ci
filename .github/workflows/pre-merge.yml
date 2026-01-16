@@ -856,8 +856,13 @@ jobs:
       - name: Prepare Trivy CIS artifact name
         id: trivy-artifact
         run: |
+          set -euo pipefail
           IMAGE="${{ matrix.image }}"
-          IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")
+          if [ -z "$IMAGE_DIGEST" ]; then
+            IMAGE_DIGEST="$IMAGE"
+          fi
+          IMAGE_HASH=$(echo -n "$IMAGE_DIGEST" | sha1sum | awk '{print $1}')
           ARTIFACT_NAME="trivy-cis-${IMAGE_HASH:0:8}"
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
@@ -873,7 +878,7 @@ jobs:
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
-      #  Trivy Compliance doesn't support sarif format, so results can't be uploaded to GitHub Security tab
+      # Trivy Compliance doesn't support sarif format, so results can't be uploaded to GitHub Security tab
 
       - name: Upload CIS Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
