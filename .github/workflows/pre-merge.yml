@@ -333,6 +333,20 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
+              ))
+            )
+          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
@@ -342,6 +356,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_fs
   trivy-critical-scan:
     permissions:
       contents: read
@@ -383,6 +398,20 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           trivy-config: ${{ inputs.trivy_config_path }}
           output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
+              ))
+            )
+          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
@@ -394,6 +423,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_config
 
   bandit:
     permissions:
@@ -696,24 +726,20 @@ jobs:
         run: |
           make helm-push
 
-      - name: List Docker Images
+      - name: List & Filter Docker Images
         id: list-images
         if: ${{ inputs.run_docker_build }}
         env:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
-          # List of exact image names to skip (from input)
-          skip_images="${TRIVY_IMAGE_SKIP}"
-
-          # List of patterns to exclude (e.g. <none>, clamav, etc.)
-          skip_patterns="<none>|clamav"
-
-          IFS=',' read -r -a skip_array <<< "$skip_images"
-
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -Ev "$skip_patterns" | jq -R . | jq -s -c .)
+          set -euo pipefail
+          IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
+          skip_patterns="<none>|clamav|dependabot"
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" \
+            | grep -Ev "$skip_patterns" \
+            | jq -R . | jq -s -c .)
 
           filtered_images=()
-
           for image in $(echo "$all_images" | jq -r '.[]'); do
             skip=false
             for skip_image in "${skip_array[@]}"; do
@@ -726,10 +752,8 @@ jobs:
               filtered_images+=("$image")
             fi
           done
-
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
-
-          echo "images=$images"
+          echo "Filtered images: $images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
@@ -793,17 +817,22 @@ jobs:
           path: ${{ inputs.artifacts_path }}
 
   scan-images:
+    name: Scan Docker Images for CIS
     permissions:
       contents: read
-    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' && needs.run-repo-pipelines.outputs.images != '[""]' }}
     needs: [sanitize-project-folder, run-repo-pipelines]
+    if: |
+      inputs.run_docker_build &&
+      needs.run-repo-pipelines.outputs.images != '[]' &&
+      needs.run-repo-pipelines.outputs.images != '[""]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJson(needs.run-repo-pipelines.outputs.images) }}
+        image: ${{ fromJSON(needs.run-repo-pipelines.outputs.images) }}
+
     steps:
       - name: Download Docker Images
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v5.0.0
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
 
@@ -818,10 +847,18 @@ jobs:
         env:
           MATRIX_IMAGE: ${{ matrix.image }}
         run: |
-          # Replace colon with underscore
-          sanitized_image_name="${MATRIX_IMAGE}"
-          sanitized_image_name="${sanitized_image_name//[:\/]/_}"
+          sanitized_image_name="${MATRIX_IMAGE//[:\/@]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
+
+      - name: Prepare Trivy CIS artifact name
+        id: trivy-artifact
+        run: |
+          set -euo pipefail
+          IMAGE="${{ matrix.image }}"
+          SANITIZED_NAME=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
+          IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          ARTIFACT_NAME="trivy-cis-${SANITIZED_NAME}-${IMAGE_HASH:0:8}"
+          echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@v0.2.5
@@ -833,21 +870,14 @@ jobs:
           trivy image \
             --compliance docker-cis-1.6.0 \
             --format table \
-            --output "trivy-${{ env.sanitized_image_name }}-cis.txt" \
+            --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
 
-      - name: Calculate MD5 Checksum
-        id: checksum
-        run: |
-          md5sum_value=$(md5sum "trivy-${{ env.sanitized_image_name }}-cis.txt" | cut -d " " -f 1)
-          echo "md5sum is $md5sum_value"
-          echo "md5sum_value=$md5sum_value" >> "$GITHUB_ENV"
-
       - name: Upload CIS Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: trivy-cis-${{ env.sanitized_image_name }}
-          path: trivy-${{ env.sanitized_image_name }}-cis.txt
+          name: ${{ steps.trivy-artifact.outputs.artifact_name }}
+          path: trivy_cis-${{ env.sanitized_image_name }}.txt
 
       - name: Checkout code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
@@ -858,27 +888,40 @@ jobs:
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           image-ref: ${{ matrix.image }}
-          format: table
+          format: 'sarif'
           ignore-unfixed: true
           severity: 'HIGH,CRITICAL'
-          output: "trivy-${{ env.sanitized_image_name }}-high-critical.txt"
+          output: "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif"
           trivy-config: ${{ inputs.trivy_config_path }}
-          exit-code: 1
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
+              ))
+            )
+          ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
 
-      - name: Upload Trivy Critical FS Report
-        uses: actions/upload-artifact@v6
+      - name: Upload Trivy Image Results
+        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
         with:
-          name: trivy-critical-scan-${{ env.sanitized_image_name }}
-          path: trivy-${{ env.sanitized_image_name }}-high-critical.txt
+          sarif_file: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
+          category: Trivy_image
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: trivy-image-vuln-${{ env.sanitized_image_name }}
-          path: trivy-${{ env.sanitized_image_name }}-high-critical.txt
+          path: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
 
       - name: Display report for High/Critical Issues
         if: ${{ always() }}
         run: |
-          cat trivy-${{ env.sanitized_image_name }}-high-critical.txt || echo "No report found"
+          cat trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif || echo "No report found"
