@@ -726,24 +726,20 @@ jobs:
         run: |
           make helm-push
 
-      - name: List Docker Images
+      - name: List & Filter Docker Images
         id: list-images
         if: ${{ inputs.run_docker_build }}
         env:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
-          # List of exact image names to skip (from input)
-          skip_images="${TRIVY_IMAGE_SKIP}"
-
-          # List of patterns to exclude (e.g. <none>, clamav, etc.)
-          skip_patterns="<none>|clamav"
-
-          IFS=',' read -r -a skip_array <<< "$skip_images"
-
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -Ev "$skip_patterns" | jq -R . | jq -s -c .)
+          set -euo pipefail
+          IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
+          skip_patterns="<none>|clamav|dependabot"
+          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" \
+            | grep -Ev "$skip_patterns" \
+            | jq -R . | jq -s -c .)
 
           filtered_images=()
-
           for image in $(echo "$all_images" | jq -r '.[]'); do
             skip=false
             for skip_image in "${skip_array[@]}"; do
@@ -756,10 +752,8 @@ jobs:
               filtered_images+=("$image")
             fi
           done
-
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
-
-          echo "images=$images"
+          echo "Filtered images: $images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
@@ -822,35 +816,19 @@ jobs:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
 
-  scan-images-prepare:
-    name: Prepare Image Matrix for CIS Scan
-    permissions:
-      contents: read
-    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' && needs.run-repo-pipelines.outputs.images != '[""]' }}
-    needs: [sanitize-project-folder, run-repo-pipelines]
-    runs-on: ubuntu-latest
-    outputs:
-      filtered-images: ${{ steps.prepare.outputs.filtered }}
-    steps:
-      - name: Prepare image matrix excluding dependabot
-        id: prepare
-        run: |
-          images='${{ needs.run-repo-pipelines.outputs.images }}'
-          # Filter out images containing "dependabot"
-          filtered=$(echo "$images" | jq -c '[.[] | select(contains("dependabot") | not)]')
-          echo "Filtered images: $filtered"
-          echo "filtered=$filtered" >> "$GITHUB_OUTPUT"
-
   scan-images:
     name: Scan Docker Images for CIS
     permissions:
       contents: read
-    needs: [sanitize-project-folder, run-repo-pipelines, scan-images-prepare]
-    if: ${{ inputs.run_docker_build && needs.scan-images-prepare.outputs.filtered-images != '[]' && needs.scan-images-prepare.outputs.filtered-images != '[""]' }}
+    needs: [sanitize-project-folder, run-repo-pipelines]
+    if: |
+      inputs.run_docker_build &&
+      needs.run-repo-pipelines.outputs.images != '[]' &&
+      needs.run-repo-pipelines.outputs.images != '[""]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ${{ fromJSON(needs.scan-images-prepare.outputs.filtered-images) }}
+        image: ${{ fromJSON(needs.run-repo-pipelines.outputs.images) }}
 
     steps:
       - name: Download Docker Images
