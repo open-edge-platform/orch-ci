@@ -200,7 +200,7 @@ runs:
     - name: "Restore Go tools from cache"
       if: contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all')
       id: restored-go-cache
-      uses: actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb  # v5.0.1
+      uses: actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7  # v5.0.2
       with:
         path: |
           ${{ env.temp_go_cache }}
@@ -220,7 +220,7 @@ runs:
 
     - name: "Save Go tools to cache"
       if: steps.restored-go-cache.outputs.cache-hit != 'true' && (contains(inputs.bootstrap_tools, 'gotools') || contains(inputs.bootstrap_tools, 'all'))
-      uses: actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb  # v5.0.1
+      uses: actions/cache/save@8b402f58fbc84540c8b491a91e594a4576fec3d7  # v5.0.2
       with:
         path: |
           ${{ env.temp_go_cache }}
