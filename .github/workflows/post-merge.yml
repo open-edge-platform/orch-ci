@@ -264,7 +264,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -281,7 +281,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -879,7 +879,7 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/dev-version-update@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
@@ -887,6 +887,6 @@ jobs:
     needs: [run-repo-pipelines]
     if: always() &&
       contains(needs.*.result, 'failure')
-    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
     secrets:
       MSTEAMS_WEBHOOK: ${{ secrets.MSTEAMS_WEBHOOK }}

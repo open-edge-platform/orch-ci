@@ -278,7 +278,7 @@ jobs:
           persist-credentials: false
 
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -302,7 +302,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/clamav@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
           project-folder: ${{ inputs.project_folder }}
@@ -436,7 +436,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
@@ -455,7 +455,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@d8913e7797d787e85913c80133c07a0bac675ecd  # 2026.0.5
         with:
           scan-scope: "changed"
           severity: "HIGH"
