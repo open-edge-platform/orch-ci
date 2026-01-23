@@ -684,25 +684,50 @@ jobs:
         run: |
           set -euo pipefail
           IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
+          
           skip_patterns="<none>|clamav|dependabot"
+          
+          # NOTE: add '|| true' so grep not matching anything doesn't fail under 'set -e'
           all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" \
-            | grep -Ev "$skip_patterns" \
+            | grep -Ev "$skip_patterns" || true \
             | jq -R . | jq -s -c .)
-
+          
+          # If no images remain after initial filtering, short-circuit to []
+          if [[ "$all_images" == "[]" || -z "$all_images" ]]; then
+            images='[]'
+            echo "Filtered images: $images"
+            echo "images=$images" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
           filtered_images=()
-          for image in $(echo "$all_images" | jq -r '.[]'); do
+          
+          # Use a safe while-read loop instead of command-substitution 'for ... in $(...)'
+          # This avoids word-splitting issues and handles empty streams gracefully.
+          while IFS= read -r image; do
+            # skip empty lines just in case
+            [[ -z "$image" ]] && continue
+          
             skip=false
             for skip_image in "${skip_array[@]}"; do
+              # If TRIVY_IMAGE_SKIP is empty, the loop runs zero times—safe
               if [[ "$image" == "$skip_image" ]]; then
                 skip=true
                 break
               fi
             done
-            if [ "$skip" = false ]; then
+            if [[ "$skip" == false ]]; then
               filtered_images+=("$image")
             fi
-          done
-          images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
+          done < <(jq -r '.[]' <<< "$all_images")
+          
+          # Convert to JSON; handle empty array explicitly to avoid empty input to jq
+          if ((${#filtered_images[@]} == 0)); then
+            images='[]'
+          else
+            images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
+          fi
+          
           echo "Filtered images: $images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
