@@ -278,7 +278,7 @@ jobs:
           persist-credentials: false
 
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@8fc2349c02d438e1707f99343069963fb49d3eba  # 2026.0.6
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@ec8e8c2ec9d654d8cf4b6f7929b175282f5f1f40  # 2026.0.6
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -411,7 +411,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@8fc2349c02d438e1707f99343069963fb49d3eba  # 2026.0.6
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@ec8e8c2ec9d654d8cf4b6f7929b175282f5f1f40  # 2026.0.6
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
