@@ -683,17 +683,20 @@ jobs:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
           set -euo pipefail
+
           IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
           skip_patterns="<none>|clamav|dependabot"
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" \
-            | grep -Ev "$skip_patterns" \
-            | jq -R . | jq -s -c .)
 
+          mapfile -t all_images < <(
+            docker images --format "{{.Repository}}:{{.Tag}}" \
+              | grep -Ev "$skip_patterns" || true
+          )
           filtered_images=()
-          for image in $(echo "$all_images" | jq -r '.[]'); do
+
+          for image in "${all_images[@]}"; do
             skip=false
             for skip_image in "${skip_array[@]}"; do
-              if [[ "$image" == "$skip_image" ]]; then
+              if [[ -n "$skip_image" && "$image" == "$skip_image" ]]; then
                 skip=true
                 break
               fi
@@ -702,6 +705,7 @@ jobs:
               filtered_images+=("$image")
             fi
           done
+
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
           echo "Filtered images: $images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
@@ -716,11 +720,10 @@ jobs:
           mkdir -p docker-images
           images=${IMAGES}
           # Remove the brackets and split the string into individual image names
-          formatted_images=$(echo "$images" | jq -r '.[]')
+          formatted_images=$(echo "$images" | jq -r '.[]?')
 
           for image in $formatted_images; do
-            sanitized_image=$(echo "$image" | tr -d '"')
-            docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
+            docker save -o "docker-images/${image//[:\/]/_}.tar" "$image"
           done
 
       - name: Upload Docker Images
