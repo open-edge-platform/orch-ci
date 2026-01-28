@@ -424,11 +424,14 @@ jobs:
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               while IFS= read -r file; do
-                # Only include executable files and exclude package metadata (e.g., DEBIAN folder)
-                if [[ -x "$file" ]] && [[ "$file" != *"/DEBIAN/"* ]]; then
+                # Only include executable files, exclude .git and package metadata (e.g., DEBIAN folder)
+                if [[ -x "$file" ]] \
+                  && [[ "$file" != *"/DEBIAN/"* ]] \
+                  && [[ "$file" != *"/.git/"* ]]; then
                   binaries+=("$file")
                 fi
-              done < <(find "$full_path" -type f || true)
+              done < <(find "$full_path" -type f ! -path '*/.git/*' || true)
+
             fi
           done
 
