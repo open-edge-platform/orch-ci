@@ -265,7 +265,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@8fc2349c02d438e1707f99343069963fb49d3eba  # 2026.0.6
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@3f2ae03a1c8061c4b9b51046952616429beebaca  # 2026.0.7
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -864,7 +864,7 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@8fc2349c02d438e1707f99343069963fb49d3eba  # 2026.0.6
+        uses: open-edge-platform/orch-ci/dev-version-update@3f2ae03a1c8061c4b9b51046952616429beebaca  # 2026.0.7
         with:
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
