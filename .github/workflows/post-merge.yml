@@ -195,6 +195,7 @@ jobs:
           echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
           echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
   trivy-filesystem-scan:
+    if: github.actor != 'dependabot[bot]'
     permissions:
       security-events: write
     runs-on: ubuntu-latest
@@ -560,11 +561,11 @@ jobs:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
           IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
-          skip_patterns="<none>|clamav"
+          skip_patterns="(<none>|clamav|dependabot)"
 
           mapfile -t all_images < <(
             docker images --format "{{.Repository}}:{{.Tag}}" \
-              | grep -Ev "$skip_patterns" || true
+              | grep -Eiv "$skip_patterns" || true
           )
           filtered_images=()
 
@@ -583,7 +584,6 @@ jobs:
           done
 
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
-          echo "images=$images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
@@ -798,7 +798,11 @@ jobs:
   scan-images:
     permissions:
       security-events: write
-    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' && needs.run-repo-pipelines.outputs.images != '[""]' }}
+    if: >
+      github.actor != 'dependabot[bot]' &&
+      inputs.run_docker_build &&
+      needs.run-repo-pipelines.outputs.images != '[]' &&
+      needs.run-repo-pipelines.outputs.images != '[""]'
     needs: [sanitize-project-folder, run-repo-pipelines]
     runs-on: ubuntu-latest
     strategy:
