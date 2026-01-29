@@ -1,0 +1,286 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# yamllint disable rule:line-length
+
+name: Security Scans
+
+on:  # yamllint disable-line rule:truthy
+  workflow_call:
+    inputs:
+      run_security_scans:
+        description: "Run security scans"
+        required: false
+        default: false
+        type: boolean
+      run_lint:
+        description: "Run lint via make lint"
+        required: false
+        default: true
+        type: boolean
+      lint_makeflags:
+        description: "MAKEFLAGS for make lint"
+        required: false
+        default: ""
+        type: string
+      project_folder:
+        description: >-
+          Project subfolder where the job will run, defaults to '.'
+        required: false
+        default: "."
+        type: string
+      orch_ci_repo_ref:
+        description: >-
+          The ref of the orch-ci repo, including bootstrap action and scripts, defaults to 'main'
+        required: false
+        default: "main"
+        type: string
+      runs_on:
+        description: "Label for runner"
+        required: false
+        default: "ubuntu-latest"
+        type: string
+      trivy_image_skip:
+        description: "Images to skip scanning with trivy"
+        required: false
+        default: ""
+        type: string
+      trivy_config_path:
+        description: "Path to trivy configuration file"
+        required: false
+        default: "trivy.yaml"
+        type: string
+    secrets:
+      SYS_EMF_GH_TOKEN:
+        required: false  ## temp workaround
+      NO_AUTH_ECR_PUSH_USERNAME:
+        required: false
+      NO_AUTH_ECR_PUSH_PASSWD:
+        required: false
+      NO_AUTH_S3_PUSH_USERNAME:
+        required: false
+      NO_AUTH_S3_PUSH_PASSWD:
+        required: false
+      ORCH_DEFAULT_PASSWORD:
+        required: false
+permissions:
+  contents: read
+jobs:
+  sanitize-project-folder:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      sanitized_project_name: ${{ steps.sanitize.outputs.sanitized_project_name }}
+    env:
+      INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
+    steps:
+      - name: Sanitize project folder
+        id: sanitize
+        run: |
+          # check if inputs.project_folder is set, if not return repository name
+          if [ -z "${INPUTS_PROJECT_FOLDER}" ] || [ "${INPUTS_PROJECT_FOLDER}" = "." ]; then
+            SANITIZED_PROJECT_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+          else
+            SANITIZED_PROJECT_NAME=$(echo "${INPUTS_PROJECT_FOLDER}" | tr '/' '-')
+          fi
+          echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
+          echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
+  zizmor-scan:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    env:
+      ZIZMOR_VERSION: 1.20.0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b  # v7.2.0
+      - name: Run zizmor
+        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
+      - name: Upload Zizmor Scan Report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: zizmor_scan_report.txt
+
+  license-compliance-check:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run_reuse_check }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5  # v6.0.0
+
+  secrets-gitleaks-scan:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    env:
+      INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
+      SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Clone CI repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          persist-credentials: false
+      - name: Gitleaks scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
+        with:
+          scan-scope: changed
+          source: ${INPUTS_PROJECT_FOLDER}
+          config_path: ci/.gitleaks.toml
+          baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZED_PROJECT_NAME }}.json
+          report_format: json
+          redact: "true"
+          report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
+
+  trivy-filesystem-scan:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+        with:
+          scan-type: 'fs'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          ignore-unfixed: true
+          trivy-config: ${{ inputs.trivy_config_path }}
+          scanners: 'vuln,secret'
+          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
+              ))
+            )
+          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Upload Trivy Scan Report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Upload Trivy Results
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
+        with:
+          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_fs
+
+  trivy-critical-scan:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run Trivy Critical Filesystem Scan
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+        with:
+          scan-type: 'fs'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          ignore-unfixed: false
+          trivy-config: ${{ inputs.trivy_config_path }}
+          scanners: 'vuln,misconfig,secret'
+          exit-code: 1
+
+  trivy-config-scan:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy Config Scan (Dockerfile / IaC)
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: 'config'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          trivy-config: ${{ inputs.trivy_config_path }}
+          output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
+              ))
+            )
+          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Upload Trivy Config Scan Report (SDL419)
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Upload Trivy Config Results to Security Tab
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30
+        with:
+          sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_config
+
+  bandit:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Run Bandit scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
+        with:
+          scan-scope: "changed"
+          severity-level: "HIGH"
+          confidence-level: "HIGH"
+          output-format: "txt"
