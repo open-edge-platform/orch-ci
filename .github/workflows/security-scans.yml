@@ -36,6 +36,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "main"
         type: string
+      run_reuse_check:
+        description: "Header license scan with reuse"
+        required: false
+        default: true
+        type: boolean
       runs_on:
         description: "Label for runner"
         required: false
