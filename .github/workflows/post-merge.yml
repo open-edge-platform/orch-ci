@@ -195,13 +195,14 @@ jobs:
           echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
           echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
   trivy-filesystem-scan:
+    if: github.actor != 'dependabot[bot]'
     permissions:
       security-events: write
     runs-on: ubuntu-latest
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
@@ -227,7 +228,7 @@ jobs:
           name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
   zizmor-scan:
@@ -236,10 +237,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: sanitize-project-folder
     env:
-      ZIZMOR_VERSION: 1.5.2
+      ZIZMOR_VERSION: 1.20.0
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
 
@@ -250,7 +251,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -260,28 +261,11 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
-        with:
-          scan-scope: "all"
-          fail-on-findings: false
-  semgrep:
-    permissions:
-      security-events: write
-    runs-on: ubuntu-latest
-    container:
-      image: returntocorp/semgrep@sha256:14e073f6417e5d2d0797aa13f26d569270b86fac9d52052d2358c985f1a4e9f0  # v1.124.0
-    needs: sanitize-project-folder
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
-        with:
-          persist-credentials: false
-      - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -300,7 +284,7 @@ jobs:
       PROJECT_NAME: ${{ github.repository }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           # Do not persist credentials by default, otherwise they
           # will clash with credentials set by bootstrap action
@@ -313,7 +297,7 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Checkout action repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           repository: open-edge-platform/orch-ci
           ref: ${{ inputs.orch_ci_repo_ref }}
@@ -440,11 +424,14 @@ jobs:
             echo "Checking path: $full_path"
             if [ -d "$full_path" ]; then
               while IFS= read -r file; do
-                # Only include executable files and exclude package metadata (e.g., DEBIAN folder)
-                if [[ -x "$file" ]] && [[ "$file" != *"/DEBIAN/"* ]]; then
+                # Only include executable files, exclude .git and package metadata (e.g., DEBIAN folder)
+                if [[ -x "$file" ]] \
+                  && [[ "$file" != *"/DEBIAN/"* ]] \
+                  && [[ "$file" != *"/.git/"* ]]; then
                   binaries+=("$file")
                 fi
-              done < <(find "$full_path" -type f || true)
+              done < <(find "$full_path" -type f ! -path '*/.git/*' || true)
+
             fi
           done
 
@@ -576,34 +563,30 @@ jobs:
         env:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
-          # List of exact image names to skip (from input)
-          skip_images="${TRIVY_IMAGE_SKIP}"
+          IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
+          skip_patterns="(<none>|clamav|dependabot)"
 
-          # List of patterns to exclude (e.g. <none>, clamav, etc.)
-          skip_patterns="<none>|clamav"
-
-          IFS=',' read -r -a skip_array <<< "$skip_images"
-
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -Ev "$skip_patterns" | jq -R . | jq -s -c .)
-
+          mapfile -t all_images < <(
+            docker images --format "{{.Repository}}:{{.Tag}}" \
+              | grep -Eiv "$skip_patterns" || true
+          )
           filtered_images=()
 
-          for image in $(echo "$all_images" | jq -r '.[]'); do
+          for image in "${all_images[@]}"; do
             skip=false
             for skip_image in "${skip_array[@]}"; do
-              if [[ "$image" == "$skip_image" ]]; then
+              if [[ -n "$skip_image" && "$image" == "$skip_image" ]]; then
                 skip=true
                 break
               fi
             done
+
             if [ "$skip" = false ]; then
               filtered_images+=("$image")
             fi
           done
 
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
-
-          echo "images=$images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
@@ -611,16 +594,14 @@ jobs:
         env:
           IMAGES: ${{ steps.list-images.outputs.images }}
         run: |
-          set -euxo pipefail
+          set -euo pipefail
+
           docker images
           mkdir -p docker-images
-          images=${IMAGES}
-          # Remove the brackets and split the string into individual image names
-          formatted_images=$(echo "$images" | jq -r '.[]')
+          mapfile -t formatted_images < <(echo "$IMAGES" | jq -r '.[]?')
 
-          for image in $formatted_images; do
-            sanitized_image=$(echo "$image" | tr -d '"')
-            docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
+          for image in "${formatted_images[@]}"; do
+            docker save -o "docker-images/${image//[:\/]/_}.tar" "$image"
           done
 
       - name: Upload Docker Images
@@ -727,7 +708,7 @@ jobs:
         _index: [0]  # ensures matrix uniqueness
     steps:
       - name: Checkout orch-ci for Cosign
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_EMF_GH_TOKEN }}
@@ -789,11 +770,11 @@ jobs:
         image: ${{ fromJson(needs.run-repo-pipelines.outputs.ecr_images) }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
       - name: Checkout orch-ci for Cosign
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           repository: open-edge-platform/orch-ci
           token: ${{ secrets.SYS_EMF_GH_TOKEN }}
@@ -820,7 +801,11 @@ jobs:
   scan-images:
     permissions:
       security-events: write
-    if: ${{ inputs.run_docker_build && needs.run-repo-pipelines.outputs.images != '[]' && needs.run-repo-pipelines.outputs.images != '[""]' }}
+    if: >
+      github.actor != 'dependabot[bot]' &&
+      inputs.run_docker_build &&
+      needs.run-repo-pipelines.outputs.images != '[]' &&
+      needs.run-repo-pipelines.outputs.images != '[""]'
     needs: [sanitize-project-folder, run-repo-pipelines]
     runs-on: ubuntu-latest
     strategy:
@@ -858,7 +843,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy Image Scan Report
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
           sarif_file: trivy-${{ env.sanitized_image_name }}.sarif
   version-bump:
@@ -868,18 +853,18 @@ jobs:
     if: ${{inputs.run_version_dev}}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Checkout action repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           repository: open-edge-platform/orch-ci
           path: ci
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/dev-version-update@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
         with:
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
@@ -887,6 +872,6 @@ jobs:
     needs: [run-repo-pipelines]
     if: always() &&
       contains(needs.*.result, 'failure')
-    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
     secrets:
       MSTEAMS_WEBHOOK: ${{ secrets.MSTEAMS_WEBHOOK }}

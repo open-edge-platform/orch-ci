@@ -230,10 +230,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: sanitize-project-folder
     env:
-      ZIZMOR_VERSION: 1.5.2
+      ZIZMOR_VERSION: 1.20.0
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Install uv
@@ -252,7 +252,7 @@ jobs:
     if: ${{ inputs.run_reuse_check }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: REUSE Compliance Check
@@ -267,18 +267,18 @@ jobs:
       SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Clone CI repo
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           repository: open-edge-platform/orch-ci
           path: ci
           persist-credentials: false
 
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -287,31 +287,6 @@ jobs:
           report_format: json
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
-  clamav-antivirus-scan:
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    needs: sanitize-project-folder
-    env:
-      CLAMAV_ARTIFACT_NAME: clamav-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-      SANITIZED_CLAMAV_REPORT_PATH: clamav_scan_report-${{ inputs.project_folder }}.txt
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
-        with:
-          persist-credentials: false
-      - name: Run ClamAV Scan
-        uses: open-edge-platform/orch-ci/.github/actions/clamav@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
-        with:
-          report-path: clamav_scan_report-${{ inputs.project_folder }}.txt
-          project-folder: ${{ inputs.project_folder }}
-
-      - name: Upload ClamAV Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
-        with:
-          name: ${{ env.CLAMAV_ARTIFACT_NAME }}
-          path: ${{ env.SANITIZED_CLAMAV_REPORT_PATH }}
   trivy-filesystem-scan:
     permissions:
       contents: read
@@ -319,7 +294,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
@@ -353,7 +328,7 @@ jobs:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_fs
@@ -364,7 +339,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Run Trivy Critical Filesystem Scan
@@ -385,7 +360,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
 
@@ -420,7 +395,7 @@ jobs:
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
@@ -432,33 +407,15 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
           confidence-level: "HIGH"
-          output-format: "txt"
-  semgrep:
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    container:
-      image: returntocorp/semgrep@sha256:14e073f6417e5d2d0797aa13f26d569270b86fac9d52052d2358c985f1a4e9f0  # v1.124.0
-    needs: sanitize-project-folder
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
-        with:
-          persist-credentials: false
-      - name: Run Semgrep scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/semgrep@c6a01b803d3c045de1b1b2f788a47eaaefed3f07  # 2026.0.4
-        with:
-          scan-scope: "changed"
-          severity: "HIGH"
           output-format: "txt"
   run-repo-pipelines:
     permissions:
@@ -472,7 +429,7 @@ jobs:
       PROJECT_NAME: ${{ github.repository }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           # Fetch all history, workaround sporadic issue with missing tags
           fetch-depth: 0
@@ -482,7 +439,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout action repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           repository: open-edge-platform/orch-ci
           path: ci
@@ -636,13 +593,6 @@ jobs:
             fi
           done
 
-      - name: ClamAV Scan
-        if: ${{ steps.scan-directories.outputs.directory }}
-        uses: ./ci/.github/actions/clamav
-        with:
-          report-path: clamav_scan_binary_report.txt
-          project-folder: ${{ steps.scan-directories.outputs.directory }}
-
       - name: Save Go cache
         if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@8b402f58fbc84540c8b491a91e594a4576fec3d7  # v5.0.2
@@ -733,17 +683,20 @@ jobs:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
           set -euo pipefail
+
           IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
           skip_patterns="<none>|clamav|dependabot"
-          all_images=$(docker images --format "{{.Repository}}:{{.Tag}}" \
-            | grep -Ev "$skip_patterns" \
-            | jq -R . | jq -s -c .)
 
+          mapfile -t all_images < <(
+            docker images --format "{{.Repository}}:{{.Tag}}" \
+              | grep -Ev "$skip_patterns" || true
+          )
           filtered_images=()
-          for image in $(echo "$all_images" | jq -r '.[]'); do
+
+          for image in "${all_images[@]}"; do
             skip=false
             for skip_image in "${skip_array[@]}"; do
-              if [[ "$image" == "$skip_image" ]]; then
+              if [[ -n "$skip_image" && "$image" == "$skip_image" ]]; then
                 skip=true
                 break
               fi
@@ -752,6 +705,7 @@ jobs:
               filtered_images+=("$image")
             fi
           done
+
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
           echo "Filtered images: $images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
@@ -766,11 +720,10 @@ jobs:
           mkdir -p docker-images
           images=${IMAGES}
           # Remove the brackets and split the string into individual image names
-          formatted_images=$(echo "$images" | jq -r '.[]')
+          formatted_images=$(echo "$images" | jq -r '.[]?')
 
           for image in $formatted_images; do
-            sanitized_image=$(echo "$image" | tr -d '"')
-            docker save -o "docker-images/${sanitized_image//[:\/]/_}.tar" "$sanitized_image"
+            docker save -o "docker-images/${image//[:\/]/_}.tar" "$image"
           done
 
       - name: Upload Docker Images
@@ -880,7 +833,7 @@ jobs:
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
 
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
           persist-credentials: false
 
@@ -909,7 +862,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
 
       - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89  # v3.29.5
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
           sarif_file: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
           category: Trivy_image
