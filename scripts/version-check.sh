@@ -120,15 +120,38 @@ function is_valid_version {
 # -------------------------------
 function enforce_dev_before_release {
 
-  # If current version is dev, always allowed
+  local HIGHEST_RELEASED
+  HIGHEST_RELEASED=$(highest_released_version)
+
+  local HR_MAJOR HR_MINOR HR_PATCH
+  semverParse "$HIGHEST_RELEASED" HR_MAJOR HR_MINOR HR_PATCH
+
+  # -----------------------------
+  # DEV VERSION CHECKS
+  # -----------------------------
   if [[ "$NEW_VERSION" =~ -dev$ ]]; then
+    local BASE_VERSION=${NEW_VERSION%-dev}
+    local MAJOR MINOR PATCH
+    semverParse "$BASE_VERSION" MAJOR MINOR PATCH
+
+    # Disallow going backwards: 1.5.1 → 1.5.1-dev
+    if (( MAJOR < HR_MAJOR )) ||
+       (( MAJOR == HR_MAJOR && MINOR < HR_MINOR )) ||
+       (( MAJOR == HR_MAJOR && MINOR == HR_MINOR && PATCH <= HR_PATCH )); then
+      echo "ERROR: Dev version $NEW_VERSION must be greater than latest release $HIGHEST_RELEASED"
+      echo "Suggested next dev version: ${TAG_PREFIX}${HR_MAJOR}.${HR_MINOR}.$((HR_PATCH + 1))-dev"
+      FAIL_VALIDATION=1
+    fi
     return
   fi
+
+  # -----------------------------
+  # RELEASE VERSION CHECKS
+  # -----------------------------
 
   # Prevent duplicate numeric releases
   if echo "$existing_tags" | grep -q "^$NEW_VERSION$"; then
     echo "ERROR: Numeric release $NEW_VERSION already exists!"
-    # Suggest next patch dev version
     IFS='.' read -r MAJOR MINOR PATCH <<< "$NEW_VERSION"
     PATCH=$((PATCH + 1))
     echo "Suggested next dev version: ${TAG_PREFIX}${MAJOR}.${MINOR}.${PATCH}-dev"
@@ -136,8 +159,8 @@ function enforce_dev_before_release {
     return
   fi
 
-  # Check that dev version exists before allowing release
-  dev_version="${NEW_VERSION}-dev"
+  # Require dev version first
+  local dev_version="${NEW_VERSION}-dev"
   if ! echo "$existing_tags" | grep -q "^$dev_version$"; then
     echo "ERROR: Release $NEW_VERSION requires dev version $dev_version first."
     echo "Suggested next valid version: ${TAG_PREFIX}${NEW_VERSION}-dev"
