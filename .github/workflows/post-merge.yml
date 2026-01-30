@@ -214,8 +214,22 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
           trivy-config: ${{ inputs.trivy_config_path }}
-          scanners: 'vuln,misconfig,secret'
+          scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
+              ))
+            )
+          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Run Trivy SBOM
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
         with:
@@ -225,12 +239,64 @@ jobs:
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
-          name: trivy-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          name: trivy-scan-report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
+      - name: Upload Trivy Scan Report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        with:
+          name: trivy-fs-scan-report-fs-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_fs
+  trivy-config-scan:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy Config Scan (Dockerfile / IaC)
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: 'config'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          trivy-config: ${{ inputs.trivy_config_path }}
+          output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
+              ))
+            )
+          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Upload Trivy Config Scan Report (SDL419)
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+          path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Upload Trivy Config Results to Security Tab
+        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30
+        with:
+          sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_config
   zizmor-scan:
     permissions:
       security-events: write
@@ -841,11 +907,33 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           output: "trivy-${{ env.sanitized_image_name }}.sarif"
           ignore-unfixed: true
+          trivy-config: ${{ inputs.trivy_config_path }}
+      - name: Tag Trivy SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
+              ))
+            )
+          ' trivy-${{ env.sanitized_image_name }}.sarif \
+          > trivy_tagged.sarif \
+          && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}.sarif
 
-      - name: Upload Trivy Image Scan Report
+      - name: Upload Trivy Image Results
         uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
         with:
-          sarif_file: trivy-${{ env.sanitized_image_name }}.sarif
+          sarif_file: trivy-image-${{ env.sanitized_image_name }}.sarif
+          category: Trivy_image
+      - name: Upload Trivy Image Vulnerability Scan (SDL514)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: trivy-image-vuln-${{ env.sanitized_image_name }}
+          path: trivy-image-${{ env.sanitized_image_name }}.sarif
   version-bump:
     permissions:
       contents: read
