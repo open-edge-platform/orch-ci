@@ -6,10 +6,6 @@
 
 # version-check.sh
 # validates if a version provided in VERSION file is valid
-# Enforces:
-#  - sequential versioning
-#  - dev must come before release
-#  - no duplicate numeric releases
 
 set -eu -o pipefail
 
@@ -26,9 +22,29 @@ TAG_PREFIX=${1:-""}
 #print TAG_PREFIX
 echo "TAG_PREFIX is: ${TAG_PREFIX}"
 
-# -------------------------------
-# Original continuity check
-# -------------------------------
+# --------------------------------------------------
+# Prevent bumping from X.Y.Z → X.Y.Z-dev
+# --------------------------------------------------
+function reject_backward_dev_bump {
+
+  [[ "$NEW_VERSION" =~ -dev$ ]] || return
+
+  base_version="${NEW_VERSION%-dev}"
+
+  if echo "$existing_tags" | grep -qx "$base_version"; then
+    echo "ERROR: Cannot bump from release $base_version to $NEW_VERSION"
+    IFS='.' read -r MAJOR MINOR PATCH <<< "$base_version"
+    echo "Suggested next dev version: ${TAG_PREFIX}${MAJOR}.${MINOR}.$((PATCH + 1))-dev"
+    FAIL_VALIDATION=1
+    exit 1
+  fi
+}
+
+# --------------------------------------------------
+# Check if a previous tag has been created
+# (avoids going from 2.7.0-dev to 2.7.1-dev)
+# Skipped for calendar versions
+# --------------------------------------------------
 function is_valid_version {
 
   if [[ "$CALENDAR_VERSION" == "true" ]]; then
@@ -36,7 +52,7 @@ function is_valid_version {
   fi
 
   local MAJOR=0 MINOR=0 PATCH=0
-  local C_MAJOR=0 C_MINOR=0 C_PATCH=0 # these are used in the inner loops to compare
+  local C_MAJOR=0 C_MINOR=0 C_PATCH=0
 
   semverParse "$NEW_VERSION" MAJOR MINOR PATCH
 
@@ -47,8 +63,7 @@ function is_valid_version {
     prev_major=$(( MAJOR - 1 ))
     parent_version="$TAG_PREFIX$prev_major.x.x"
     echo "Minor is 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags
-    do
+    for existing_tag in $existing_tags; do
       if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
         if [[ "$prev_major" == "$C_MAJOR" ]]; then
@@ -65,8 +80,7 @@ function is_valid_version {
     prev_minor=$(( MINOR - 1 ))
     parent_version="$TAG_PREFIX$MAJOR.$prev_minor.x"
     echo "Patch is 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags
-    do
+    for existing_tag in $existing_tags; do
       if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
         if [[ "$MAJOR" == "$C_MAJOR" && "$prev_minor" == "$C_MINOR" ]]; then
@@ -83,12 +97,12 @@ function is_valid_version {
     prev_patch=$(( PATCH - 1 ))
     parent_version="$TAG_PREFIX$MAJOR.$MINOR.$prev_patch"
     echo "Patch is not 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags
-    do
+    for existing_tag in $existing_tags; do
       if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
-        if [[ "$MAJOR" == "$C_MAJOR" && "$MINOR" == "$C_MINOR" && "$prev_patch" == "$C_PATCH" ]]
-        then
+        if [[ "$MAJOR" == "$C_MAJOR" &&
+              "$MINOR" == "$C_MINOR" &&
+              "$prev_patch" == "$C_PATCH" ]]; then
           echo "Found previous tag matching $parent_version: $existing_tag"
           found_parent=true
           break
@@ -115,62 +129,9 @@ function is_valid_version {
   fi
 }
 
-# -------------------------------
-# Enforce dev-before-release & prevent duplicates
-# -------------------------------
-function enforce_dev_before_release {
-
-  local HIGHEST_RELEASED
-  HIGHEST_RELEASED=$(highest_released_version)
-
-  local HR_MAJOR HR_MINOR HR_PATCH
-  semverParse "$HIGHEST_RELEASED" HR_MAJOR HR_MINOR HR_PATCH
-
-  # -----------------------------
-  # DEV VERSION CHECKS
-  # -----------------------------
-  if [[ "$NEW_VERSION" =~ -dev$ ]]; then
-    local BASE_VERSION=${NEW_VERSION%-dev}
-    local MAJOR MINOR PATCH
-    semverParse "$BASE_VERSION" MAJOR MINOR PATCH
-
-    # Disallow going backwards: 1.5.1 → 1.5.1-dev
-    if (( MAJOR < HR_MAJOR )) ||
-       (( MAJOR == HR_MAJOR && MINOR < HR_MINOR )) ||
-       (( MAJOR == HR_MAJOR && MINOR == HR_MINOR && PATCH <= HR_PATCH )); then
-      echo "ERROR: Dev version $NEW_VERSION must be greater than latest release $HIGHEST_RELEASED"
-      echo "Suggested next dev version: ${TAG_PREFIX}${HR_MAJOR}.${HR_MINOR}.$((HR_PATCH + 1))-dev"
-      FAIL_VALIDATION=1
-    fi
-    return
-  fi
-
-  # -----------------------------
-  # RELEASE VERSION CHECKS
-  # -----------------------------
-
-  # Prevent duplicate numeric releases
-  if echo "$existing_tags" | grep -q "^$NEW_VERSION$"; then
-    echo "ERROR: Numeric release $NEW_VERSION already exists!"
-    IFS='.' read -r MAJOR MINOR PATCH <<< "$NEW_VERSION"
-    PATCH=$((PATCH + 1))
-    echo "Suggested next dev version: ${TAG_PREFIX}${MAJOR}.${MINOR}.${PATCH}-dev"
-    FAIL_VALIDATION=1
-    return
-  fi
-
-  # Require dev version first
-  local dev_version="${NEW_VERSION}-dev"
-  if ! echo "$existing_tags" | grep -q "^$dev_version$"; then
-    echo "ERROR: Release $NEW_VERSION requires dev version $dev_version first."
-    echo "Suggested next valid version: ${TAG_PREFIX}${NEW_VERSION}-dev"
-    FAIL_VALIDATION=1
-  fi
-}
-
-# -------------------------------
+# --------------------------------------------------
 # Start of actual code
-# -------------------------------
+# --------------------------------------------------
 echo "Checking git repo with remotes:"
 git remote -v
 
@@ -183,19 +144,12 @@ existing_tags=$(git tag -l)
 echo "$existing_tags"
 
 read_version
-
-# Check continuity
+reject_backward_dev_bump
 is_valid_version
-
-# Check dev-before-release and duplicates
-enforce_dev_before_release
-
-# Determine if this is a release version
 check_if_releaseversion
 
 # perform checks if a released version
-if [ "$RELEASE_VERSION" -eq "1" ]
-then
+if [ "$RELEASE_VERSION" -eq "1" ]; then
   is_git_tag_duplicated "$existing_tags"
   dockerfile_parentcheck
 fi
