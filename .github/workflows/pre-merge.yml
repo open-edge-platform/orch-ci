@@ -276,9 +276,8 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           persist-credentials: false
-
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -287,6 +286,7 @@ jobs:
           report_format: json
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
+          upload-sarif: "false"
   trivy-filesystem-scan:
     permissions:
       contents: read
