@@ -30,7 +30,7 @@ function reject_backward_dev_bump {
   [[ "$NEW_VERSION" =~ -dev$ ]] || return
 
   base_version="${NEW_VERSION%-dev}"
-
+  echo "### Prevent bumping from X.Y.Z → X.Y.Z-dev ###"
   if echo "$existing_tags" | grep -qx "$base_version"; then
     echo "ERROR: Cannot bump from release $base_version to $NEW_VERSION"
     IFS='.' read -r MAJOR MINOR PATCH <<< "$base_version"
