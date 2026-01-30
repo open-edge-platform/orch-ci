@@ -6,6 +6,10 @@
 
 # version-check.sh
 # validates if a version provided in VERSION file is valid
+# Enforces:
+#  - sequential versioning
+#  - dev must come before release
+#  - no duplicate numeric releases
 
 set -eu -o pipefail
 
@@ -22,8 +26,9 @@ TAG_PREFIX=${1:-""}
 #print TAG_PREFIX
 echo "TAG_PREFIX is: ${TAG_PREFIX}"
 
-# check if a previous tag has been created (to avoid going from 2.7.0-dev to 2.7.1-dev)
-# this check is skipped for calendar versions as they are not sequential
+# -------------------------------
+# Original continuity check
+# -------------------------------
 function is_valid_version {
 
   if [[ "$CALENDAR_VERSION" == "true" ]]; then
@@ -110,7 +115,39 @@ function is_valid_version {
   fi
 }
 
+# -------------------------------
+# Enforce dev-before-release & prevent duplicates
+# -------------------------------
+function enforce_dev_before_release {
+
+  # If current version is dev, always allowed
+  if [[ "$NEW_VERSION" =~ -dev$ ]]; then
+    return
+  fi
+
+  # Prevent duplicate numeric releases
+  if echo "$existing_tags" | grep -q "^$NEW_VERSION$"; then
+    echo "ERROR: Numeric release $NEW_VERSION already exists!"
+    # Suggest next patch dev version
+    IFS='.' read -r MAJOR MINOR PATCH <<< "$NEW_VERSION"
+    PATCH=$((PATCH + 1))
+    echo "Suggested next dev version: ${TAG_PREFIX}${MAJOR}.${MINOR}.${PATCH}-dev"
+    FAIL_VALIDATION=1
+    return
+  fi
+
+  # Check that dev version exists before allowing release
+  dev_version="${NEW_VERSION}-dev"
+  if ! echo "$existing_tags" | grep -q "^$dev_version$"; then
+    echo "ERROR: Release $NEW_VERSION requires dev version $dev_version first."
+    echo "Suggested next valid version: ${TAG_PREFIX}${NEW_VERSION}-dev"
+    FAIL_VALIDATION=1
+  fi
+}
+
+# -------------------------------
 # Start of actual code
+# -------------------------------
 echo "Checking git repo with remotes:"
 git remote -v
 
@@ -123,7 +160,14 @@ existing_tags=$(git tag -l)
 echo "$existing_tags"
 
 read_version
+
+# Check continuity
 is_valid_version
+
+# Check dev-before-release and duplicates
+enforce_dev_before_release
+
+# Determine if this is a release version
 check_if_releaseversion
 
 # perform checks if a released version
