@@ -327,11 +327,6 @@ jobs:
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-      - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
-        with:
-          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-          category: Trivy_fs
   trivy-critical-scan:
     permissions:
       contents: read
@@ -393,12 +388,6 @@ jobs:
         with:
           name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-
-      - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30
-        with:
-          sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-          category: Trivy_config
 
   bandit:
     permissions:
@@ -861,12 +850,6 @@ jobs:
           ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
-
-      - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
-        with:
-          sarif_file: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
-          category: Trivy_image
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
