@@ -26,7 +26,7 @@ echo "TAG_PREFIX is: ${TAG_PREFIX}"
 # Prevent bumping from X.Y.Z → X.Y.Z-dev
 # --------------------------------------------------
 function reject_backward_dev_bump {
-
+  echo "### Escaped here!!! ###"
   [[ "$NEW_VERSION" =~ -dev$ ]] || return
 
   base_version="${NEW_VERSION%-dev}"
