@@ -105,6 +105,10 @@ inputs:
     description: "Compliance benchmark to use (e.g., docker-cis-1.6.0)"
     required: false
     default: ""
+  upload-sarif:
+    description: "Whether to upload SARIF results to the GitHub Security tab"
+    required: false
+    default: "true"
 
 outputs:
   scan_result:
@@ -254,7 +258,7 @@ runs:
         path: ${{ steps.run-trivy.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
-      if: contains(steps.run-trivy.outputs.report_path, '.sarif')  # if SARIF is available, upload it
+      if: inputs.upload-sarif == 'true' && contains(steps.run-trivy.outputs.report_path, '.sarif')
       uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
       with:
         sarif_file: ${{ steps.run-trivy.outputs.report_path }}
