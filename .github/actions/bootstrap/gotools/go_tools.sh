@@ -1,5 +1,5 @@
 #!/bin/bash
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 # Exit immediately if a command exits with a non-zero status
@@ -41,7 +41,7 @@ done < go_deps
 # Create go_install.sh file
 cat <<EOF > go_install.sh
 #!/bin/bash -x
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 $GO_INSTALL_LINES

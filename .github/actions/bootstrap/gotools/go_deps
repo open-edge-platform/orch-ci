@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Will be used in go_install.sh                                    # In go_install.sh          # Original binary name (optional)  # New binary name (optional)

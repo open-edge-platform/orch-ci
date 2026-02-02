@@ -19,11 +19,30 @@ cd "$WORKSPACE/$BASEDIR"
 
 TAG_PREFIX=${1:-""}
 
-#print TAG_PREFIX
 echo "TAG_PREFIX is: ${TAG_PREFIX}"
 
-# check if a previous tag has been created (to avoid going from 2.7.0-dev to 2.7.1-dev)
-# this check is skipped for calendar versions as they are not sequential
+# --------------------------------------------------
+# Prevent bumping from X.Y.Z → X.Y.Z-dev
+# --------------------------------------------------
+function reject_backward_dev_bump {
+
+  [[ "$NEW_VERSION" =~ -dev$ ]] || return
+
+  base_version="${NEW_VERSION%-dev}"
+  if echo "$existing_tags" | grep -qx "$base_version"; then
+    echo "ERROR: Cannot bump from release $base_version to $NEW_VERSION"
+    IFS='.' read -r MAJOR MINOR PATCH <<< "$base_version"
+    echo "Suggested next dev version: ${TAG_PREFIX}${MAJOR}.${MINOR}.$((PATCH + 1))-dev"
+    FAIL_VALIDATION=1
+    exit 1
+  fi
+}
+
+# --------------------------------------------------
+# Check if a previous tag has been created
+# (avoids going from 2.7.0-dev to 2.7.1-dev)
+# Skipped for calendar versions
+# --------------------------------------------------
 function is_valid_version {
 
   if [[ "$CALENDAR_VERSION" == "true" ]]; then
@@ -31,7 +50,7 @@ function is_valid_version {
   fi
 
   local MAJOR=0 MINOR=0 PATCH=0
-  local C_MAJOR=0 C_MINOR=0 C_PATCH=0 # these are used in the inner loops to compare
+  local C_MAJOR=0 C_MINOR=0 C_PATCH=0
 
   semverParse "$NEW_VERSION" MAJOR MINOR PATCH
 
@@ -42,8 +61,7 @@ function is_valid_version {
     prev_major=$(( MAJOR - 1 ))
     parent_version="$TAG_PREFIX$prev_major.x.x"
     echo "Minor is 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags
-    do
+    for existing_tag in $existing_tags; do
       if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
         if [[ "$prev_major" == "$C_MAJOR" ]]; then
@@ -60,8 +78,7 @@ function is_valid_version {
     prev_minor=$(( MINOR - 1 ))
     parent_version="$TAG_PREFIX$MAJOR.$prev_minor.x"
     echo "Patch is 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags
-    do
+    for existing_tag in $existing_tags; do
       if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
         if [[ "$MAJOR" == "$C_MAJOR" && "$prev_minor" == "$C_MINOR" ]]; then
@@ -78,12 +95,12 @@ function is_valid_version {
     prev_patch=$(( PATCH - 1 ))
     parent_version="$TAG_PREFIX$MAJOR.$MINOR.$prev_patch"
     echo "Patch is not 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags
-    do
+    for existing_tag in $existing_tags; do
       if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
-        if [[ "$MAJOR" == "$C_MAJOR" && "$MINOR" == "$C_MINOR" && "$prev_patch" == "$C_PATCH" ]]
-        then
+        if [[ "$MAJOR" == "$C_MAJOR" &&
+              "$MINOR" == "$C_MINOR" &&
+              "$prev_patch" == "$C_PATCH" ]]; then
           echo "Found previous tag matching $parent_version: $existing_tag"
           found_parent=true
           break
@@ -110,7 +127,9 @@ function is_valid_version {
   fi
 }
 
+# --------------------------------------------------
 # Start of actual code
+# --------------------------------------------------
 echo "Checking git repo with remotes:"
 git remote -v
 
@@ -123,12 +142,12 @@ existing_tags=$(git tag -l)
 echo "$existing_tags"
 
 read_version
+reject_backward_dev_bump
 is_valid_version
 check_if_releaseversion
 
 # perform checks if a released version
-if [ "$RELEASE_VERSION" -eq "1" ]
-then
+if [ "$RELEASE_VERSION" -eq "1" ]; then
   is_git_tag_duplicated "$existing_tags"
   dockerfile_parentcheck
 fi
