@@ -26,7 +26,7 @@ echo "TAG_PREFIX is: ${TAG_PREFIX}"
 # --------------------------------------------------
 function reject_backward_dev_bump {
 
-  [[ "$NEW_VERSION" =~ -dev$ ]] || return
+  [[ "$NEW_VERSION" =~ -dev$ ]] || return 0
 
   base_version="${NEW_VERSION%-dev}"
   if echo "$existing_tags" | grep -qx "$base_version"; then
