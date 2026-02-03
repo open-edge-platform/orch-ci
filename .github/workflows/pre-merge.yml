@@ -529,6 +529,12 @@ jobs:
           echo "Building the code"
           make build
 
+      - name: Install TFLint
+        if: ${{ inputs.run_lint }}
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint --version
+
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
