@@ -110,6 +110,12 @@ function is_valid_version {
     echo "First 1.0.0 release, so OK"
     found_parent=true
   fi
+  
+  # New major version line with no applicable parent checks → OK
+  if [[ "$MINOR" == 0 && "$PATCH" == 0 && "$MAJOR" -gt 1 ]]; then
+    echo "New major version $MAJOR.x.x, no parent required"
+    found_parent=true
+  fi
 
   if [[ $found_parent == false ]]; then
     echo "Invalid $NEW_VERSION version. Expected parent version matching $parent_version does not exist."
