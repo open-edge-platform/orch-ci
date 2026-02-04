@@ -83,7 +83,7 @@ function is_valid_version {
   }
 
   # if patch == 0, check that there was a release with MAJOR.MINOR-1.X
-  if [[ "$PATCH" == 0 ]]; then
+  if [[ "$PATCH" == 0 && "$MINOR" -gt 0 ]]; then
     prev_minor=$(( MINOR - 1 ))
     parent_version="$MAJOR.$prev_minor.x"
     echo "Patch is 0, checking for parent version $parent_version"
