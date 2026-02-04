@@ -68,6 +68,7 @@ function is_valid_version {
   semverParse "$NEW_VERSION" MAJOR MINOR PATCH
 
   found_parent=false
+  parent_version=""
 
   check_parent_tag() {
     local version_to_check="$1"
@@ -82,16 +83,8 @@ function is_valid_version {
     done
   }
 
-  # if minor == 0, check that there was a release with MAJOR-1.X.X
-  if [[ "$MINOR" == 0 ]]; then
-    prev_major=$(( MAJOR - 1 ))
-    parent_version="$prev_major.x.x"
-    echo "Minor is 0, checking for parent version $parent_version"
-    check_parent_tag "$parent_version"
-  fi
-
   # if patch == 0, check that there was a release with MAJOR.MINOR-1.X
-  if [[ "$PATCH" == 0 ]]; then
+  if [[ "$PATCH" == 0 && "$MINOR" -gt 0 ]]; then
     prev_minor=$(( MINOR - 1 ))
     parent_version="$MAJOR.$prev_minor.x"
     echo "Patch is 0, checking for parent version $parent_version"
@@ -115,6 +108,12 @@ function is_valid_version {
   # May be tagging the first 1.0.0 release with no prior tags
   if [[ "$MAJOR" == 1 && "$MINOR" == 0 && "$PATCH" == 0 ]]; then
     echo "First 1.0.0 release, so OK"
+    found_parent=true
+  fi
+  
+  # New major version line with no applicable parent checks → OK
+  if [[ "$MINOR" == 0 && "$PATCH" == 0 && "$MAJOR" -gt 1 ]]; then
+    echo "New major version $MAJOR.x.x, no parent required"
     found_parent=true
   fi
 
