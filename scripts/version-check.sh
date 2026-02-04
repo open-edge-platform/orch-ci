@@ -68,6 +68,7 @@ function is_valid_version {
   semverParse "$NEW_VERSION" MAJOR MINOR PATCH
 
   found_parent=false
+  parent_version=""
 
   check_parent_tag() {
     local version_to_check="$1"
