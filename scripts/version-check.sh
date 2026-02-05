@@ -72,13 +72,23 @@ function is_valid_version {
 
   check_parent_tag() {
     local version_to_check="$1"
+
     for existing_tag in $existing_tags; do
       if [[ $existing_tag == "${TAG_PREFIX}"* ]] || [[ $existing_tag == "${ALT_TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
-        if [[ "$C_MAJOR.$C_MINOR.$C_PATCH" == "$version_to_check" ]]; then
-          found_parent=true
-          return
-        fi
+
+        case "$version_to_check" in
+          *.x.x)
+            [[ "$C_MAJOR" == "${version_to_check%%.*}" ]] && found_parent=true && return
+            ;;
+          *.*.x)
+            IFS='.' read -r VMAJ VMIN _ <<< "$version_to_check"
+            [[ "$C_MAJOR" == "$VMAJ" && "$C_MINOR" == "$VMIN" ]] && found_parent=true && return
+            ;;
+          *)
+            [[ "$C_MAJOR.$C_MINOR.$C_PATCH" == "$version_to_check" ]] && found_parent=true && return
+            ;;
+        esac
       fi
     done
   }
