@@ -354,7 +354,7 @@ runs:
       if: contains(inputs.bootstrap_tools, 'opa') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        curl -Lo /tmp/opa "https://openpolicyagent.org/downloads/v${OPA_VER}/opa_linux_amd64_static"
+        curl -Lo /tmp/opa "https://github.com/open-policy-agent/opa/releases/download/v${OPA_VER}/opa_linux_amd64_static"
         sha256sum -c --ignore-missing ${{ github.action_path }}/SHA256SUM
         chmod +x /tmp/opa
         mv /tmp/opa /usr/local/bin
