@@ -247,7 +247,7 @@ jobs:
           name: trivy-fs-scan-report-fs-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v3.29.5
+        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_fs
@@ -293,7 +293,7 @@ jobs:
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314
+        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
@@ -317,7 +317,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v3.29.5
+        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -924,7 +924,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}.sarif
 
       - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@6bc82e05fd0ea64601dd4b465378bbcf57de0314  # v3.29.5
+        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v3.29.5
         with:
           sarif_file: trivy-image-${{ env.sanitized_image_name }}.sarif
           category: Trivy_image
