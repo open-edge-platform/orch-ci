@@ -87,10 +87,10 @@ with:
 **Steps performed:**
 
 1. Logs into GitHub Container Registry using `gh_token`.
-2. Signs the image keylessly with Cosign.
-3. Downloads signature, certificate, and attestation artifacts.
-4. Verifies the signature using OIDC-issued certificates.
-5. Uploads artifacts to GitHub Actions.
+1. Signs the image keylessly with Cosign.
+1. Downloads signature, certificate, and attestation artifacts.
+1. Verifies the signature using OIDC-issued certificates.
+1. Uploads artifacts to GitHub Actions.
 
 ---
 
@@ -105,12 +105,12 @@ with:
 **Steps performed:**
 
 1. Signs the binary locally using Cosign.
-2. Generates the following artifacts:
+1. Generates the following artifacts:
    - `cosign.sig` — signature file
    - `cosign.cert` — certificate file
    - `cosign.bundle.json` — signing bundle
-3. Verifies the signature using OIDC-issued certificate.
-4. Uploads artifacts to GitHub Actions.
+1. Verifies the signature using OIDC-issued certificate.
+1. Uploads artifacts to GitHub Actions.
 
 ---
 
@@ -142,15 +142,15 @@ GitHub Actions artifacts with a unique suffix, e.g., `cosign-image-3f2a1b`.
 ## How it Works
 
 1. **Setup Cosign** — Installs Cosign version `v3.0.2`.
-2. **Login (Images only)** — Authenticates to GitHub Container Registry using
+1. **Login (Images only)** — Authenticates to GitHub Container Registry using
    `gh_token`.
-3. **Signing**:
+1. **Signing**:
    - **Image**: Keyless signing directly to the registry.
    - **Binary**: Local signing with output files (`sig`, `cert`, `bundle`).
-4. **Fetch Artifacts** (Images only) — Downloads signature, certificate, and
+1. **Fetch Artifacts** (Images only) — Downloads signature, certificate, and
    attestation.
-5. **Verify Signature** — Ensures authenticity using OIDC-issued certificates.
-6. **Upload Artifacts** — All Cosign artifacts are uploaded to GitHub Actions
+1. **Verify Signature** — Ensures authenticity using OIDC-issued certificates.
+1. **Upload Artifacts** — All Cosign artifacts are uploaded to GitHub Actions
    for traceability.
 
 ---
