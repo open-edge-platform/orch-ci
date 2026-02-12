@@ -22,16 +22,16 @@ Designed for secure CI/CD pipelines and DevSecOps environments.
 -   [Overview](#overview)
 -   [Architecture and Execution Flow](#architecture-and-execution-flow)
 -   [Scan Modes](#scan-modes)
-    -   [Changed Files Mode](#changed-files-mode)
-    -   [Full Repository Mode](#full-repository-mode)
+  -   [Changed Files Mode](#changed-files-mode)
+  -   [Full Repository Mode](#full-repository-mode)
 -   [Inputs](#inputs)
 -   [Input-to-Behavior Mapping](#input-to-behavior-mapping)
 -   [Outputs](#outputs)
 -   [Report and Artifact Handling](#report-and-artifact-handling)
 -   [Failure Logic](#failure-logic)
 -   [Usage Examples](#usage-examples)
-    -   [Pull Request Incremental Scan](#pull-request-incremental-scan)
-    -   [Full Repository Scan](#full-repository-scan)
+  -   [Pull Request Incremental Scan](#pull-request-incremental-scan)
+  -   [Full Repository Scan](#full-repository-scan)
 -   [Baseline and Configuration
     Handling](#baseline-and-configuration-handling)
 -   [SARIF Integration](#sarif-integration)
@@ -155,7 +155,7 @@ security-results/gitleaks/
 ## Inputs
 
   Input               Description                       Required   Default
-  ------------------- --------------------------------- ---------- ---------
+------------------------------------------------------------------------
   scan-scope          Scan scope (`changed` or `all`)   No         changed
   source              Directory to scan                 No         .
   version             Gitleaks version or latest        No         latest
@@ -172,7 +172,7 @@ security-results/gitleaks/
 ## Input-to-Behavior Mapping
 
   Input                Internal Behavior
-  -------------------- ---------------------------------------------
+------------------------------------------------------------------------
   scan-scope=changed   Uses temporary directory with changed files
   scan-scope=all       Scans full `source` path
   version              Downloads specific Gitleaks binary
@@ -188,7 +188,7 @@ security-results/gitleaks/
 ## Outputs
 
   Output        Description
-  ------------- --------------------------------
+------------------------------------------------------------------------
   exit_code     Exit code returned by Gitleaks
   report_path   Path to generated report file
 
