@@ -134,9 +134,11 @@ Behavior:
 - Scans all files under `paths`.
 - Generates structured report file.
 - Stores report in:
-  ```
-  security-results/semgrep/
-  ```
+
+```text
+security-results/semgrep/
+```
+
 - Sets `report_path` output.
 - Uploads artifact.
 - Optionally uploads SARIF to GitHub Security.
@@ -194,13 +196,17 @@ This mode is recommended for:
 For full scans:
 
 - Report file name format:
-  ```
-  semgrep-results-<random>.sarif
-  ```
+
+```text
+semgrep-results-<random>.sarif
+```
+
 - Stored under:
-  ```
-  security-results/semgrep
-  ```
+
+```text
+security-results/semgrep
+```
+
 - Uploaded via `actions/upload-artifact`
 - Retention period: 7 days
 
