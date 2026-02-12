@@ -61,6 +61,11 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: ""
         type: string
+      images:
+        description: 'JSON array of images to scan'
+        required: false
+        type: string
+        default: '[]'
       trivy_config_path:
         description: "Path to trivy configuration file"
         required: false
@@ -85,7 +90,7 @@ jobs:
   sanitize-project-folder:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     outputs:
       sanitized_project_name: ${{ steps.sanitize.outputs.sanitized_project_name }}
     env:
@@ -106,7 +111,7 @@ jobs:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     env:
       ZIZMOR_VERSION: 1.20.0
@@ -128,7 +133,7 @@ jobs:
   license-compliance-check:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     if: ${{ ((inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan)) && inputs.run_reuse_check }}
     steps:
       - name: Checkout code
@@ -142,7 +147,7 @@ jobs:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     env:
       INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
@@ -173,7 +178,7 @@ jobs:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
@@ -220,7 +225,7 @@ jobs:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
@@ -243,7 +248,7 @@ jobs:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
@@ -287,11 +292,103 @@ jobs:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
 
+  trivy-image-scan:
+    if: ${{ inputs.run_security_scans && inputs.post_merge_scan && inputs.images != '[]' }}
+    permissions:
+      contents: read
+      security-events: write
+    runs-on: ${{ inputs.runs_on }}
+    needs: sanitize-project-folder
+
+    strategy:
+      matrix:
+        image: ${{ fromJson(inputs.images) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Pull Image
+        run: docker pull ${{ matrix.image }}
+
+      - name: Sanitize image name
+        id: img
+        run: |
+          SAFE_NAME=$(echo "${{ matrix.image }}" | tr '/:@' '___')
+          echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Scan Docker Image
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          image-ref: ${{ matrix.image }}
+          format: 'sarif'
+          severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
+          ignore-unfixed: true
+          output: trivy-image-${{ steps.img.outputs.safe_name }}.sarif
+
+      - name: Upload Trivy Image Results
+        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2
+        with:
+          sarif_file: trivy-image-${{ steps.img.outputs.safe_name }}.sarif
+          category: Trivy_image
+
+  trivy-cis-scan:
+    if: ${{ inputs.run_security_scans && inputs.post_merge_scan }}
+    permissions:
+      contents: read
+      security-events: write
+    runs-on: ${{ inputs.runs_on }}
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Run Trivy CIS Compliance Scan
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: 'config'
+          scan-ref: ${{ inputs.project_folder }}
+          format: 'sarif'
+          scanners: 'misconfig'
+          compliance: 'docker-cis-1.6.0'
+          output: trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Tag Trivy CIS SARIF results
+        run: |
+          jq '
+            .runs |= map(
+              .tool.driver.rules |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_CIS"] | unique) }
+              )) |
+              .results |= (. // [] | map(
+                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_CIS"] | unique) }
+              ))
+            )
+          ' trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          > trivy_cis_tagged.sarif \
+          && mv trivy_cis_tagged.sarif trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Upload CIS Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-cis-report
+          path: trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
+      - name: Upload CIS SARIF to Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          category: Trivy_CIS
+
   bandit:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
