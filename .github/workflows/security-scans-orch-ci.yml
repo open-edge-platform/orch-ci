@@ -3,8 +3,10 @@
 ---
 
 name: Security Scans Orch-CI
+
 permissions:
   contents: read
+  security-events: write
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
@@ -13,8 +15,6 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 jobs:
   security-scans:
-    permissions:
-      contents: read
     uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@6a493a0145cfb78a1b6f00b199cfa39b327cd19b
     with:
       run_lint: true
