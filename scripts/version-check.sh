@@ -21,15 +21,30 @@ TAG_PREFIX=${1:-""}
 
 echo "TAG_PREFIX is: ${TAG_PREFIX}"
 
+# --- compute alternate prefix for compatibility ---
+if [[ "$TAG_PREFIX" == */ ]]; then
+  ALT_TAG_PREFIX="${TAG_PREFIX}v"
+else
+  ALT_TAG_PREFIX="${TAG_PREFIX%/}/"
+fi
+echo "Alternate TAG_PREFIX is: ${ALT_TAG_PREFIX}"
+
+# helper function to check if a tag exists with either prefix
+tag_exists() {
+  local version="$1"
+  grep -qx "${TAG_PREFIX}${version}" <<< "$existing_tags" || \
+  grep -qx "${ALT_TAG_PREFIX}${version}" <<< "$existing_tags"
+}
+
 # --------------------------------------------------
 # Prevent bumping from X.Y.Z → X.Y.Z-dev
 # --------------------------------------------------
 function reject_backward_dev_bump {
 
-  [[ "$NEW_VERSION" =~ -dev$ ]] || return
+  [[ "$NEW_VERSION" =~ -dev$ ]] || return 0
 
   base_version="${NEW_VERSION%-dev}"
-  if echo "$existing_tags" | grep -qx "$base_version"; then
+  if tag_exists "$base_version"; then
     echo "ERROR: Cannot bump from release $base_version to $NEW_VERSION"
     IFS='.' read -r MAJOR MINOR PATCH <<< "$base_version"
     echo "Suggested next dev version: ${TAG_PREFIX}${MAJOR}.${MINOR}.$((PATCH + 1))-dev"
@@ -40,8 +55,6 @@ function reject_backward_dev_bump {
 
 # --------------------------------------------------
 # Check if a previous tag has been created
-# (avoids going from 2.7.0-dev to 2.7.1-dev)
-# Skipped for calendar versions
 # --------------------------------------------------
 function is_valid_version {
 
@@ -55,58 +68,45 @@ function is_valid_version {
   semverParse "$NEW_VERSION" MAJOR MINOR PATCH
 
   found_parent=false
+  parent_version=""
 
-  # if minor == 0, check that there was a release with MAJOR-1.X.X
-  if [[ "$MINOR" == 0 ]]; then
-    prev_major=$(( MAJOR - 1 ))
-    parent_version="$TAG_PREFIX$prev_major.x.x"
-    echo "Minor is 0, checking for parent version $parent_version"
+  check_parent_tag() {
+    local version_to_check="$1"
+
     for existing_tag in $existing_tags; do
-      if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
+      if [[ $existing_tag == "${TAG_PREFIX}"* ]] || [[ $existing_tag == "${ALT_TAG_PREFIX}"* ]]; then
         semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
-        if [[ "$prev_major" == "$C_MAJOR" ]]; then
-          echo "Found previous tag matching $parent_version: $existing_tag"
-          found_parent=true
-          break
-        fi
+
+        case "$version_to_check" in
+          *.x.x)
+            [[ "$C_MAJOR" == "${version_to_check%%.*}" ]] && found_parent=true && return
+            ;;
+          *.*.x)
+            IFS='.' read -r VMAJ VMIN _ <<< "$version_to_check"
+            [[ "$C_MAJOR" == "$VMAJ" && "$C_MINOR" == "$VMIN" ]] && found_parent=true && return
+            ;;
+          *)
+            [[ "$C_MAJOR.$C_MINOR.$C_PATCH" == "$version_to_check" ]] && found_parent=true && return
+            ;;
+        esac
       fi
     done
-  fi
+  }
 
   # if patch == 0, check that there was a release with MAJOR.MINOR-1.X
-  if [[ "$PATCH" == 0 ]]; then
+  if [[ "$PATCH" == 0 && "$MINOR" -gt 0 ]]; then
     prev_minor=$(( MINOR - 1 ))
-    parent_version="$TAG_PREFIX$MAJOR.$prev_minor.x"
+    parent_version="$MAJOR.$prev_minor.x"
     echo "Patch is 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags; do
-      if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
-        semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
-        if [[ "$MAJOR" == "$C_MAJOR" && "$prev_minor" == "$C_MINOR" ]]; then
-          echo "Found previous tag matching $parent_version: $existing_tag"
-          found_parent=true
-          break
-        fi
-      fi
-    done
+    check_parent_tag "$parent_version"
   fi
 
   # if patch != 0 check that there was a release with MAJOR.MINOR.PATCH-1
   if [[ "$PATCH" != 0 ]]; then
     prev_patch=$(( PATCH - 1 ))
-    parent_version="$TAG_PREFIX$MAJOR.$MINOR.$prev_patch"
+    parent_version="$MAJOR.$MINOR.$prev_patch"
     echo "Patch is not 0, checking for parent version $parent_version"
-    for existing_tag in $existing_tags; do
-      if [[ $TAG_PREFIX == "" || $existing_tag == "${TAG_PREFIX}"* ]]; then
-        semverParse "$existing_tag" C_MAJOR C_MINOR C_PATCH
-        if [[ "$MAJOR" == "$C_MAJOR" &&
-              "$MINOR" == "$C_MINOR" &&
-              "$prev_patch" == "$C_PATCH" ]]; then
-          echo "Found previous tag matching $parent_version: $existing_tag"
-          found_parent=true
-          break
-        fi
-      fi
-    done
+    check_parent_tag "$parent_version"
   fi
 
   # At the beginning there can be no parent, which is OK
@@ -118,6 +118,12 @@ function is_valid_version {
   # May be tagging the first 1.0.0 release with no prior tags
   if [[ "$MAJOR" == 1 && "$MINOR" == 0 && "$PATCH" == 0 ]]; then
     echo "First 1.0.0 release, so OK"
+    found_parent=true
+  fi
+  
+  # New major version line with no applicable parent checks → OK
+  if [[ "$MINOR" == 0 && "$PATCH" == 0 && "$MAJOR" -gt 1 ]]; then
+    echo "New major version $MAJOR.x.x, no parent required"
     found_parent=true
   fi
 

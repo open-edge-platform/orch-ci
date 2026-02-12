@@ -135,7 +135,7 @@ runs:
       if: contains(inputs.bootstrap_tools, 'nodejs') || contains(inputs.bootstrap_tools, 'all')
       uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238  # v6.2.0
       with:
-        node-version: '18'
+        node-version: '24'
 
     - name: "Set up Python environment"
       if: contains(inputs.bootstrap_tools, 'python') || contains(inputs.bootstrap_tools, 'all')
@@ -354,7 +354,7 @@ runs:
       if: contains(inputs.bootstrap_tools, 'opa') || contains(inputs.bootstrap_tools, 'all')
       shell: bash
       run: |
-        curl -Lo /tmp/opa "https://openpolicyagent.org/downloads/v${OPA_VER}/opa_linux_amd64_static"
+        curl -Lo /tmp/opa "https://github.com/open-policy-agent/opa/releases/download/v${OPA_VER}/opa_linux_amd64_static"
         sha256sum -c --ignore-missing ${{ github.action_path }}/SHA256SUM
         chmod +x /tmp/opa
         mv /tmp/opa /usr/local/bin

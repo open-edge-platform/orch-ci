@@ -237,7 +237,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Install uv
-        uses: astral-sh/setup-uv@803947b9bd8e9f986429fa0c5a41c367cd732b41  # v7.2.1
+        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b  # v7.3.0
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizmor Scan Report
@@ -276,9 +276,8 @@ jobs:
           repository: open-edge-platform/orch-ci
           path: ci
           persist-credentials: false
-
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -287,6 +286,7 @@ jobs:
           report_format: json
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
+          upload-sarif: "false"
   trivy-filesystem-scan:
     permissions:
       contents: read
@@ -327,11 +327,6 @@ jobs:
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-      - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
-        with:
-          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-          category: Trivy_fs
   trivy-critical-scan:
     permissions:
       contents: read
@@ -394,12 +389,6 @@ jobs:
           name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
-      - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30
-        with:
-          sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-          category: Trivy_config
-
   bandit:
     permissions:
       contents: read
@@ -411,12 +400,13 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@467367d6f859a4654f2645ca78efd60035cf390c  # 2026.0.8
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
           confidence-level: "HIGH"
           output-format: "txt"
+          upload-sarif: "false"
   run-repo-pipelines:
     permissions:
       contents: read
@@ -539,6 +529,12 @@ jobs:
           echo "Building the code"
           make build
 
+      - name: Install TFLint
+        if: ${{ inputs.run_lint }}
+        run: |
+          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          tflint --version
+
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
@@ -631,7 +627,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8  # v5.1.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -736,7 +732,7 @@ jobs:
       # Configure AWS credentials for ECR
       - name: Configure AWS credentials for ECR
         if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8  # v5.1.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -745,7 +741,7 @@ jobs:
       # Configure AWS credentials for S3
       - name: Configure AWS credentials for S3
         if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8  # v5.1.0
+        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
@@ -860,12 +856,6 @@ jobs:
           ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
-
-      - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@b20883b0cd1f46c72ae0ba6d1090936928f9fa30  # v3.29.5
-        with:
-          sarif_file: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
-          category: Trivy_image
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
