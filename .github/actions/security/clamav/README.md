@@ -19,8 +19,8 @@ enforcement** within CI/CD workflows.
 -   [Features](#features)
 -   [Prerequisites](#prerequisites)
 -   [Usage](#usage)
-    -   [Scan Changed Files](#scan-changed-files)
-    -   [Scan Entire Repository](#scan-entire-repository)
+  -   [Scan Changed Files](#scan-changed-files)
+  -   [Scan Entire Repository](#scan-entire-repository)
 -   [Inputs](#inputs)
 -   [Outputs and Artifacts](#outputs-and-artifacts)
 -   [How it Works](#how-it-works)
@@ -128,7 +128,6 @@ jobs:
 | `fail_on_detection` | Fail workflow if malware detected | No | `true` |
 | `report_format` | Report format: `json`, `txt`, or `both` | No | `both` |
 
-
 ------------------------------------------------------------------------
 
 ## Outputs and Artifacts
@@ -183,7 +182,7 @@ Artifacts include:
 ## Input-to-Behavior Mapping
 
   Input                 Affects
-  --------------------- -----------------------------
+ ------------------------------------------------------------------------
   `scan-scope`          Determines target file set
   `exclude_dirs`        Adds `--exclude-dir` flags
   `max_file_size`       Adds `--max-filesize` flag
