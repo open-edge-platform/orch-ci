@@ -144,10 +144,10 @@ Artifacts are uploaded with a unique suffix.
 ## How it Works
 
 1. Installs Python and Bandit
-2. Determines scan scope
-3. Runs Bandit with configured filters
-4. Uploads reports
-5. Publishes SARIF results to GitHub Security
+1. Determines scan scope
+1. Runs Bandit with configured filters
+1. Uploads reports
+1. Publishes SARIF results to GitHub Security
 
 ---
 

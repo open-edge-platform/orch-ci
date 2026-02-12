@@ -150,15 +150,15 @@ Artifacts include:
 ## How it Works
 
 1. Pulls the official ClamAV container image.
-2. Updates virus definitions using `freshclam`.
-3. Determines scan scope:
+1. Updates virus definitions using `freshclam`.
+1. Determines scan scope:
    - Changed files (via `git diff`)
    - Entire repository
-4. Applies configured exclusions and file size limits.
-5. Executes `clamscan`.
-6. Generates reports.
-7. Uploads reports as workflow artifacts.
-8. Optionally fails the pipeline if threats are detected.
+1. Applies configured exclusions and file size limits.
+1. Executes `clamscan`.
+1. Generates reports.
+1. Uploads reports as workflow artifacts.
+1. Optionally fails the pipeline if threats are detected.
 
 ---
 
