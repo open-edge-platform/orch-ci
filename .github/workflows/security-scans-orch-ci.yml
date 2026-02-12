@@ -24,4 +24,3 @@ jobs:
       run_security_scans: true
       pre_merge_scan: true
       post_merge_scan: true
-
