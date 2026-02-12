@@ -171,12 +171,11 @@ Results appear under **GitHub → Security → Code scanning**.
 
 ## References
 
-- https://bandit.readthedocs.io/
-- https://github.com/PyCQA/bandit
+- [Bandit Documentation](https://bandit.readthedocs.io/)
+- [Bandit GitHub Repository](https://github.com/PyCQA/bandit)
 
 ---
 
 ## License
 
 Apache License 2.0
-
