@@ -161,7 +161,7 @@ Recommended for:
 ## Scan Types
 
 | Scan Type | Description |
-|-----------|-------------|
+|------------|-------------|
 | fs | Filesystem scan |
 | repo | Repository scan |
 | image | Container image scan |
@@ -175,7 +175,7 @@ Each type modifies Trivy CLI behavior internally.
 ## Inputs
 
 | Input | Description | Required | Default |
-|-------|-------------|----------|---------|
+|--------|-------------|----------|----------|
 | scan_type | Type of scan | No | fs |
 | scan-scope | Scope (`all` or `changed`) | No | changed |
 | scan_target | Target path or image | No | . |
@@ -195,7 +195,7 @@ Each type modifies Trivy CLI behavior internally.
 ## Input-to-Behavior Mapping
 
 | Input | Internal Behavior |
-|-------|------------------|
+|--------|------------------|
 | scan_type | Selects Trivy subcommand |
 | scan-scope=changed | Uses repository root scan |
 | scan-scope=all | Uses provided scan_target |
@@ -213,7 +213,7 @@ Each type modifies Trivy CLI behavior internally.
 ## Outputs
 
 | Output | Description |
-|--------|------------|
+|---------|-------------|
 | scan_result | Exit code from Trivy |
 | report_path | Path to generated report |
 
@@ -225,13 +225,13 @@ These outputs allow downstream workflow steps to evaluate results.
 
 Reports are stored in:
 
-```
+```text
 security-results/trivy
 ```
 
 File naming pattern:
 
-```
+```text
 trivy-results-<random>.<format>
 ```
 
@@ -249,7 +249,7 @@ generate_sbom: true
 
 The action runs:
 
-```
+```bash
 trivy fs --format <sbom_format>
 ```
 
@@ -261,7 +261,7 @@ Supported SBOM formats:
 
 SBOM is stored in:
 
-```
+```text
 security-results/trivy/
 ```
 
@@ -273,7 +273,7 @@ This supports supply chain transparency and compliance initiatives.
 
 Trivy exit codes are captured and surfaced via:
 
-```
+```text
 exit_code
 ```
 
@@ -375,12 +375,12 @@ Supports:
 
 ## Operational Best Practices
 
-- Use incremental scans for pull requests.
-- Use full scans for protected branches.
-- Enable SBOM generation for supply chain audits.
-- Combine with dependency and SAST scanning.
-- Monitor vulnerability database freshness.
-- Tune severity thresholds to reduce noise.
+- Use incremental scans for pull requests
+- Use full scans for protected branches
+- Enable SBOM generation for supply chain audits
+- Combine with dependency and SAST scanning
+- Monitor vulnerability database freshness
+- Tune severity thresholds to reduce noise
 
 ---
 
@@ -414,4 +414,3 @@ Suitable for:
 ## License
 
 Apache License 2.0
-

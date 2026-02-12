@@ -244,4 +244,3 @@ Designed for CI/CD supply chain protection.
 ## License
 
 Apache License 2.0
-
