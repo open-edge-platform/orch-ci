@@ -1,6 +1,5 @@
-```{=html}
 <!-- markdownlint-disable MD013 -->
-```
+
 # ClamAV Security Scan GitHub Action
 
 [![License: Apache
@@ -119,24 +118,14 @@ jobs:
 
 ## Inputs
 
-  --------------------------------------------------------------------------------------
-  Name                  Description             Required           Default
-  --------------------- ----------------------- ------------------ ---------------------
-  `scan-scope`          Scan mode: `changed` or Yes                `changed`
-                        `full`                                     
+| Name | Description | Required | Default |
+|------|-------------|----------|----------|
+| `scan-scope` | Scan mode: `changed` or `full` | Yes | `changed` |
+| `exclude_dirs` | Comma-separated directories to exclude | No | `.git,node_modules` |
+| `max_file_size` | Maximum file size to scan (e.g. `25M`) | No | `25M` |
+| `fail_on_detection` | Fail workflow if malware detected | No | `true` |
+| `report_format` | Report format: `json`, `txt`, or `both` | No | `both` |
 
-  `exclude_dirs`        Comma-separated         No                 `.git,node_modules`
-                        directories to exclude                     
-
-  `max_file_size`       Maximum file size to    No                 `25M`
-                        scan (e.g. `25M`)                          
-
-  `fail_on_detection`   Fail workflow if        No                 `true`
-                        malware detected                           
-
-  `report_format`       Report format: `json`,  No                 `both`
-                        `txt`, or `both`                           
-  --------------------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
 
@@ -162,15 +151,15 @@ Artifacts include:
 ## How it Works
 
 1.  Pulls the official ClamAV container image.
-2.  Updates virus definitions using `freshclam`.
-3.  Determines scan scope:
+1.  Updates virus definitions using `freshclam`.
+1.  Determines scan scope:
     -   Changed files (via git diff)
     -   Entire repository
-4.  Applies exclusions and file size limits.
-5.  Runs `clamscan` with appropriate flags.
-6.  Generates structured reports.
-7.  Uploads reports as workflow artifacts.
-8.  Optionally fails the pipeline if threats are detected.
+1.  Applies exclusions and file size limits.
+1.  Runs `clamscan` with appropriate flags.
+1.  Generates structured reports.
+1.  Uploads reports as workflow artifacts.
+1.  Optionally fails the pipeline if threats are detected.
 
 ------------------------------------------------------------------------
 
@@ -268,5 +257,4 @@ Designed for CI/CD supply chain protection.
 
 ## License
 
-Licensed under the Apache License, Version 2.0.\
-See the LICENSE file for details.
+Licensed under the Apache License, Version 2.0.
