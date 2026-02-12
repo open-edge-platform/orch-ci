@@ -1,4 +1,6 @@
 <!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD030 -->
+<!-- markdownlint-disable MD034 -->
 
 # ClamAV Security Scan GitHub Action
 
