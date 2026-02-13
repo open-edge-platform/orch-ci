@@ -1,0 +1,26 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# yamllint disable rule:line-length
+
+name: Security Scans Orch-CI
+
+permissions:
+  contents: read
+  security-events: write
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+jobs:
+  security-scans:
+    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@df54689cba91a1f6d282c0c20f2aff2ac49ff41f
+    with:
+      run_lint: true
+      trivy_config_path: trivy.yaml
+      run_security_scans: true
+      pre_merge_scan: true
+      post_merge_scan: true
