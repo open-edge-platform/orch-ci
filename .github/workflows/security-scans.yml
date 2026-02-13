@@ -335,54 +335,60 @@ jobs:
           category: Trivy_image
 
   trivy-cis-scan:
-    if: ${{ inputs.run_security_scans && inputs.post_merge_scan }}
+    name: Trivy Docker CIS Compliance Scan
+    if: ${{ inputs.run_security_scans && inputs.post_merge_scan && inputs.images != '[]' }}
     permissions:
       contents: read
-      security-events: write
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
+
+    strategy:
+      matrix:
+        image: ${{ fromJson(inputs.images) }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           persist-credentials: false
 
-      - name: Run Trivy CIS Compliance Scan
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        with:
-          scan-type: 'config'
-          scan-ref: ${{ inputs.project_folder }}
-          format: 'sarif'
-          scanners: 'misconfig'
-          compliance: 'docker-cis-1.6.0'
-          output: trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Pull Docker Image
+        run: docker pull ${{ matrix.image }}
 
-      - name: Tag Trivy CIS SARIF results
+      - name: Sanitize image name
+        id: sanitize
         run: |
-          jq '
-            .runs |= map(
-              .tool.driver.rules |= (. // [] | map(
-                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_CIS"] | unique) }
-              )) |
-              .results |= (. // [] | map(
-                .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_CIS"] | unique) }
-              ))
-            )
-          ' trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
-          > trivy_cis_tagged.sarif \
-          && mv trivy_cis_tagged.sarif trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          IMAGE="${{ matrix.image }}"
+          SANITIZED=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
+          echo "sanitized_name=$SANITIZED" >> "$GITHUB_OUTPUT"
 
-      - name: Upload CIS Report as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-cis-report
-          path: trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+      - name: Prepare CIS artifact name
+        id: artifact
+        run: |
+          set -euo pipefail
+          IMAGE="${{ matrix.image }}"
+          HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          ARTIFACT_NAME="trivy-cis-${{ steps.sanitize.outputs.sanitized_name }}-${HASH:0:8}"
+          echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Upload CIS SARIF to Security Tab
-        uses: github/codeql-action/upload-sarif@v3
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.2.5
         with:
-          sarif_file: trivy-cis-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-          category: Trivy_CIS
+          version: latest
+
+      - name: Run Trivy Docker CIS Compliance Scan
+        run: |
+          trivy image \
+            --compliance docker-cis-1.6.0 \
+            --format table \
+            --output "trivy_cis-${{ steps.sanitize.outputs.sanitized_name }}.txt" \
+            ${{ matrix.image }}
+
+      - name: Upload CIS Scan Report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: ${{ steps.artifact.outputs.artifact_name }}
+          path: trivy_cis-${{ steps.sanitize.outputs.sanitized_name }}.txt
 
   bandit:
     if: ${{ (inputs.run_security_scans && inputs.pre_merge_scan) || (inputs.run_security_scans && inputs.post_merge_scan) }}
