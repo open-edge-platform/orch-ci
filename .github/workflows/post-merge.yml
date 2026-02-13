@@ -206,7 +206,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -231,7 +231,7 @@ jobs:
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Run Trivy SBOM
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
         with:
           scan-type: 'fs'
           format: 'spdx-json'
@@ -247,7 +247,7 @@ jobs:
           name: trivy-fs-scan-report-fs-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v3.29.5
+        uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_fs
@@ -264,7 +264,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy Config Scan (Dockerfile / IaC)
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.project_folder }}
@@ -294,7 +294,7 @@ jobs:
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2
+        uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
@@ -318,7 +318,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v3.29.5
+        uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -901,7 +901,7 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Scan Image
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8  # 0.33.1
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
         with:
           image-ref: ${{ matrix.image }}
           format: 'sarif'
@@ -925,7 +925,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}.sarif
 
       - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@45cbd0c69e560cd9e7cd7f8c32362050c9b7ded2  # v3.29.5
+        uses: github/codeql-action/upload-sarif@9e907b5e64f6b83e7804b09294d44122997950d6  # v3.29.5
         with:
           sarif_file: trivy-image-${{ env.sanitized_image_name }}.sarif
           category: Trivy_image
