@@ -685,22 +685,40 @@ jobs:
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed ECR images to sign..."
+          ACCOUNT="080137407410"
+          REGION="us-west-2"
 
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" \
-            | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+          # Find ECR repositories that exist locally
+          repos=$(docker images --format "{{.Repository}}" \
+            | grep "^${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com" \
+            | sort -u || true)
 
-          images=$(echo "$images" | sed '/^\s*$/d' | sort -u)
+          images=()
+          for repo in $repos; do
+            repo_name=${repo#${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/}
 
-          if [ -z "$images" ]; then
+            digests=$(aws ecr describe-images \
+              --repository-name "$repo_name" \
+              --region "$REGION" \
+              --query 'imageDetails[].imageDigest' \
+              --output text || true)
+
+            for digest in $digests; do
+              if [[ "$digest" == sha256:* ]]; then
+                images+=("${repo}@${digest}")
+              fi
+            done
+          done
+
+          if [ ${#images[@]} -eq 0 ]; then
             echo "⚠️ No ECR images found to sign."
             echo "ecr_images=[]" >> $GITHUB_OUTPUT
           else
-            ecr_images_json=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n") | map(select(. != ""))')
-            if [ -z "$ecr_images_json" ]; then
-              ecr_images_json='[]'
-            fi
+            printf '%s\n' "${images[@]}" | sort -u > /tmp/ecr_images.txt
             echo "Found images:"
-            echo "$images"
+            cat /tmp/ecr_images.txt
+
+            ecr_images_json=$(jq -R -s -c 'split("\n") | map(select(. != ""))' /tmp/ecr_images.txt)
             echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
           fi
 
