@@ -689,9 +689,10 @@ jobs:
           ACCOUNT="080137407410"
           REGION="us-west-2"
 
-          # Only local images pushed in this workflow
+          # List all local images we just built
+          # Assuming images are tagged like <name>:<version> locally
           built_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" \
-            | grep '^telemetrymgr:' || true)
+            | grep -E '^(attestationstatusmgr|telemetrymgr):' || true)
 
           if [ -z "$built_tags" ]; then
             echo "⚠️ No local images found to sign."
@@ -701,14 +702,13 @@ jobs:
 
           images=()
           for tag in $built_tags; do
-            # Get just the tag part
             image_name=$(echo "$tag" | cut -d: -f1)
             image_tag=$(echo "$tag" | cut -d: -f2)
 
             # Map to ECR repository
             ecr_repo="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/edge-orch/infra/${image_name}"
 
-            # Query ECR for digest of the tag we just pushed
+            # Query ECR for the digest of the tag we just pushed
             digest=$(aws ecr describe-images \
               --repository-name "edge-orch/infra/${image_name}" \
               --image-ids imageTag="${image_tag}" \
