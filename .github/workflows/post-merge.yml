@@ -685,35 +685,32 @@ jobs:
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed ECR images to sign..."
-
           ACCOUNT="080137407410"
           REGION="us-west-2"
+          formatted_images=($(echo '${{ steps.list-images.outputs.images }}' | jq -r '.[]?'))
 
-          # List of images we pushed in this workflow (replace with your actual pushed tags)
-          pushed_tags=(
-            "attestationstatusmgr:0.9.1-dev"
-            "telemetrymgr:1.25.1-dev"
-          )
+          if [ ${#formatted_images[@]} -eq 0 ]; then
+            echo "⚠️ No images found to sign."
+            echo "ecr_images=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           images=()
+          for img in "${formatted_images[@]}"; do
+            # Split into repo and tag
+            image_repo="${img%:*}"
+            image_tag="${img##*:}"
 
-          for tag in "${pushed_tags[@]}"; do
-            image_name="${tag%%:*}"
-            image_tag="${tag##*:}"
-
-            # Map to ECR repository
-            ecr_repo="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/edge-orch/infra/${image_name}"
-
-            # Get digest of the image in ECR
+            # Query ECR for digest
             digest=$(aws ecr describe-images \
-              --repository-name "edge-orch/infra/${image_name}" \
+              --repository-name "${image_repo#*.amazonaws.com/}" \
               --image-ids imageTag="${image_tag}" \
               --region "$REGION" \
               --query 'imageDetails[0].imageDigest' \
               --output text || true)
 
             if [ -n "$digest" ] && [ "$digest" != "None" ]; then
-              images+=("${ecr_repo}@${digest}")
+              images+=("${image_repo}@${digest}")
             fi
           done
 
@@ -724,10 +721,8 @@ jobs:
             printf '%s\n' "${images[@]}" | sort -u > /tmp/ecr_images.txt
             echo "Found images to sign:"
             cat /tmp/ecr_images.txt
-
             ecr_images_json=$(jq -R -s -c 'split("\n") | map(select(. != ""))' /tmp/ecr_images.txt)
             echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
-          fi
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
