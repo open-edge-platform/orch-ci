@@ -685,29 +685,40 @@ jobs:
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed ECR images to sign..."
+
           ACCOUNT="080137407410"
           REGION="us-west-2"
 
-          # Find ECR repositories that exist locally
-          repos=$(docker images --format "{{.Repository}}" \
-            | grep "^${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com" \
-            | sort -u || true)
+          # Only local images pushed in this workflow
+          built_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" \
+            | grep '^telemetrymgr:' || true)
+
+          if [ -z "$built_tags" ]; then
+            echo "⚠️ No local images found to sign."
+            echo "ecr_images=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           images=()
-          for repo in $repos; do
-            repo_name=${repo#${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/}
+          for tag in $built_tags; do
+            # Get just the tag part
+            image_name=$(echo "$tag" | cut -d: -f1)
+            image_tag=$(echo "$tag" | cut -d: -f2)
 
-            digests=$(aws ecr describe-images \
-              --repository-name "$repo_name" \
+            # Map to ECR repository
+            ecr_repo="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/edge-orch/infra/${image_name}"
+
+            # Query ECR for digest of the tag we just pushed
+            digest=$(aws ecr describe-images \
+              --repository-name "edge-orch/infra/${image_name}" \
+              --image-ids imageTag="${image_tag}" \
               --region "$REGION" \
-              --query 'imageDetails[].imageDigest' \
+              --query 'imageDetails[0].imageDigest' \
               --output text || true)
 
-            for digest in $digests; do
-              if [[ "$digest" == sha256:* ]]; then
-                images+=("${repo}@${digest}")
-              fi
-            done
+            if [ -n "$digest" ]; then
+              images+=("${ecr_repo}@${digest}")
+            fi
           done
 
           if [ ${#images[@]} -eq 0 ]; then
@@ -715,7 +726,7 @@ jobs:
             echo "ecr_images=[]" >> $GITHUB_OUTPUT
           else
             printf '%s\n' "${images[@]}" | sort -u > /tmp/ecr_images.txt
-            echo "Found images:"
+            echo "Found images to sign:"
             cat /tmp/ecr_images.txt
 
             ecr_images_json=$(jq -R -s -c 'split("\n") | map(select(. != ""))' /tmp/ecr_images.txt)
