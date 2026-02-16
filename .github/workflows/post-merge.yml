@@ -689,26 +689,22 @@ jobs:
           ACCOUNT="080137407410"
           REGION="us-west-2"
 
-          # List all local images we just built
-          # Assuming images are tagged like <name>:<version> locally
-          built_tags=$(docker images --format "{{.Repository}}:{{.Tag}}" \
-            | grep -E '^(attestationstatusmgr|telemetrymgr):' || true)
-
-          if [ -z "$built_tags" ]; then
-            echo "⚠️ No local images found to sign."
-            echo "ecr_images=[]" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          # List of images we pushed in this workflow (replace with your actual pushed tags)
+          pushed_tags=(
+            "attestationstatusmgr:0.9.1-dev"
+            "telemetrymgr:1.25.1-dev"
+          )
 
           images=()
-          for tag in $built_tags; do
-            image_name=$(echo "$tag" | cut -d: -f1)
-            image_tag=$(echo "$tag" | cut -d: -f2)
+
+          for tag in "${pushed_tags[@]}"; do
+            image_name="${tag%%:*}"
+            image_tag="${tag##*:}"
 
             # Map to ECR repository
             ecr_repo="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com/edge-orch/infra/${image_name}"
 
-            # Query ECR for the digest of the tag we just pushed
+            # Get digest of the image in ECR
             digest=$(aws ecr describe-images \
               --repository-name "edge-orch/infra/${image_name}" \
               --image-ids imageTag="${image_tag}" \
@@ -716,7 +712,7 @@ jobs:
               --query 'imageDetails[0].imageDigest' \
               --output text || true)
 
-            if [ -n "$digest" ]; then
+            if [ -n "$digest" ] && [ "$digest" != "None" ]; then
               images+=("${ecr_repo}@${digest}")
             fi
           done
