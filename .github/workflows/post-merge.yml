@@ -685,38 +685,42 @@ jobs:
         run: |
           set -euo pipefail
           echo "🔍 Finding pushed images to sign using local digests..."
-          IMAGES='${{ steps.list-images.outputs.images }}'
-          mapfile -t formatted_images < <(echo "$IMAGES" | jq -r '.[]?')
 
-          if [ ${#formatted_images[@]} -eq 0 ]; then
-            echo "⚠️ No images found."
-            echo "ecr_images=[]" >> $GITHUB_OUTPUT
+          IMAGES_JSON='${{ steps.list-images.outputs.images }}'
+
+          if [ -z "$IMAGES_JSON" ] || [ "$IMAGES_JSON" = "null" ]; then
+            echo "⚠️ No images provided."
+            echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          mapfile -t formatted_images < <(echo "$IMAGES_JSON" | jq -r '.[]')
+
           images=()
+
           for img in "${formatted_images[@]}"; do
-            # Get full repo digest from Docker (after push)
+            echo "Processing $img"
+
             digest_ref=$(docker inspect --format='{{index .RepoDigests 0}}' "$img" 2>/dev/null || true)
 
-            if [[ -n "$digest_ref" ]]; then
+            if [ -n "$digest_ref" ]; then
               images+=("$digest_ref")
             else
-              echo "⚠️ No RepoDigest found for $img (was it pushed?)"
+              echo "⚠️ No RepoDigest found for $img (not pushed?)"
             fi
           done
 
           if [ ${#images[@]} -eq 0 ]; then
             echo "⚠️ No pushed images found to sign."
-            echo "ecr_images=[]" >> $GITHUB_OUTPUT
+            echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
           else
             printf '%s\n' "${images[@]}" | sort -u > /tmp/ecr_images.txt
-
             echo "Found images to sign:"
             cat /tmp/ecr_images.txt
 
             ecr_images_json=$(jq -R -s -c 'split("\n") | map(select(. != ""))' /tmp/ecr_images.txt)
-            echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
-
+            echo "ecr_images=${ecr_images_json}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Build Helm chart
         if: ${{ inputs.run_helm_build }}
