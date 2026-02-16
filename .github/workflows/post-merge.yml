@@ -626,7 +626,7 @@ jobs:
 
       - name: List Docker Images
         id: list-images
-        if: ${{ inputs.run_docker_build }}
+        if: ${{ inputs.run_docker_build || inputs.run_docker_push }}
         env:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
@@ -678,30 +678,48 @@ jobs:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
 
-      - name: Find ECR images
-        if: always()
+      - name: Find pushed images to sign
+        if: ${{ inputs.run_docker_push }}
         id: find-images
         shell: bash
         run: |
           set -euo pipefail
-          echo "🔍 Finding pushed ECR images to sign..."
+          echo "🔍 Finding pushed images to sign using local digests..."
 
-          images=$(docker images --digests --format "{{.Repository}}@{{.Digest}}" \
-            | grep '^080137407410.dkr.ecr.us-west-2.amazonaws.com' || true)
+          IMAGES_JSON='${{ steps.list-images.outputs.images }}'
 
-          images=$(echo "$images" | sed '/^\s*$/d' | sort -u)
+          if [ -z "$IMAGES_JSON" ] || [ "$IMAGES_JSON" = "null" ]; then
+            echo "⚠️ No images provided."
+            echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-          if [ -z "$images" ]; then
-            echo "⚠️ No ECR images found to sign."
-            echo "ecr_images=[]" >> $GITHUB_OUTPUT
-          else
-            ecr_images_json=$(printf '%s\n' "$images" | jq -R -s -c 'split("\n") | map(select(. != ""))')
-            if [ -z "$ecr_images_json" ]; then
-              ecr_images_json='[]'
+          mapfile -t formatted_images < <(echo "$IMAGES_JSON" | jq -r '.[]')
+
+          images=()
+
+          for img in "${formatted_images[@]}"; do
+            echo "Processing $img"
+
+            digest_ref=$(docker inspect --format='{{index .RepoDigests 0}}' "$img" 2>/dev/null || true)
+
+            if [ -n "$digest_ref" ]; then
+              images+=("$digest_ref")
+            else
+              echo "⚠️ No RepoDigest found for $img (not pushed?)"
             fi
-            echo "Found images:"
-            echo "$images"
-            echo "ecr_images=${ecr_images_json}" >> $GITHUB_OUTPUT
+          done
+
+          if [ ${#images[@]} -eq 0 ]; then
+            echo "⚠️ No pushed images found to sign."
+            echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
+          else
+            printf '%s\n' "${images[@]}" | sort -u > /tmp/ecr_images.txt
+            echo "Found images to sign:"
+            cat /tmp/ecr_images.txt
+
+            ecr_images_json=$(jq -R -s -c 'split("\n") | map(select(. != ""))' /tmp/ecr_images.txt)
+            echo "ecr_images=${ecr_images_json}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build Helm chart
