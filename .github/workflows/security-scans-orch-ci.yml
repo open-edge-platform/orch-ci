@@ -17,10 +17,11 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 jobs:
   security-scans:
-    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@ff9b56d8909f2688d2e52dc2d0b7ddeb76c65b62
+    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@c86f36c43c07ca8097dfd443185cc54a7d32e725
     with:
       run_lint: true
       trivy_config_path: trivy.yaml
       run_security_scans: true
       pre_merge_scan: true
       post_merge_scan: true
+      images: '["080137407410.dkr.ecr.us-west-2.amazonaws.com/edge-orch/orch-ui/infra:4.0.1-dev"]'
