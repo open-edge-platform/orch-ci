@@ -25,7 +25,7 @@ jobs:
       pre_merge_scan: true
       post_merge_scan: true
       images: '["080137407410.dkr.ecr.us-west-2.amazonaws.com/edge-orch/orch-ui/infra:4.0.1-dev"]'
- 
+
     secrets:
       NO_AUTH_ECR_PUSH_USERNAME: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
       NO_AUTH_ECR_PUSH_PASSWD: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
