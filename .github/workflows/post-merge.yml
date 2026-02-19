@@ -653,7 +653,12 @@ jobs:
             fi
           done
 
-          images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
+          if [ ${#filtered_images[@]} -eq 0 ]; then
+            images="[]"
+          else
+            images=$(printf '%s\n' "${filtered_images[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
