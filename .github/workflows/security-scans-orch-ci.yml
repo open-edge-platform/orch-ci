@@ -18,7 +18,6 @@ on:   # yamllint disable-line rule:truthy
 
 jobs:
   security-scans:
-    runs-on: ubuntu-latest
     permissions:
       security-events: write   # only this job can write security events
       contents: read           # minimal additional permission

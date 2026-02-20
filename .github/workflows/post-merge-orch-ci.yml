@@ -18,7 +18,6 @@ permissions:
 
 jobs:
   post-merge:
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'  # only run on main
     permissions:
       contents: read

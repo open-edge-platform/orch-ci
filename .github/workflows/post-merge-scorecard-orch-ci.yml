@@ -16,7 +16,6 @@ permissions:
 
 jobs:
   call-scorecard:
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'  # only run on main
     permissions:
       security-events: write  # only this job can write security events
