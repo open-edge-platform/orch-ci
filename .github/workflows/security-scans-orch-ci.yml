@@ -7,16 +7,20 @@
 name: Security Scans Orch-CI
 
 permissions:
-  contents: read
-  security-events: write
+  contents: read   # global least privilege
+  security-events: none  # remove global write access
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   security-scans:
+    permissions:
+      security-events: write   # only this job can write security events
+      contents: read           # minimal additional permission
     uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@0d87105b01c38f6e9aa373871337b8b836237b19  # v2026.0.12
     with:
       run_lint: true
