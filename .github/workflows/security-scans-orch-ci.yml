@@ -17,7 +17,7 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
 jobs:
   security-scans:
-    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@141ebcd99e8cdbb7012cd13450b13eee0a762126
+    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@a21d1491d0d456d44b386515f74885632a9536a1
     with:
       run_lint: true
       trivy_config_path: trivy.yaml
