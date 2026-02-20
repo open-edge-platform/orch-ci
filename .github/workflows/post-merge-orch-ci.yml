@@ -4,7 +4,7 @@
 
 name: Post-Merge CI Pipeline
 
-on:   # yamllint disable-line rule:truthy
+on:  # yamllint disable-line rule:truthy
   push:
     branches:
       - main
@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
       security-events: write   # only this job can write security events
-      id-token: write          # only if absolutely required
+      id-token: write
     uses: open-edge-platform/orch-ci/.github/workflows/post-merge.yml@c8c1792b4f2e2934ffc459bb1b981bc26ddaa39a  # 2026.0.12
     with:
       run_build: false
