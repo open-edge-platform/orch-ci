@@ -853,7 +853,7 @@ jobs:
       id-token: write
       contents: read
     needs: run-repo-pipelines
-    if: ${{ needs.run-repo-pipelines.outputs.ecr_images != '[]' && needs.run-repo-pipelines.outputs.ecr_images != '[""]' }}
+    if: ${{ needs.run-repo-pipelines.outputs.ecr_images != '[]' && needs.run-repo-pipelines.outputs.ecr_images != '[""]' && needs.run-repo-pipelines.outputs.ecr_images != '' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
