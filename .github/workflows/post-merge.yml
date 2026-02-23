@@ -206,7 +206,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -231,7 +231,7 @@ jobs:
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Run Trivy SBOM
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
         with:
           scan-type: 'fs'
           format: 'spdx-json'
@@ -264,7 +264,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy Config Scan (Dockerfile / IaC)
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.project_folder }}
@@ -924,7 +924,7 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Scan Image
-        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284  # 0.34.0
+        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
         with:
           image-ref: ${{ matrix.image }}
           format: 'sarif'
