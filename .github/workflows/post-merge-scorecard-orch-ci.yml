@@ -10,16 +10,16 @@ on:  # yamllint disable-line rule:truthy
       - main
   workflow_dispatch:
 
+# Global token permissions (least privilege)
 permissions:
-  contents: read
+  contents: read       # default permission
 
 jobs:
   call-scorecard:
+    if: github.ref == 'refs/heads/main'  # only run on main
     permissions:
-      security-events: write   # required for SARIF upload
-      id-token: write
-      contents: read
-
+      security-events: write  # only this job can write security events
+      contents: read          # minimal additional permission
     uses: open-edge-platform/orch-ci/.github/workflows/post-merge-scorecard.yml@c8c1792b4f2e2934ffc459bb1b981bc26ddaa39a  # v2026.0.12
     with:
       project_folder: "."
