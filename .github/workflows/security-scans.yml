@@ -125,7 +125,7 @@ jobs:
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizmor Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
@@ -211,7 +211,7 @@ jobs:
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -281,7 +281,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -385,7 +385,7 @@ jobs:
             ${{ matrix.image }}
 
       - name: Upload CIS Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ steps.artifact.outputs.artifact_name }}
           path: trivy_cis-${{ steps.sanitize.outputs.sanitized_name }}.txt

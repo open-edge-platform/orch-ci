@@ -241,7 +241,7 @@ jobs:
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizmor Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
@@ -323,7 +323,7 @@ jobs:
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -384,7 +384,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -724,7 +724,7 @@ jobs:
 
       - name: Upload Docker Images
         if: ${{ inputs.run_docker_build }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
@@ -760,7 +760,7 @@ jobs:
 
       - name: Artifact upload to GitHub
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
@@ -823,7 +823,7 @@ jobs:
             ${{ matrix.image }}
 
       - name: Upload CIS Scan Report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ steps.trivy-artifact.outputs.artifact_name }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
@@ -859,7 +859,7 @@ jobs:
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: trivy-image-vuln-${{ env.sanitized_image_name }}
           path: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
