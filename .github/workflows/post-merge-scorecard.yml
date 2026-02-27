@@ -73,7 +73,7 @@ jobs:
           publish_results: true
 
       - name: Upload raw Scorecard Results as Artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: raw-scorecard-results
           path: raw-scorecard.sarif
@@ -112,7 +112,7 @@ jobs:
           wait-for-processing: true
 
       - name: Upload Scorecard Results as Artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
