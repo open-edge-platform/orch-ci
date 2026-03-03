@@ -321,7 +321,6 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
         with:
           scan-scope: all
-          source: ${INPUTS_PROJECT_FOLDER}
           config_path: ci/.gitleaks.toml
           baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZED_PROJECT_NAME }}.json
           report_format: sarif
