@@ -247,7 +247,7 @@ jobs:
           name: trivy-fs-scan-report-fs-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e  # v3.29.5
+        uses: github/codeql-action/upload-sarif@c793b717bc78562f491db7b0e93a3a178b099162  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_fs
@@ -294,10 +294,41 @@ jobs:
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e
+        uses: github/codeql-action/upload-sarif@c793b717bc78562f491db7b0e93a3a178b099162
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
+  secrets-gitleaks-scan:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    needs: sanitize-project-folder
+    env:
+      INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
+      SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Clone CI repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          persist-credentials: false
+      - name: Gitleaks scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
+        with:
+          scan-scope: all
+          source: ${INPUTS_PROJECT_FOLDER}
+          config_path: ci/.gitleaks.toml
+          baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZED_PROJECT_NAME }}.json
+          report_format: sarif
+          redact: "true"
+          report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
+          upload-sarif: "true"
+          exit_code_on_leak: "0"
   zizmor-scan:
     permissions:
       security-events: write
@@ -312,13 +343,13 @@ jobs:
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@eac588ad8def6316056a12d4907a9d4d84ff7a3b  # v7.3.0
+        uses: astral-sh/setup-uv@5a095e7a2014a4212f075830d4f7277575a9d098  # v7.3.1
 
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e  # v3.29.5
+        uses: github/codeql-action/upload-sarif@c793b717bc78562f491db7b0e93a3a178b099162  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -948,7 +979,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}.sarif
 
       - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@89a39a4e59826350b863aa6b6252a07ad50cf83e  # v3.29.5
+        uses: github/codeql-action/upload-sarif@c793b717bc78562f491db7b0e93a3a178b099162  # v3.29.5
         with:
           sarif_file: trivy-image-${{ env.sanitized_image_name }}.sarif
           category: Trivy_image
