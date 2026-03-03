@@ -324,7 +324,7 @@ jobs:
           source: ${INPUTS_PROJECT_FOLDER}
           config_path: ci/.gitleaks.toml
           baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZED_PROJECT_NAME }}.json
-          report_format: json
+          report_format: sarif
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
           upload-sarif: "true"
