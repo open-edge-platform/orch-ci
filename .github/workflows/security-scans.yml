@@ -164,7 +164,7 @@ jobs:
           path: ci
           persist-credentials: false
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@24a3a495be45af021486e265cf09a17ac3798405  # 2026.0.13
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@582cb262491c89e19904164eb24887b01f6925b2  # 2026.0.15
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -186,7 +186,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478  # 0.34.2
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -233,7 +233,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Critical Filesystem Scan
-        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518  # 0.34.1
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478  # 0.34.2
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -257,7 +257,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy Config Scan (Dockerfile / IaC)
-        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.project_folder }}
@@ -320,7 +320,7 @@ jobs:
           echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
 
       - name: Scan Docker Image
-        uses: aquasecurity/trivy-action@e368e328979b113139d6f9068e03accaed98a518
+        uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           image-ref: ${{ matrix.image }}
           format: 'sarif'
@@ -402,7 +402,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@24a3a495be45af021486e265cf09a17ac3798405  # 2026.0.13
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@582cb262491c89e19904164eb24887b01f6925b2  # 2026.0.15
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
