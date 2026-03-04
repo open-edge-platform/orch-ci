@@ -112,7 +112,7 @@ inputs:
   sbom_flags:
     description: "Trivy flags to generate the SBOM files"
     required: false
-    default: "--scanners vuln,license --license-full --pkg-types library --include-dev-deps --skip-db-update"
+    default: "--scanners license --license-full --pkg-types library --include-dev-deps --skip-db-update"
 
 outputs:
   scan_result:
