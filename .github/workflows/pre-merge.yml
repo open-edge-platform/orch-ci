@@ -258,7 +258,7 @@ jobs:
       - name: Upgrade REUSE
         run: |
           pip install --upgrade pip
-          pip install --upgrade reuse==6.0.0
+          pip install --upgrade reuse==6.2.0
       - name: Run REUSE lint
         run: reuse lint
   secrets-gitleaks-scan:
