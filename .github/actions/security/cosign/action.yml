@@ -40,8 +40,9 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.gh_token }}
+        GH_ACTOR: ${{ github.actor }}
       run: |
-        echo "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
 
     - name: Sign image or binary with Cosign
       shell: bash
