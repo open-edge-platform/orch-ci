@@ -257,10 +257,11 @@ jobs:
           persist-credentials: false
       - name: Upgrade REUSE
         run: |
-          pip install --upgrade pip
-          pip install --upgrade reuse==6.2.0
+          python3 -m pip install --upgrade pip
+          python3 -m pip install --upgrade reuse==6.2.0
       - name: Run REUSE lint
-        run: reuse lint
+        run: |
+          python3 -m reuse lint
   secrets-gitleaks-scan:
     permissions:
       contents: read
