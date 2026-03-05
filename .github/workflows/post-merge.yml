@@ -320,7 +320,7 @@ jobs:
           path: ci
           persist-credentials: false
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@582cb262491c89e19904164eb24887b01f6925b2  # v2026.0.15
         with:
           scan-scope: all
           config_path: ci/.gitleaks.toml
