@@ -210,7 +210,7 @@ runs:
         if [[ "$STATUS" -ne 0 ]]; then
           echo "::warning::Gitleaks detected leaks (exit code $STATUS)"
         fi
-        
+
     - name: Fix SARIF endColumn values for GitHub validation
       if: inputs.upload-sarif == 'true' && contains(steps.run-gitleaks.outputs.report_path, '.sarif')
       shell: bash
@@ -218,12 +218,12 @@ runs:
         set -euo pipefail
         SARIF_FILE="${{ steps.run-gitleaks.outputs.report_path }}"
         TMP_FILE="${SARIF_FILE}.tmp"
-        
+
         jq '
           (.runs[].results[].locations[].physicalLocation.region.endColumn) |=
           (if . == 0 then 1 else . end)
         ' "$SARIF_FILE" > "$TMP_FILE"
-        
+
         mv "$TMP_FILE" "$SARIF_FILE"
     - name: Upload SARIF (code scanning)
       if: inputs.upload-sarif == 'true' && contains(steps.run-gitleaks.outputs.report_path, '.sarif')
