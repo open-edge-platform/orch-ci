@@ -277,7 +277,7 @@ jobs:
           path: ci
           persist-credentials: false
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@582cb262491c89e19904164eb24887b01f6925b2  # v2026.0.15
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -400,7 +400,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@main
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@582cb262491c89e19904164eb24887b01f6925b2  # v2026.0.15
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
@@ -810,7 +810,7 @@ jobs:
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@v0.2.5
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514  # v0.2.5
         with:
           version: 'latest'
 
