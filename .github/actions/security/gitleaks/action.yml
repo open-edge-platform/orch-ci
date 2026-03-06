@@ -225,11 +225,7 @@ runs:
         ' "$SARIF_FILE" > "$TMP_FILE"
 
         mv "$TMP_FILE" "$SARIF_FILE"
-    - name: Upload SARIF (code scanning)
-      if: inputs.upload-sarif == 'true' && contains(steps.run-gitleaks.outputs.report_path, '.sarif')
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841
-      with:
-        sarif_file: ${{ steps.run-gitleaks.outputs.report_path }}
+    
     - name: Upload report artifact
       if: steps.run-gitleaks.outputs.report_path != ''
       env:
