@@ -225,7 +225,7 @@ runs:
         ' "$SARIF_FILE" > "$TMP_FILE"
 
         mv "$TMP_FILE" "$SARIF_FILE"
-    
+
     - name: Upload report artifact
       if: steps.run-gitleaks.outputs.report_path != ''
       env:
