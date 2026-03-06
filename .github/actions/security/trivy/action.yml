@@ -109,6 +109,10 @@ inputs:
     description: "Whether to upload SARIF results to the GitHub Security tab"
     required: false
     default: "true"
+  sbom_flags:
+    description: "Trivy flags to generate the SBOM files"
+    required: false
+    default: "--scanners license --license-full --pkg-types library --include-dev-deps --skip-db-update"
 
 outputs:
   scan_result:
@@ -162,6 +166,7 @@ runs:
         INPUTS_SBOM_FORMAT: ${{ inputs.sbom_format }}
         INPUTS_COMPLIANCE: ${{ inputs.compliance }}
         CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        SBOM_FLAGS: ${{ inputs.sbom_flags }}
 
       # zizmor ignore: all_changed_files is tj-actions/changed-files output
       run: | # zizmor: ignore[template-injection]
@@ -242,6 +247,7 @@ runs:
         if [[ "$INPUTS_GENERATE_SBOM" == "true" ]]; then
           echo "Generating SBOM in $INPUTS_SBOM_FORMAT format"
           trivy fs \
+            "$SBOM_FLAGS" \
             --format "$INPUTS_SBOM_FORMAT" \
             --output "security-results/trivy/trivy-sbom.$INPUTS_SBOM_FORMAT" \
             ${SCAN_TARGET}
