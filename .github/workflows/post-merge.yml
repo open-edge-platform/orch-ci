@@ -1016,6 +1016,6 @@ jobs:
     needs: [run-repo-pipelines]
     if: always() &&
       contains(needs.*.result, 'failure')
-    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@911003af66d2c84c55511764255e9cbb348114b2  # 2026.0.16
+    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # 2026.0.17
     secrets:
       MSTEAMS_WEBHOOK: ${{ secrets.MSTEAMS_WEBHOOK }}
