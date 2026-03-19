@@ -674,7 +674,7 @@ jobs:
           for image in "${all_images[@]}"; do
             skip=false
             for skip_image in "${skip_array[@]}"; do
-              if [[ -n "$skip_image" && "$image" == "$skip_image" ]]; then
+              if [[ -n "$skip_image" && "$image" == "$skip_image"* ]]; then
                 skip=true
                 break
               fi
@@ -719,14 +719,16 @@ jobs:
         if: ${{ inputs.run_docker_push }}
         id: find-images
         shell: bash
+        env:
+          IMAGES_JSON: ${{ steps.list-images.outputs.images }}
+          TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
           set -euo pipefail
-          echo "🔍 Finding pushed images to sign using local digests..."
+          echo "🔍 Finding pushed images to sign (with skip filter)..."
 
-          IMAGES_JSON='${{ steps.list-images.outputs.images }}'
+          IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
 
           if [ -z "$IMAGES_JSON" ] || [ "$IMAGES_JSON" = "null" ]; then
-            echo "⚠️ No images provided."
             echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -738,23 +740,32 @@ jobs:
           for img in "${formatted_images[@]}"; do
             echo "Processing $img"
 
+            skip=false
+            for skip_image in "${skip_array[@]}"; do
+              if [[ -n "$skip_image" && "$img" == "$skip_image"* ]]; then
+                echo "⏭ Skipping (filtered): $img"
+                skip=true
+                break
+              fi
+            done
+
+            if [ "$skip" = true ]; then
+              continue
+            fi
+
             digest_ref=$(docker inspect --format='{{index .RepoDigests 0}}' "$img" 2>/dev/null || true)
 
             if [ -n "$digest_ref" ]; then
               images+=("$digest_ref")
             else
-              echo "⚠️ No RepoDigest found for $img (not pushed?)"
+              echo "⚠️ No RepoDigest found for $img"
             fi
           done
 
           if [ ${#images[@]} -eq 0 ]; then
-            echo "⚠️ No pushed images found to sign."
             echo "ecr_images=[]" >> "$GITHUB_OUTPUT"
           else
             printf '%s\n' "${images[@]}" | sort -u > /tmp/ecr_images.txt
-            echo "Found images to sign:"
-            cat /tmp/ecr_images.txt
-
             ecr_images_json=$(jq -R -s -c 'split("\n") | map(select(. != ""))' /tmp/ecr_images.txt)
             echo "ecr_images=${ecr_images_json}" >> "$GITHUB_OUTPUT"
           fi
