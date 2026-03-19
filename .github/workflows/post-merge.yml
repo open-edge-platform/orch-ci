@@ -924,6 +924,7 @@ jobs:
         with:
           registries: "080137407410"
       - name: Sign image
+        if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         uses: ./orch-ci/.github/actions/security/cosign
         with:
           target: image
@@ -967,6 +968,7 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Scan Image
+        if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0
         with:
           image-ref: ${{ matrix.image }}
