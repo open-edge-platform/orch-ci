@@ -9,6 +9,8 @@ updates:
       - "/"  # this enables searching only in /.github/workflows directory
       - "/.github/actions/bootstrap"
       - "/.github/actions/clamav"
+      - "/.github/actions/pr_updater"
+      - "/.github/actions/security"
       - "/dev-version-update"
       - "/discover-changed-files"
       - "/discover-changed-subfolders"
