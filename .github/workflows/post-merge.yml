@@ -978,6 +978,7 @@ jobs:
           ignore-unfixed: true
           trivy-config: ${{ inputs.trivy_config_path }}
       - name: Tag Trivy SARIF results
+        if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         run: |
           jq '
             .runs |= map(
