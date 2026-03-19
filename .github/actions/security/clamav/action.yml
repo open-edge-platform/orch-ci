@@ -101,7 +101,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c  # v46.0.5
+      uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323  # v47.0.5
 
     - name: Run ClamAV scan
       id: run-clamav
@@ -185,7 +185,7 @@ runs:
       env:
         suffix: ${{ inputs.report_suffix }}
       if: steps.run-clamav.outputs.report_path != ''  # if any report is available
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: clamav-results-${{ steps.run-clamav.outputs.rand_suffix }}${{ env.suffix }}
         path: ${{ steps.run-clamav.outputs.report_path }}

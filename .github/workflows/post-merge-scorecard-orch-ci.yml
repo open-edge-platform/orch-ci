@@ -21,7 +21,7 @@ jobs:
       security-events: write  # only this job can write security events
       contents: read          # minimal additional permission
       id-token: write
-    uses: open-edge-platform/orch-ci/.github/workflows/post-merge-scorecard.yml@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # v2026.0.17
+    uses: open-edge-platform/orch-ci/.github/workflows/post-merge-scorecard.yml@3fc30e438875fee1b679268eef33fca33b3c7102  # 2026.0.17
     with:
       project_folder: "."
     secrets:

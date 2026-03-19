@@ -113,7 +113,7 @@ runs:
     - name: Get changed files
       if: inputs.scan-scope == 'changed'
       id: changed-files
-      uses: tj-actions/changed-files@823fcebdb31bb35fdf2229d9f769b400309430d0  # v46.0.3
+      uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323  # v47.0.5
       with:
         files: |
           **/*.*
@@ -192,14 +192,14 @@ runs:
       env:
         suffix: ${{inputs.report_suffix}}
       if: steps.run-semgrep.outputs.report_path != ''  # if any report is available
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: semgrep-results-${{ steps.run-semgrep.outputs.rand_suffix }}${{ env.suffix }}
         path: ${{ steps.run-semgrep.outputs.report_path }}
         retention-days: 7
     - name: Upload sarif
       if: inputs.upload-sarif == 'true' && contains(steps.run-semgrep.outputs.report_path, '.sarif')
-      uses: github/codeql-action/upload-sarif@1b549b9259bda1cb5ddde3b41741a82a2d15a841  # v3.28.8
+      uses: github/codeql-action/upload-sarif@b1bff81932f5cdfc8695c7752dcee935dcd061c8  # v4.33.0
       with:
         sarif_file: ${{ steps.run-semgrep.outputs.report_path }}
 
