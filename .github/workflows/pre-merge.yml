@@ -680,17 +680,21 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Read the TRIVY_IMAGE_SKIP list
           IFS=',' read -r -a skip_array <<< "${TRIVY_IMAGE_SKIP:-}"
-          skip_patterns="<none>|clamav|dependabot"
+
+          # Only include images from your ECR registry
+          ecr_registry="080137407410.dkr.ecr.us-west-2.amazonaws.com"
 
           mapfile -t all_images < <(
             docker images --format "{{.Repository}}:{{.Tag}}" \
-              | grep -Ev "$skip_patterns" || true
+              | grep "^$ecr_registry" || true
           )
-          filtered_images=()
 
+          filtered_images=()
           for image in "${all_images[@]}"; do
             skip=false
+            # Skip images in the TRIVY_IMAGE_SKIP list
             for skip_image in "${skip_array[@]}"; do
               if [[ -n "$skip_image" && "$image" == "$skip_image" ]]; then
                 skip=true
@@ -703,7 +707,7 @@ jobs:
           done
 
           images=$(printf '%s\n' "${filtered_images[@]}" | jq -R . | jq -s -c .)
-          echo "Filtered images: $images"
+          echo "Filtered ECR images: $images"
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
