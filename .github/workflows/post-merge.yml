@@ -247,7 +247,7 @@ jobs:
           name: trivy-fs-scan-report-fs-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@c6f931105cb2c34c8f901cc885ba1e2e259cf745  # v3.29.5
+        uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc  # v3.29.5
         with:
           sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_fs
@@ -294,7 +294,7 @@ jobs:
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@c6f931105cb2c34c8f901cc885ba1e2e259cf745
+        uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
@@ -350,7 +350,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@c6f931105cb2c34c8f901cc885ba1e2e259cf745  # v3.29.5
+        uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -995,7 +995,7 @@ jobs:
 
       - name: Upload Trivy Image Results
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
-        uses: github/codeql-action/upload-sarif@c6f931105cb2c34c8f901cc885ba1e2e259cf745  # v3.29.5
+        uses: github/codeql-action/upload-sarif@38697555549f1db7851b81482ff19f1fa5c4fedc  # v3.29.5
         with:
           sarif_file: trivy-image-${{ env.sanitized_image_name }}.sarif
           category: Trivy_image
