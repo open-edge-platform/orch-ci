@@ -112,7 +112,7 @@ inputs:
   sbom_flags:
     description: "Trivy flags to generate the SBOM files"
     required: false
-    default: "--scanners license --license-full --pkg-types library --include-dev-deps --skip-db-update"
+    default: "--scanners license --pkg-types library --include-dev-deps --skip-db-update"
 
 outputs:
   scan_result:
@@ -231,8 +231,11 @@ runs:
         # Add the scan target and execute
         CMD="$CMD ${SCAN_TARGET}"
         echo "Executing command: $CMD"
-        eval $CMD || echo "::warning::Trivy scan completed with findings"
+        eval $CMD
         EXIT_CODE=$?
+        if [ $EXIT_CODE -ne 0 ]; then
+          echo "::warning::Trivy exited with code $EXIT_CODE"
+        fi
         echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
 
         if [ -f "${REPORT_FILE}" ]; then
@@ -247,7 +250,7 @@ runs:
         if [[ "$INPUTS_GENERATE_SBOM" == "true" ]]; then
           echo "Generating SBOM in $INPUTS_SBOM_FORMAT format"
           trivy fs \
-            "$SBOM_FLAGS" \
+            $SBOM_FLAGS \
             --format "$INPUTS_SBOM_FORMAT" \
             --output "security-results/trivy/trivy-sbom.$INPUTS_SBOM_FORMAT" \
             ${SCAN_TARGET}
