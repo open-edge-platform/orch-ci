@@ -10,4 +10,6 @@ description = "Allow CI folder as it scanned separately"
 paths = [
   '''ci''',
   '''gitleaks_baselines''',
+  '''internal/cli/testdata/sample\.pfx''',
 ]
+rules = ["pkcs12-file"]
