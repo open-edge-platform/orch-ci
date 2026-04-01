@@ -141,6 +141,12 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: "all"
         type: string
+      ignore_trivy_fail:
+        description: >- 
+          "If true, Trivy scan failures will not block the PR merge"
+        required: false
+        default: false
+        type: boolean
       cache_go:
         description: >-
           Should Go-related cache for project be saved/restored.
@@ -844,6 +850,7 @@ jobs:
         run: |
           echo "Trivy found HIGH/CRITICAL issues"
           exit 1
+        continue-on-error: ${{ inputs.ignore_trivy_fail }}
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -898,3 +905,4 @@ jobs:
         run: |
           echo "Trivy vulnerability scan failed"
           exit 1
+        continue-on-error: ${{ inputs.ignore_trivy_fail }}
