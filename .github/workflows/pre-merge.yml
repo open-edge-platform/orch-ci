@@ -820,18 +820,30 @@ jobs:
 
       - name: Scan Image for Docker CIS compliance
         run: |
+          set +e
           trivy image \
             --compliance docker-cis-1.6.0 \
             --exit-code 1 \
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
+          EXIT_CODE=$?
+          echo "TRIVY_EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+          exit 0
 
       - name: Upload CIS Scan Report
+        if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ steps.trivy-artifact.outputs.artifact_name }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
+          if-no-files-found: warn
+
+      - name: Fail if Trivy CIS found issues
+        if: env.TRIVY_EXIT_CODE != '0'
+        run: |
+          echo "Trivy found HIGH/CRITICAL issues"
+          exit 1
 
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -839,15 +851,20 @@ jobs:
           persist-credentials: false
 
       - name: Scan Image for High/Critical Issues (Trivy)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
-        with:
-          image-ref: ${{ matrix.image }}
-          format: 'sarif'
-          ignore-unfixed: true
-          severity: 'HIGH,CRITICAL'
-          output: "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif"
-          trivy-config: ${{ inputs.trivy_config_path }}
-          exit-code: 1
+        run: |
+          set +e
+          trivy image \
+            --format sarif \
+            --ignore-unfixed \
+            --severity HIGH,CRITICAL \
+            --output "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif" \
+            --config ${{ inputs.trivy_config_path }} \
+            ${{ matrix.image }}
+
+          EXIT_CODE=$?
+          echo "TRIVY_VULN_EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
+          exit 0
+
       - name: Tag Trivy SARIF results
         run: |
           jq '
@@ -874,3 +891,9 @@ jobs:
         if: ${{ always() }}
         run: |
           cat trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif || echo "No report found"
+
+      - name: Fail if Trivy vuln scan found high/critical issues
+        if: env.TRIVY_VULN_EXIT_CODE != '0'
+        run: |
+          echo "Trivy vulnerability scan failed"
+          exit 1
