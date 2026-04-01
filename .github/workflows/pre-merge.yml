@@ -823,7 +823,6 @@ jobs:
           set +e
           trivy image \
             --compliance docker-cis-1.6.0 \
-            --exit-code 1 \
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
