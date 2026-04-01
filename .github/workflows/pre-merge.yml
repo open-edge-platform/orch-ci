@@ -142,7 +142,7 @@ on:  # yamllint disable-line rule:truthy
         default: "all"
         type: string
       ignore_trivy_fail:
-        description: >- 
+        description: >-
           "If true, Trivy scan failures will not block the PR merge"
         required: false
         default: false
