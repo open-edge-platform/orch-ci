@@ -826,15 +826,19 @@ jobs:
 
       - name: Scan Image for Docker CIS compliance
         run: |
-          set +e
           trivy image \
             --compliance docker-cis-1.6.0 \
-            --severity HIGH,CRITICAL \
-            --exit-code 1 \
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
             ${{ matrix.image }}
-          EXIT_CODE=$?
+
+          if grep -E '│ *(HIGH|CRITICAL) *│.*│ *FAIL *│' trivy_cis-${{ env.sanitized_image_name }}.txt; then
+            echo "❌ Found HIGH/CRITICAL CIS failures"
+            EXIT_CODE=1
+          else
+            echo "✅ No HIGH/CRITICAL CIS failures"
+            EXIT_CODE=0
+          fi
           echo "TRIVY_EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
           exit 0
 
