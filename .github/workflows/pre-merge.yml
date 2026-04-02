@@ -776,7 +776,7 @@ jobs:
           path: ${{ inputs.artifacts_path }}
 
   scan-images:
-    name: Scan Docker Images for CIS
+    name: Scan Docker Images
     permissions:
       contents: read
     needs: [sanitize-project-folder, run-repo-pipelines]
