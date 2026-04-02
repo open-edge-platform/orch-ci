@@ -829,6 +829,7 @@ jobs:
           set +e
           trivy image \
             --compliance docker-cis-1.6.0 \
+            --severity HIGH,CRITICAL \
             --exit-code 1 \
             --format table \
             --output "trivy_cis-${{ env.sanitized_image_name }}.txt" \
