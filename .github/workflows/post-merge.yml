@@ -320,7 +320,7 @@ jobs:
           path: ci
           persist-credentials: false
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # v2026.0.17
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@2026.0.19
         with:
           scan-scope: all
           config_path: ci/.gitleaks.toml
@@ -364,7 +364,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # 2026.0.17
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@2026.0.19
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -1023,14 +1023,13 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # 2026.0.17
-        with:
+        uses: open-edge-platform/orch-ci/dev-version-update@2026.0.19
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
   notify-teams:
     needs: [run-repo-pipelines]
     if: always() &&
       contains(needs.*.result, 'failure')
-    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@d40dfda9598df896aa20cb1dc2c950d6444e8fa7  # 2026.0.19
+    uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@2026.0.19
     secrets:
       MSTEAMS_WEBHOOK: ${{ secrets.MSTEAMS_WEBHOOK }}
