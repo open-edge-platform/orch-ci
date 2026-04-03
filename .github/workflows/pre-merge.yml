@@ -834,7 +834,7 @@ jobs:
 
           if grep -E '│ *(HIGH|CRITICAL) *│.*│ *FAIL *│' trivy_cis-${{ env.sanitized_image_name }}.txt; then
             echo "❌ Found HIGH/CRITICAL CIS failures"
-            cat trivy_cis-${{ env.sanitized_image_name }}.txt 
+            cat trivy_cis-${{ env.sanitized_image_name }}.txt
             EXIT_CODE=1
           else
             echo "✅ No HIGH/CRITICAL CIS failures"
@@ -878,7 +878,7 @@ jobs:
           EXIT_CODE=$?
           echo "TRIVY_VULN_EXIT_CODE=$EXIT_CODE" >> $GITHUB_ENV
 
-          # Print the sarif file if it exists 
+          # Print the sarif file if it exists
           if [ -f "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif" ]; then
             echo "::group::Trivy SARIF (first 200 lines)"
             sed -n '1,200p' "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif"
