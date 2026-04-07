@@ -822,7 +822,9 @@ jobs:
       - name: Load tool versions (safe)
         shell: bash
         run: |
-          TRIVY_VER="$(grep -E '^TRIVY_VER=' .github/actions/bootstrap/VERSIONS | head -n1 | cut -d= -f2-)"
+          set -a
+          source .github/actions/bootstrap/VERSIONS
+          set +a
           echo "TRIVY_VER=${TRIVY_VER}" >> "$GITHUB_ENV"
 
       - name: Install Trivy
