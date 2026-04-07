@@ -633,7 +633,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37  # v6.1.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -742,7 +742,7 @@ jobs:
       # Configure AWS credentials for ECR
       - name: Configure AWS credentials for ECR
         if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37  # v6.1.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -751,7 +751,7 @@ jobs:
       # Configure AWS credentials for S3
       - name: Configure AWS credentials for S3
         if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7  # v6.0.0
+        uses: aws-actions/configure-aws-credentials@ec61189d14ec14c8efccab744f656cffd0e33f37  # v6.1.0
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
