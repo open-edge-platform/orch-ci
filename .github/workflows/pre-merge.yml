@@ -873,14 +873,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --output "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif" \
             --config ${{ inputs.trivy_config_path }} \
-            ${{ matrix.image }}
-
-          # Print the sarif file if it exists
-          if [ -f "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif" ]; then
-            echo "::group::Trivy SARIF (first 200 lines)"
-            sed -n '1,200p' "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif"
-            echo "::endgroup::"
-          fi
+            ${{ matrix.image }}  
 
       - name: Tag Trivy SARIF results
         run: |
