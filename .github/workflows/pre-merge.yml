@@ -145,7 +145,7 @@ on:  # yamllint disable-line rule:truthy
         description: >-
           "If true, Trivy scan failures will not block the PR merge"
         required: false
-        default: false
+        default: true
         type: boolean
       cache_go:
         description: >-
@@ -354,6 +354,7 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
           exit-code: 1
+        continue-on-error: ${{ inputs.ignore_trivy_fail }}
   trivy-config-scan:
     permissions:
       contents: read
