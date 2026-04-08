@@ -873,7 +873,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --output "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif" \
             --config ${{ inputs.trivy_config_path }} \
-            ${{ matrix.image }}  
+            ${{ matrix.image }}
 
       - name: Tag Trivy SARIF results
         run: |
