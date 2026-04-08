@@ -908,4 +908,3 @@ jobs:
         if: ${{ always() }}
         run: |
           cat trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif || echo "No report found"
-      
