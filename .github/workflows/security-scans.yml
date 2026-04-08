@@ -181,6 +181,13 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     steps:
+      - name: Load tool versions
+        shell: bash
+        run: |
+          set -a
+          source .github/actions/bootstrap/VERSIONS
+          set +a
+          echo "TRIVY_VER=${TRIVY_VER}" >> "$GITHUB_ENV"
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
         with:
@@ -374,7 +381,7 @@ jobs:
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514  # v0.2.5
         with:
-          version: latest
+          version: ${{ env.TRIVY_VER }}
 
       - name: Run Trivy Docker CIS Compliance Scan
         run: |
