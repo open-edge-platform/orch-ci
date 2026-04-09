@@ -873,6 +873,7 @@ jobs:
             --format sarif \
             --ignore-unfixed \
             --severity HIGH,CRITICAL \
+            --exit-code 1 \
             --output "trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif" \
             --config ${{ inputs.trivy_config_path }} \
             ${{ matrix.image }}
