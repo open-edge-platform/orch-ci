@@ -355,6 +355,7 @@ jobs:
           ignore-unfixed: false
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,misconfig,secret'
+          exit-code: 1
   trivy-config-scan:
     permissions:
       contents: read
