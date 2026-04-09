@@ -846,6 +846,7 @@ jobs:
           if grep -E '│ *(HIGH|CRITICAL) *│.*│ *FAIL *│' trivy_cis-${{ env.sanitized_image_name }}.txt; then
             echo "❌ Found HIGH/CRITICAL CIS failures"
             cat trivy_cis-${{ env.sanitized_image_name }}.txt
+            exit 1
           else
             echo "✅ No HIGH/CRITICAL CIS failures"
           fi
