@@ -116,13 +116,15 @@ runs:
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
+        GITHUB_TOKEN: ${{ secrets.SYS_EMF_GH_TOKEN }}
       run: |
         set -euo pipefail
         VER="${INPUT_VERSION}"
 
         if [[ "$VER" == "latest" ]]; then
           # Resolve latest tag (e.g., v8.28.0) and strip the 'v' for the tarball name
-          VER=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+          VER=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
             | grep -Po '"tag_name":\s*"v\K[0-9.]+' || true)
           if [[ -z "$VER" ]]; then
             echo "::error::Failed to resolve latest Gitleaks version"
@@ -131,7 +133,7 @@ runs:
         fi
 
         echo "Installing Gitleaks version: $VER"
-        curl -sSL \
+        curl -sSL -H "Authorization: Bearer ${GITHUB_TOKEN}" \
           -o /tmp/gitleaks.tar.gz \
           "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz"
         sudo tar xf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
