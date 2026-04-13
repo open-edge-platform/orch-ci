@@ -94,6 +94,10 @@ inputs:
     description: "Whether to upload SARIF results to the GitHub Security tab"
     required: false
     default: "true"
+  github_token:
+    description: "GitHub token used for GitHub API calls / downloading releases"
+    required: false
+    default: ""
 
 outputs:
   exit_code:
@@ -116,7 +120,7 @@ runs:
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
-        GITHUB_TOKEN: ${{ secrets.SYS_EMF_GH_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         set -euo pipefail
         VER="${INPUT_VERSION}"
