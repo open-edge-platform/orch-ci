@@ -271,6 +271,7 @@ jobs:
     env:
       INPUTS_PROJECT_FOLDER: ${{ inputs.project_folder }}
       SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
+      GH_TOKEN: ${{ secrets.SYS_EMF_GH_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -293,7 +294,7 @@ jobs:
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
           upload-sarif: "false"
-          github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
+          github_token: ${{ env.GH_TOKEN }}
   trivy-filesystem-scan:
     permissions:
       contents: read
