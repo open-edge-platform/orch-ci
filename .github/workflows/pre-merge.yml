@@ -293,6 +293,7 @@ jobs:
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
           upload-sarif: "false"
+          github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
   trivy-filesystem-scan:
     permissions:
       contents: read
