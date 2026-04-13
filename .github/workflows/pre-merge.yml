@@ -247,7 +247,7 @@ jobs:
       - name: Run zizmor
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
       - name: Upload Zizmor Scan Report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
@@ -283,7 +283,7 @@ jobs:
           path: ci
           persist-credentials: false
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@2026.1.1
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@7f386e60209a8a37ef76dc29a3c46d6984cc1ce9
         with:
           scan-scope: changed
           source: ${INPUTS_PROJECT_FOLDER}
@@ -340,7 +340,7 @@ jobs:
           exit 0
 
       - name: Upload Trivy Scan Report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -412,7 +412,7 @@ jobs:
           exit 0
 
       - name: Upload Trivy Config Scan Report (SDL419)
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
@@ -428,7 +428,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@2026.1.1
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@7f386e60209a8a37ef76dc29a3c46d6984cc1ce9
         with:
           scan-scope: "changed"
           severity-level: "HIGH"
@@ -756,7 +756,7 @@ jobs:
 
       - name: Upload Docker Images
         if: ${{ inputs.run_docker_build }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: docker-images
@@ -792,7 +792,7 @@ jobs:
 
       - name: Artifact upload to GitHub
         if: ${{ inputs.run_artifact && inputs.artifacts_path != 'empty' }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: artifacts-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: ${{ inputs.artifacts_path }}
@@ -870,7 +870,7 @@ jobs:
 
       - name: Upload CIS Scan Report
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.trivy-artifact.outputs.artifact_name }}
           path: trivy_cis-${{ env.sanitized_image_name }}.txt
@@ -911,7 +911,7 @@ jobs:
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: trivy-image-vuln-${{ env.sanitized_image_name }}
           path: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
