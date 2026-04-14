@@ -123,6 +123,10 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
+        echo "🔍 Checking GitHub API rate limit..."
+        curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        https://api.github.com/rate_limit | jq '.rate.limit'
+        
         VER="${INPUT_VERSION}"
 
         if [[ "$VER" == "latest" ]]; then
