@@ -126,6 +126,9 @@ runs:
         echo "🔍 Checking GitHub API rate limit..."
         curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         https://api.github.com/rate_limit | jq '.rate'
+        echo "🔍 Checking authenticated user"
+        curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+        https://api.github.com/user | jq '.login
         VER="${INPUT_VERSION}"
 
         if [[ "$VER" == "latest" ]]; then
