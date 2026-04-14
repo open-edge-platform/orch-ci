@@ -120,14 +120,15 @@ runs:
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
         VER="${INPUT_VERSION}"
 
         if [[ "$VER" == "latest" ]]; then
           # Resolve latest tag (e.g., v8.28.0) and strip the 'v' for the tarball name
-          VER=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+          VER=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
             | grep -Po '"tag_name":\s*"v\K[0-9.]+' || true)
           if [[ -z "$VER" ]]; then
             echo "::error::Failed to resolve latest Gitleaks version"
