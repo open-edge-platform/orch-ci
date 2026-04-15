@@ -347,28 +347,6 @@ jobs:
         with:
           name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
-  trivy-critical-scan:
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    needs: sanitize-project-folder
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-        with:
-          persist-credentials: false
-      - name: Run Trivy Critical Filesystem Scan
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0
-        continue-on-error: true
-        with:
-          scan-type: 'fs'
-          scan-ref: ${{ inputs.project_folder }}
-          format: 'table'
-          severity: 'HIGH,CRITICAL'
-          ignore-unfixed: false
-          trivy-config: ${{ inputs.trivy_config_path }}
-          scanners: 'vuln,misconfig,secret'
-          exit-code: 1
   trivy-config-scan:
     permissions:
       contents: read
