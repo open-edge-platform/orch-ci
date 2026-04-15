@@ -333,13 +333,14 @@ jobs:
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Trivy FS Verdict
+        continue-on-error: true
         run: |
           if jq -e '.runs[].results[]?.level == "error"' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif > /dev/null; then
             echo "HIGH/CRITICAL found in FS scan"
+            exit 1
           else
             echo "No HIGH/CRITICAL found in FS scan"
           fi
-          exit 0
 
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -405,13 +406,14 @@ jobs:
           && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Trivy Config Verdict
+        continue-on-error: true
         run: |
           if jq -e '.runs[].results[]?.level == "error"' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif > /dev/null; then
             echo "HIGH/CRITICAL found in Config scan"
+            exit 1
           else
             echo "No HIGH/CRITICAL found in Config scan"
           fi
-          exit 0
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
