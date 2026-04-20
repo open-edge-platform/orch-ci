@@ -115,12 +115,25 @@ runs:
       id: changed-files
       uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323  # v47.0.5
 
+    - name: Load tool versions
+      id: load-versions
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [[ -f ".github/actions/bootstrap/VERSIONS" ]]; then
+          source .github/actions/bootstrap/VERSIONS
+          echo "GITLEAKS_VER=${GITLEAKS_VER}" >> $GITHUB_ENV
+        else
+          echo "::warning::VERSIONS file not found, falling back to input version"
+        fi
+
     - name: Install Gitleaks
       id: install
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
         GITHUB_TOKEN: ${{ github.token }}
+        GITLEAKS_VER: ${{ env.GITLEAKS_VER }}
       run: |
         set -euo pipefail
         echo "🔍 Checking GitHub API rate limit..."
@@ -129,7 +142,8 @@ runs:
         echo "🔍 Checking authenticated user"
         curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
         https://api.github.com/repos/${{ github.repository }} | jq '.owner.login'
-        VER="${INPUT_VERSION}"
+        VER="${GITLEAKS_VER:-$INPUT_VERSION}"
+        echo "Using Gitleaks version: ${VER}"
 
         if [[ "$VER" == "latest" ]]; then
           # Resolve latest tag (e.g., v8.28.0) and strip the 'v' for the tarball name
