@@ -138,12 +138,44 @@ runs:
         restore-keys: |
           trivy-db-${{ runner.os }}-
 
-    - name: Install Trivy
+    - name: Checkout orch-ci (for VERSIONS)
+      uses: actions/checkout@v4
+      with:
+        repository: open-edge-platform/orch-ci
+        path: orch-ci
+
+    - name: Load tool versions
+      id: load-versions
       shell: bash
       run: |
-        TRIVY_VER="$(grep -E '^TRIVY_VER=' .github/actions/bootstrap/VERSIONS | head -n1 | cut -d= -f2-)"
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-        | sh -s -- -b /usr/local/bin "v${TRIVY_VER}"
+        set -euo pipefail
+        if [[ -f "orch-ci/.github/actions/bootstrap/VERSIONS" ]]; then
+          source orch-ci/.github/actions/bootstrap/VERSIONS
+          echo "TRIVY_VER=${TRIVY_VER}" >> $GITHUB_ENV
+        else
+          echo "::warning::VERSIONS file not found, falling back to default"
+        fi
+
+    - name: Install Trivy
+      shell: bash
+      env:
+        TRIVY_VER: ${{ env.TRIVY_VER }}
+      run: |
+        if [[ -z "${TRIVY_VER:-}" ]]; then
+          echo "::warning::TRIVY_VER not set, falling back to latest"
+        fi
+
+        TRIVY_VERSION="${TRIVY_VER:-latest}"
+        if [[ "$TRIVY_VERSION" == "latest" ]]; then
+          echo "Installing latest Trivy version"
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin
+        else
+          echo "Installing Trivy version: $TRIVY_VERSION"
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin "v${TRIVY_VERSION}"
+        fi
+
         # Download DB in advance with retry mechanism
         for i in {1..3}; do
           echo "Attempt $i to download vulnerability database..."
