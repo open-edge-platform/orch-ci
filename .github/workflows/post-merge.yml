@@ -206,7 +206,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
@@ -231,7 +231,7 @@ jobs:
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Run Trivy SBOM
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
         with:
           scan-type: 'fs'
           format: 'spdx-json'
@@ -264,7 +264,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy Config Scan (Dockerfile / IaC)
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.project_folder }}
@@ -320,7 +320,7 @@ jobs:
           path: ci
           persist-credentials: false
       - name: Gitleaks scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # v2026.0.17
+        uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@bf82f7924caaac6ba2f388b6ec6ac4edd65f48ee  # 2026.1.1
         with:
           scan-scope: all
           config_path: ci/.gitleaks.toml
@@ -364,7 +364,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Bandit scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@b5930c48c1fcdb6b34ffbcd465cff96dabfbde70  # 2026.0.17
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@bf82f7924caaac6ba2f388b6ec6ac4edd65f48ee  # 2026.1.1
         with:
           scan-scope: "all"
           fail-on-findings: false
@@ -969,7 +969,7 @@ jobs:
 
       - name: Scan Image
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # 0.35.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
         with:
           image-ref: ${{ matrix.image }}
           format: 'sarif'
