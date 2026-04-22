@@ -12,7 +12,7 @@ updates:
     open-pull-requests-limit: 10
     commit-message:
       prefix: "[gha] "
-  
+
   # Custom action directories (if they contain action.yml files)
   - package-ecosystem: "github-actions"
     directory: "/.github/actions/bootstrap"
@@ -21,7 +21,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-bootstrap] "
-  
+
   - package-ecosystem: "github-actions"
     directory: "/.github/actions/clamav"
     schedule:
@@ -29,7 +29,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-clamav] "
-  
+
   - package-ecosystem: "github-actions"
     directory: "/.github/actions/pr_updater"
     schedule:
@@ -37,7 +37,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-pr-updater] "
-  
+
   - package-ecosystem: "github-actions"
     directory: "/.github/actions/security"
     schedule:
@@ -45,7 +45,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-security] "
-  
+
   # Composite actions in root directories
   - package-ecosystem: "github-actions"
     directory: "/dev-version-update"
@@ -54,7 +54,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-dev-version] "
-  
+
   - package-ecosystem: "github-actions"
     directory: "/discover-changed-files"
     schedule:
@@ -62,7 +62,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-changed-files] "
-  
+
   - package-ecosystem: "github-actions"
     directory: "/discover-changed-subfolders"
     schedule:
@@ -70,7 +70,7 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "[gha-changed-subfolders] "
-  
+
   - package-ecosystem: "github-actions"
     directory: "/verify-branch-name"
     schedule:
