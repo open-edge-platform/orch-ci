@@ -181,11 +181,16 @@ jobs:
     runs-on: ${{ inputs.runs_on }}
     needs: sanitize-project-folder
     steps:
+      - name: Checkout orch-ci (for VERSIONS)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          repository: open-edge-platform/orch-ci
+          path: orch-ci
       - name: Load tool versions
         shell: bash
         run: |
           set -a
-          source .github/actions/bootstrap/VERSIONS
+          source orch-ci/.github/actions/bootstrap/VERSIONS
           set +a
           echo "TRIVY_VER=${TRIVY_VER}" >> "$GITHUB_ENV"
       - name: Checkout code
