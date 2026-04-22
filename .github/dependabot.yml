@@ -4,19 +4,77 @@
 ---
 version: 2
 updates:
+  # Main workflows directory
   - package-ecosystem: "github-actions"
-    directories:
-      - "/"  # this enables searching only in /.github/workflows directory
-      - "/.github/actions/bootstrap"
-      - "/.github/actions/clamav"
-      - "/.github/actions/pr_updater"
-      - "/.github/actions/security"
-      - "/dev-version-update"
-      - "/discover-changed-files"
-      - "/discover-changed-subfolders"
-      - "/verify-branch-name"
+    directory: "/"
     schedule:
       interval: daily
     open-pull-requests-limit: 10
     commit-message:
       prefix: "[gha] "
+  
+  # Custom action directories (if they contain action.yml files)
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/bootstrap"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-bootstrap] "
+  
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/clamav"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-clamav] "
+  
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/pr_updater"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-pr-updater] "
+  
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/security"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-security] "
+  
+  # Composite actions in root directories
+  - package-ecosystem: "github-actions"
+    directory: "/dev-version-update"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-dev-version] "
+  
+  - package-ecosystem: "github-actions"
+    directory: "/discover-changed-files"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-changed-files] "
+  
+  - package-ecosystem: "github-actions"
+    directory: "/discover-changed-subfolders"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-changed-subfolders] "
+  
+  - package-ecosystem: "github-actions"
+    directory: "/verify-branch-name"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "[gha-verify-branch] "
