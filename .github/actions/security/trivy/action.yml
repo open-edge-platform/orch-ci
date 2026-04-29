@@ -149,17 +149,24 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        if [[ -f "orch-ci/.github/actions/bootstrap/VERSIONS" ]]; then
-          source orch-ci/.github/actions/bootstrap/VERSIONS
-          echo "TRIVY_VER=${TRIVY_VER}" >> $GITHUB_ENV
+        VERSIONS_FILE="orch-ci/.github/actions/bootstrap/VERSIONS"
+        if [[ -f "$VERSIONS_FILE" ]]; then
+          TRIVY_VER=$(grep '^TRIVY_VER=' "$VERSIONS_FILE" | head -n1 | cut -d'=' -f2-)
+
+          if [[ "$TRIVY_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "trivy_ver=$TRIVY_VER" >> "$GITHUB_OUTPUT"
+          else
+            echo "trivy_ver=" >> "$GITHUB_OUTPUT"
+            echo "::warning::Invalid TRIVY_VER"
+          fi
         else
-          echo "::warning::VERSIONS file not found, falling back to default"
+          echo "trivy_ver=" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Install Trivy
       shell: bash
       env:
-        TRIVY_VER: ${{ env.TRIVY_VER }}
+        TRIVY_VER: ${{ steps.load-versions.outputs.trivy_ver }}
       run: |
         if [[ -z "${TRIVY_VER:-}" ]]; then
           echo "::warning::TRIVY_VER not set, falling back to latest"
@@ -224,7 +231,7 @@ runs:
         mkdir -p security-results/trivy
         RAND_SUFFIX=$(head /dev/urandom | tr -dc a-z0-9 | head -c 6)
         REPORT_FILE="security-results/trivy/trivy-results-${RAND_SUFFIX}.$INPUTS_FORMAT"
-        echo "rand_suffix=${RAND_SUFFIX}" >> $GITHUB_OUTPUT
+        echo "rand_suffix=${RAND_SUFFIX}" >> "$GITHUB_OUTPUT"
 
         echo "Running Trivy with scan type: $INPUTS_SCAN_TYPE"
         echo "Output will be saved to: ${REPORT_FILE}"
@@ -238,41 +245,43 @@ runs:
           SCAN_TARGET="$INPUTS_SCAN_TARGET"
         fi
 
-        # Build the base command
-        CMD="trivy --cache-dir ~/.cache/trivy $INPUTS_SCAN_TYPE \
-        --severity $TRIVY_SEVERITY \
-        --format $INPUTS_FORMAT \
-        --output ${REPORT_FILE} \
-        --timeout $INPUTS_TIMEOUT"
+        # Build argument array safely
+        ARGS=(
+          --cache-dir ~/.cache/trivy
+          "$INPUTS_SCAN_TYPE"
+          --severity "$TRIVY_SEVERITY"
+          --format "$INPUTS_FORMAT"
+          --output "$REPORT_FILE"
+          --timeout "$INPUTS_TIMEOUT"
+        )
 
-        # Add scanner-specific flags based on scan type
+        # Add scanner-specific flags
         if [[ "$INPUTS_SCAN_TYPE" == "config" ]]; then
-          # For config scans, use all default misconfig scanners or specified ones
-          CMD="$CMD --misconfig-scanners $INPUTS_MISCONFIG_SCANNERS"
+          ARGS+=(--misconfig-scanners "$INPUTS_MISCONFIG_SCANNERS")
         elif [[ "$INPUTS_SCAN_TYPE" == "fs" || "$INPUTS_SCAN_TYPE" == "repo" ]]; then
-          # For filesystem scans, use --scanners
-          CMD="$CMD --scanners $INPUTS_SCANNERS --ignore-unfixed=$INPUTS_IGNORE_UNFIXED"
+          ARGS+=(--scanners "$INPUTS_SCANNERS" --ignore-unfixed="$INPUTS_IGNORE_UNFIXED")
         elif [[ "$INPUTS_SCAN_TYPE" == "image" ]]; then
-          CMD="$CMD --ignore-unfixed=$INPUTS_IGNORE_UNFIXED"
+          ARGS+=(--ignore-unfixed="$INPUTS_IGNORE_UNFIXED")
         fi
 
-        # Add compliance flag if user sets input
+        # Add compliance if set
         if [[ -n "$INPUTS_COMPLIANCE" ]]; then
-          CMD="$CMD --compliance $INPUTS_COMPLIANCE"
+          ARGS+=(--compliance "$INPUTS_COMPLIANCE")
         fi
 
-        # Add the scan target and execute
-        CMD="$CMD ${SCAN_TARGET}"
-        echo "Executing command: $CMD"
-        eval $CMD
+        # Add scan target
+        ARGS+=("$SCAN_TARGET")
+
+        echo "Executing: trivy ${ARGS[*]}"
+        trivy "${ARGS[@]}"
         EXIT_CODE=$?
         if [ $EXIT_CODE -ne 0 ]; then
           echo "::warning::Trivy exited with code $EXIT_CODE"
         fi
-        echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
 
         if [ -f "${REPORT_FILE}" ]; then
-          echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
+          echo "report_path=${REPORT_FILE}" >> "$GITHUB_OUTPUT"
           echo "Scan report generated at ${REPORT_FILE}"
         else
           echo "::error::Report file was not generated"
@@ -286,7 +295,7 @@ runs:
             $SBOM_FLAGS \
             --format "$INPUTS_SBOM_FORMAT" \
             --output "security-results/trivy/trivy-sbom.$INPUTS_SBOM_FORMAT" \
-            ${SCAN_TARGET}
+            "${SCAN_TARGET}"
         fi
 
       # Upload results after full scope analysis
