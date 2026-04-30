@@ -132,7 +132,12 @@ runs:
           if [[ -z "${GITLEAKS_VER:-}" ]]; then
             echo "::warning::GITLEAKS_VER not found, falling back to input version"
           elif [[ "$GITLEAKS_VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "GITLEAKS_VER=$GITLEAKS_VER" >> "$GITHUB_ENV"
+            SAFE_VER="$(printf '%s' "$GITLEAKS_VER" | tr -cd '0-9.')"
+            if [[ "$SAFE_VER" != "$GITLEAKS_VER" ]]; then
+              echo "::error::Invalid characters in GITLEAKS_VER"
+              exit 1
+            fi
+            echo "gitleaks_ver=$SAFE_VER" >> "$GITHUB_OUTPUT"
           else
             echo "::error::Invalid GITLEAKS_VER format"
             exit 1
@@ -147,7 +152,7 @@ runs:
       env:
         INPUT_VERSION: ${{ inputs.version }}
         GITHUB_TOKEN: ${{ github.token }}
-        GITLEAKS_VER: ${{ env.GITLEAKS_VER }}
+        GITLEAKS_VER: ${{ steps.load-versions.outputs.gitleaks_ver }}
       run: |
         set -euo pipefail
         echo "🔍 Checking GitHub API rate limit..."
