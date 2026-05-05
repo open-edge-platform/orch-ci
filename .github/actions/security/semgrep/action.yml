@@ -158,16 +158,19 @@ runs:
         echo "rand_suffix=${RAND_SUFFIX}" >> $GITHUB_OUTPUT
 
         if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
-          echo "Running Semgrep on changed files, output results into workflow log only"
+          echo "Running Semgrep on changed files"
           FILES="${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}"
           semgrep \
             ${SEMGREP_SEVERITY} \
             --error \
             --timeout "$INPUTS_TIMEOUT" \
             --metrics=off \
+            --"$INPUTS_OUTPUT_FORMAT" \
+            -o "${REPORT_FILE}" \
             ${FILES}
           exit_code="$?"
           echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
 
         elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]] ; then
           echo "Running Semgrep on all files in $INPUTS_PATHS"
@@ -185,13 +188,15 @@ runs:
 
         else
           echo "No files to scan found"
+          exit_code="0"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
         fi
 
       # Upload results after full scope analysis
     - name: Upload reports
       env:
         suffix: ${{inputs.report_suffix}}
-      if: steps.run-semgrep.outputs.report_path != ''  # if any report is available
+      if: steps.run-semgrep.outputs.report_path != ''
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: semgrep-results-${{ steps.run-semgrep.outputs.rand_suffix }}${{ env.suffix }}
