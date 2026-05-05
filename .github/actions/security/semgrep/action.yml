@@ -160,28 +160,28 @@ runs:
         if [[ "$INPUTS_SCAN_SCOPE" == "changed" && -n "${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}" ]]; then
           echo "Running Semgrep on changed files, output results into workflow log only"
           FILES="${CHANGED_FILES_OUTPUTS_ALL_CHANGED_FILES}"
-        semgrep \
-          ${SEMGREP_SEVERITY} \
-          --error \
-          --timeout "$INPUTS_TIMEOUT" \
-          --metrics=off \
-          ${FILES}
-        exit_code="$?"
-        echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          semgrep \
+            ${SEMGREP_SEVERITY} \
+            --error \
+            --timeout "$INPUTS_TIMEOUT" \
+            --metrics=off \
+            ${FILES}
+          exit_code="$?"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
 
         elif [[ "$INPUTS_SCAN_SCOPE" == "all" ]] ; then
           echo "Running Semgrep on all files in $INPUTS_PATHS"
-        semgrep \
-          ${SEMGREP_SEVERITY} \
-          --error \
-          --metrics=off \
-          --timeout "$INPUTS_TIMEOUT" \
-          --"$INPUTS_OUTPUT_FORMAT" \
-          -o "${REPORT_FILE}" \
-          "$INPUTS_PATHS"
-        exit_code="$?"
-        echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
-        echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
+          semgrep \
+            ${SEMGREP_SEVERITY} \
+            --error \
+            --metrics=off \
+            --timeout "$INPUTS_TIMEOUT" \
+            --"$INPUTS_OUTPUT_FORMAT" \
+            -o "${REPORT_FILE}" \
+            "$INPUTS_PATHS"
+          exit_code="$?"
+          echo "exit_code=$exit_code" >> $GITHUB_OUTPUT
+          echo "report_path=${REPORT_FILE}" >> $GITHUB_OUTPUT
 
         else
           echo "No files to scan found"
