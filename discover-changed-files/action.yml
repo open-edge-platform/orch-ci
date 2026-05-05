@@ -4,6 +4,7 @@
 # yamllint disable rule:line-length
 ---
 name: 'Discover Changed Files'
+description: "Discover changed files"
 inputs:
   project_folder:
     description: "Project subfolder where the job will run, defaults to ."
@@ -21,6 +22,7 @@ runs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
       with:
         fetch-depth: ${{ github.base_ref == '' && 2 || 0 }}
+        persist-credentials: false
 
     - name: Discover Changed Files
       shell: bash

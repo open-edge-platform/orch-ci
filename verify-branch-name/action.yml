@@ -3,11 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: 'Verify Branch Name'
+description: "Verify branch name"
 runs:
   using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+      with:
+        persist-credentials: false
     - name: Verify branch name
       env:
         HEAD_REF: ${{ github.head_ref }}
