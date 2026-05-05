@@ -120,6 +120,7 @@ runs:
       with:
         repository: open-edge-platform/orch-ci
         path: orch-ci
+        persist-credentials: false
 
     - name: Load tool versions
       id: load-versions
