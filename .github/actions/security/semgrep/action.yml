@@ -205,7 +205,9 @@ runs:
 
     - name: Fail if Semgrep found issues
       if: inputs.fail-on-findings == 'true' && steps.run-semgrep.outputs.exit_code != '0'
+      env:
+        EXIT_CODE: ${{ steps.run-semgrep.outputs.exit_code }}
       shell: bash
       run: |
-        echo "Semgrep found issues. Failing the job with exit code ${{ steps.run-semgrep.outputs.exit_code }}"
-        exit ${{ steps.run-semgrep.outputs.exit_code }}
+        echo "Semgrep found issues. Failing the job with exit code ${EXIT_CODE}"
+        exit "${EXIT_CODE}"

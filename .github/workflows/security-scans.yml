@@ -283,6 +283,8 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq '
             .runs |= map(
@@ -293,20 +295,24 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
               ))
             )
-          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          ' trivy-config-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
           && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-config-scan-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          name: trivy-config-scan-${SANITIZED_PROJECT_NAME}
+          path: trivy-config-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          sarif_file: trivy-config-${SANITIZED_PROJECT_NAME}.sarif
           category: Trivy_config
 
   trivy-image-scan:
@@ -395,24 +401,29 @@ jobs:
 
       - name: Sanitize image name
         id: sanitize
+        env:
+          IMAGE: ${{ matrix.image }}
         run: |
-          IMAGE="${{ matrix.image }}"
           SANITIZED=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
           echo "sanitized_name=$SANITIZED" >> "$GITHUB_OUTPUT"
 
       - name: Prepare CIS artifact name
         id: artifact
+        env:
+          IMAGE: ${{ matrix.image }}
+          SANITIZED_NAME: ${{ steps.sanitize.outputs.sanitized_name }}
         run: |
           set -euo pipefail
-          IMAGE="${{ matrix.image }}"
           HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
-          ARTIFACT_NAME="trivy-cis-${{ steps.sanitize.outputs.sanitized_name }}-${HASH:0:8}"
+          ARTIFACT_NAME="trivy-cis-${SANITIZED_NAME}-${HASH:0:8}"
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Install Trivy
         uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514  # v0.2.5
+        env:
+          TRIVY_VER: ${{ env.TRIVY_VER }}
         with:
-          version: ${{ env.TRIVY_VER }}
+          version: ${TRIVY_VER}
 
       - name: Run Trivy Docker CIS Compliance Scan
         env:
