@@ -259,10 +259,12 @@ runs:
 
     - name: Fix SARIF endColumn values for GitHub validation
       if: inputs.upload-sarif == 'true' && contains(steps.run-gitleaks.outputs.report_path, '.sarif')
+      env:
+        REPORT_PATH: ${{ steps.run-gitleaks.outputs.report_path }}
       shell: bash
       run: |
         set -euo pipefail
-        SARIF_FILE="${{ steps.run-gitleaks.outputs.report_path }}"
+        SARIF_FILE="${REPORT_PATH}"
         TMP_FILE="${SARIF_FILE}.tmp"
 
         jq '

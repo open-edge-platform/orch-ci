@@ -439,41 +439,51 @@ runs:
 
     - name: Install asdf
       if: contains(inputs.bootstrap_tools, 'asdf') || contains(inputs.bootstrap_tools, 'all')
+      env:
+        ASDF_VER: ${{ env.ASDF_VER }}
       shell: bash
       run: |
-        git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v${{ env.ASDF_VER }}
+        git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v${ASDF_VER}
         echo '. $HOME/.asdf/asdf.sh' >> ~/.bashrc
         echo '. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
 
     - name: Install AWS CLI
       if: contains(inputs.bootstrap_tools, 'aws') || contains(inputs.bootstrap_tools, 'all')
+      env:
+        AWSCLI2_VER: ${{ env.AWSCLI2_VER }}
       shell: bash
       run: |
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${{ env.AWSCLI2_VER }}.zip" -o "awscliv2.zip"
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI2_VER}.zip" -o "awscliv2.zip"
           unzip awscliv2.zip
           sudo ./aws/install --update
           rm -rf awscliv2.zip aws
 
     - name: Install Cosign
       if: contains(inputs.bootstrap_tools, 'cosign') || contains(inputs.bootstrap_tools, 'all')
+      env:
+        COSIGN_VER: ${{ env.COSIGN_VER }}
       shell: bash
       run: |
-        wget "https://github.com/sigstore/cosign/releases/download/${{ env.COSIGN_VER }}/cosign-linux-amd64"
+        wget "https://github.com/sigstore/cosign/releases/download/${COSIGN_VER}/cosign-linux-amd64"
         chmod +x cosign-linux-amd64
         sudo mv cosign-linux-amd64 /usr/bin/cosign
 
     - name: Install gitleaks
       if: contains(inputs.bootstrap_tools, 'gitleaks') || contains(inputs.bootstrap_tools, 'all')
+      env:
+        GITLEAKS_VER: ${{ env.GITLEAKS_VER }}
       shell: bash
       run: |
-        wget -O /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v${{ env.GITLEAKS_VER }}/gitleaks_${{ env.GITLEAKS_VER }}_linux_x64.tar.gz
+        wget -O /tmp/gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VER}/gitleaks_${GITLEAKS_VER}_linux_x64.tar.gz
         sudo tar xf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
         rm /tmp/gitleaks.tar.gz
 
     - name: Install oasdiff
       if: contains(inputs.bootstrap_tools, 'oasdiff') || contains(inputs.bootstrap_tools, 'all')
+      env:
+        OASDIFF_VER: ${{ env.OASDIFF_VER }}
       shell: bash
       run: |
-        wget -O /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v${{ env.OASDIFF_VER }}/oasdiff_${{ env.OASDIFF_VER }}_linux_amd64.tar.gz
+        wget -O /tmp/oasdiff.tar.gz https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VER}/oasdiff_${OASDIFF_VER}_linux_amd64.tar.gz
         sudo tar xf /tmp/oasdiff.tar.gz -C /usr/local/bin oasdiff
         rm /tmp/oasdiff.tar.gz
