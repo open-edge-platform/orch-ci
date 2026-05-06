@@ -167,7 +167,7 @@ jobs:
         uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@a95228137803b756aae327668c115db235802982  # 2026.1.3
         with:
           scan-scope: changed
-          source: ${INPUTS_PROJECT_FOLDER}
+          source: ${{ env.INPUTS_PROJECT_FOLDER }}
           config_path: ci/.gitleaks.toml
           baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZED_PROJECT_NAME }}.json
           report_format: json
@@ -200,9 +200,11 @@ jobs:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
+        env:
+          SCAN_REF: ${{ inputs.project_folder }}
         with:
           scan-type: 'fs'
-          scan-ref: ${{ inputs.project_folder }}
+          scan-ref: "${{ env.SCAN_REF }}"
           format: 'sarif'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
@@ -324,27 +326,33 @@ jobs:
           persist-credentials: false
 
       - name: Pull Image
-        run: docker pull ${{ matrix.image }}
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: docker pull "$IMAGE"
 
       - name: Sanitize image name
         id: img
+        env:
+          IMAGE: ${{ matrix.image }}
         run: |
-          SAFE_NAME=$(echo "${{ matrix.image }}" | tr '/:@' '___')
-          echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
+          SANITIZED=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
+          echo "sanitized_name=$SANITIZED" >> "$GITHUB_OUTPUT"
 
       - name: Scan Docker Image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
+        env:
+          IMAGE: ${{ matrix.image }}
         with:
-          image-ref: ${{ matrix.image }}
+          image-ref: "${{ env.IMAGE }}"
           format: 'sarif'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           ignore-unfixed: true
-          output: trivy-image-${{ steps.img.outputs.safe_name }}.sarif
+          output: trivy-image-${{ steps.img.outputs.sanitized_name }}.sarif
 
       - name: Upload Trivy Image Results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7
         with:
-          sarif_file: trivy-image-${{ steps.img.outputs.safe_name }}.sarif
+          sarif_file: trivy-image-${{ steps.img.outputs.sanitized_name }}.sarif
           category: Trivy_image
 
   trivy-cis-scan:
@@ -365,8 +373,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Pull Docker Image
-        run: docker pull ${{ matrix.image }}
+      - name: Pull Image
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: docker pull "$IMAGE"
 
       - name: Sanitize image name
         id: sanitize
@@ -390,12 +400,15 @@ jobs:
           version: ${{ env.TRIVY_VER }}
 
       - name: Run Trivy Docker CIS Compliance Scan
+        env:
+          IMAGE: ${{ matrix.image }}
+          OUTFILE: trivy_cis-${{ steps.sanitize.outputs.sanitized_name }}.txt
         run: |
           trivy image \
             --compliance docker-cis-1.6.0 \
             --format table \
-            --output "trivy_cis-${{ steps.sanitize.outputs.sanitized_name }}.txt" \
-            ${{ matrix.image }}
+            --output "$OUTFILE" \
+            "$IMAGE"
 
       - name: Upload CIS Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
