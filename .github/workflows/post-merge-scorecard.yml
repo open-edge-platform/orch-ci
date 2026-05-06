@@ -96,6 +96,8 @@ jobs:
           name: raw-scorecard-results
 
       - name: Remove Fuzzing check from SARIF
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq 'del(
                 .runs[].results[]
@@ -105,16 +107,20 @@ jobs:
                 .runs[].tool.driver.rules[]
                 | select((.id // "") | test("fuzz"; "i"))
               )' raw-scorecard.sarif \
-            > scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+            > scorecard-results-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Upload Scorecard Results to Code Scanning
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7  # v3.29.5
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          sarif_file: scorecard-results-${SANITIZED_PROJECT_NAME}.sarif
           wait-for-processing: true
 
       - name: Upload Scorecard Results as Artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: scorecard-results-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          name: scorecard-results-${SANITIZED_PROJECT_NAME}
+          path: scorecard-results-${SANITIZED_PROJECT_NAME}.sarif
