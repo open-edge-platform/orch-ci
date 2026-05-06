@@ -217,6 +217,8 @@ jobs:
           scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq '
             .runs |= map(
@@ -227,29 +229,37 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               ))
             )
-          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          ' trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
       - name: Run Trivy SBOM
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
           scan-type: 'fs'
           format: 'spdx-json'
-          output: "trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json"
+          output: "trivy_scan_report-sbom-${SANITIZED_PROJECT_NAME}.json"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-scan-report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy_scan_report-sbom-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.json
+          name: trivy-scan-report-sbom-${SANITIZED_PROJECT_NAME}
+          path: trivy_scan_report-sbom-${SANITIZED_PROJECT_NAME}.json
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-fs-scan-report-fs-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          name: trivy-fs-scan-report-fs-${SANITIZED_PROJECT_NAME}
+          path: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7  # v3.29.5
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          sarif_file: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
           category: Trivy_fs
   trivy-config-scan:
     permissions:
@@ -476,15 +486,20 @@ jobs:
         if: ${{ inputs.cache_go }}
         id: restored-project-go-cache
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        env:
+          GOCACHE: ${{ env.GOCACHE }}
+          GOMODCACHE: ${{ env.GOMODCACHE }}
+          GOLANG_VER: ${{ env.GOLANG_VER }}
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
           path: |
-            ${{ env.GOCACHE }}
-            ${{ env.GOMODCACHE }}
+            ${GOCACHE}
+            ${GOMODCACHE}
             ~/.cache/golangci-lint
-          key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          key: ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-${GOLANG_VER}-${{ hashFiles('**/go.mod') }}
           restore-keys: |
-            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
-            ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-
+            ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-${GOLANG_VER}-
+            ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-
 
       - name: Free Ubuntu Disk Space
         if: ${{ inputs.run_freeup_ubuntu_space }}
@@ -581,9 +596,11 @@ jobs:
       - name: Upload binaries artifact
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        env:
+          TEMP_DIR: ${{ env.TEMP_DIR }}
         with:
           name: ${{ steps.artifact-name.outputs.artifact_name }}
-          path: ${{ env.TEMP_DIR }}
+          path: "${TEMP_DIR}"
           if-no-files-found: ignore
 
       - name: Lint Code
@@ -603,12 +620,17 @@ jobs:
       - name: Save Go cache
         if: ${{ inputs.cache_go && steps.restored-project-go-cache.outputs.cache-hit != 'true' }}
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae  # v5.0.5
+        env:
+          GOCACHE: ${{ env.GOCACHE }}
+          GOMODCACHE: ${{ env.GOMODCACHE }}
+          GOLANG_VER: ${{ env.GOLANG_VER }}
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
           path: |
-            ${{ env.GOCACHE }}
-            ${{ env.GOMODCACHE }}
+            ${GOCACHE}
+            ${GOMODCACHE}
             ~/.cache/golangci-lint
-          key: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
+          key: ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-${GOLANG_VER}-${{ hashFiles('**/go.mod') }}
 
       - name: Configure AWS credentials
         if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
@@ -886,8 +908,10 @@ jobs:
 
       - name: Upload Cosign artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        env:
+          ART_NAME: ${{ env.ART_NAME }}
         with:
-          name: ${{ env.ART_NAME }}
+          name: "${ART_NAME}"
           path: ./cosign-artifacts
           if-no-files-found: error
 
@@ -968,16 +992,21 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Scan Image
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
+          TRIVY_CONFIG_PATH: ${{ inputs.trivy_config_path }}
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
         with:
           image-ref: ${{ matrix.image }}
           format: 'sarif'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
-          output: "trivy-${{ env.sanitized_image_name }}.sarif"
+          output: "trivy-${SANITIZED_IMAGE_NAME}.sarif"
           ignore-unfixed: true
-          trivy-config: ${{ inputs.trivy_config_path }}
+          trivy-config: "${TRIVY_CONFIG_PATH}"
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         run: |
           jq '
@@ -989,22 +1018,26 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
               ))
             )
-          ' trivy-${{ env.sanitized_image_name }}.sarif \
+          ' trivy-${SANITIZED_IMAGE_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}.sarif
+          && mv trivy_tagged.sarif trivy-image-${SANITIZED_IMAGE_NAME}.sarif
 
       - name: Upload Trivy Image Results
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7  # v3.29.5
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         with:
-          sarif_file: trivy-image-${{ env.sanitized_image_name }}.sarif
+          sarif_file: trivy-image-${SANITIZED_IMAGE_NAME}.sarif
           category: Trivy_image
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         with:
-          name: trivy-image-vuln-${{ env.sanitized_image_name }}
-          path: trivy-image-${{ env.sanitized_image_name }}.sarif
+          name: trivy-image-vuln-${SANITIZED_IMAGE_NAME}
+          path: trivy-image-${SANITIZED_IMAGE_NAME}.sarif
   version-bump:
     permissions:
       contents: read
