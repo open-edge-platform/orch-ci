@@ -226,9 +226,9 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               ))
             )
-          ' trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif \
+          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
+          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         env:
