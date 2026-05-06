@@ -266,8 +266,12 @@ runs:
         TMP_FILE="${SARIF_FILE}.tmp"
 
         jq '
-          (.runs[].results[].locations[].physicalLocation.region.endColumn) |=
-          (if . == 0 then 1 else . end)
+          (.runs[].results[].locations[].physicalLocation.region) |=
+          ( .startLine   |= (if (. == null or . < 1) then 1 else . end)
+          | .startColumn |= (if (. == null or . < 1) then 1 else . end)
+          | .endLine     |= (if (. == null or . < 1) then 1 else . end)
+          | .endColumn   |= (if (. == null or . < 1) then 1 else . end)
+          )
         ' "$SARIF_FILE" > "$TMP_FILE"
 
         mv "$TMP_FILE" "$SARIF_FILE"
