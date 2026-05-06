@@ -318,6 +318,8 @@ jobs:
           scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq '
             .runs |= map(
@@ -328,14 +330,16 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               ))
             )
-          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          ' trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Trivy FS Verdict
         continue-on-error: true
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
-          if jq -e '.runs[].results[]?.level == "error"' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif > /dev/null; then
+          if jq -e '.runs[].results[]?.level == "error"' trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif > /dev/null; then
             echo "HIGH/CRITICAL found in FS scan"
             exit 1
           else
@@ -369,6 +373,8 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq '
             .runs |= map(
@@ -379,14 +385,16 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
               ))
             )
-          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          ' trivy-config-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy-config-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Trivy Config Verdict
         continue-on-error: true
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
-          if jq -e '.runs[].results[]?.level == "error"' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif > /dev/null; then
+          if jq -e '.runs[].results[]?.level == "error"' trivy-config-${SANITIZED_PROJECT_NAME}.sarif > /dev/null; then
             echo "HIGH/CRITICAL found in Config scan"
             exit 1
           else
@@ -814,10 +822,11 @@ jobs:
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
       - name: Prepare Trivy CIS artifact name
+        env:
+          IMAGE: ${{ matrix.image }}
         id: trivy-artifact
         run: |
           set -euo pipefail
-          IMAGE="${{ matrix.image }}"
           SANITIZED_NAME=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
           IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
           ARTIFACT_NAME="trivy-cis-${SANITIZED_NAME}-${IMAGE_HASH:0:8}"
@@ -886,6 +895,8 @@ jobs:
             "$IMAGE"
 
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         run: |
           jq '
             .runs |= map(
@@ -896,9 +907,9 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_image"] | unique) }
               ))
             )
-          ' trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif \
+          ' trivy-image-${SANITIZED_IMAGE_NAME}-high-critical.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
+          && mv trivy_tagged.sarif trivy-image-${SANITIZED_IMAGE_NAME}-high-critical.sarif
 
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: ${{ always() }}
@@ -908,6 +919,9 @@ jobs:
           path: trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif
 
       - name: Display report for High/Critical Issues
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         if: ${{ always() }}
         run: |
-          cat trivy-image-${{ env.sanitized_image_name }}-high-critical.sarif || echo "No report found"
+          FILE="trivy-image-${SANITIZED_IMAGE_NAME}-high-critical.sarif"
+          cat "$FILE" || echo "No report found"
