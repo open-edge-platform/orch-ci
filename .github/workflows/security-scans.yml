@@ -241,7 +241,7 @@ jobs:
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
+          sarif_file: trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif
           category: Trivy_fs
 
   trivy-critical-scan:
@@ -304,7 +304,7 @@ jobs:
             )
           ' trivy-config-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy-config-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -319,7 +319,7 @@ jobs:
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: trivy-config-${SANITIZED_PROJECT_NAME}.sarif
+          sarif_file: trivy-config-${{ env.SANITIZED_PROJECT_NAME }}.sarif
           category: Trivy_config
 
   trivy-image-scan:
