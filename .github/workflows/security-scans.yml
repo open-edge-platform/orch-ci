@@ -203,6 +203,7 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
         env:
           SCAN_REF: ${{ inputs.project_folder }}
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
           scan-type: 'fs'
           scan-ref: "${{ env.SCAN_REF }}"
@@ -211,8 +212,10 @@ jobs:
           ignore-unfixed: true
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,secret'
-          output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+          output: "trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif"
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq '
             .runs |= map(
@@ -223,18 +226,22 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               ))
             )
-          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          ' trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-fs-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
-          path: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          name: trivy-fs-scan-report-${SANITIZED_PROJECT_NAME}
+          path: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7  # v3.29.5
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          sarif_file: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
           category: Trivy_fs
 
   trivy-critical-scan:
