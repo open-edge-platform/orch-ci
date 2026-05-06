@@ -283,6 +283,8 @@ jobs:
           trivy-config: ${{ inputs.trivy_config_path }}
           output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
           jq '
             .runs |= map(
@@ -293,9 +295,9 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
               ))
             )
-          ' trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
+          ' trivy-config-${SANITIZED_PROJECT_NAME}.sarif \
           > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          && mv trivy_tagged.sarif trivy-config-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -573,17 +575,21 @@ jobs:
 
       - name: Prepare artifact name
         id: artifact-name
+        env:
+          BINARIES: ${{ steps.find-binaries.outputs.binaries }}
         run: |
-          binaries_json="${{ steps.find-binaries.outputs.binaries }}"
+          binaries_json="${BINARIES}"
           artifact_hash=$(echo "$binaries_json" | sha1sum | awk '{print $1}')
           artifact_name="built-binaries-$artifact_hash"
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
 
       - name: Copy binaries to temp folder
         if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
+        env:
+          BINARIES: ${{ steps.find-binaries.outputs.binaries }}
         run: |
           set -euo pipefail
-          binaries_json='${{ steps.find-binaries.outputs.binaries }}'
+          binaries_json='${BINARIES}'
           TEMP_DIR=$(mktemp -d)
           echo "Copying binaries to temporary folder: $TEMP_DIR"
           echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
@@ -876,10 +882,12 @@ jobs:
           path: ./binaries
       - name: Resolve actual binary path
         id: resolve-path
+        env:
+          BINARY: ${{ matrix.binary }}
         run: |
           set -euo pipefail
           ARTIFACT_ROOT="./binaries"
-          BIN_NAME=$(basename "${{ matrix.binary }}")
+          BIN_NAME=$(basename "${BINARY}")
           FILE_PATH=$(find "$ARTIFACT_ROOT" -type f -name "$BIN_NAME" | head -n1)
           if [ -z "$FILE_PATH" ]; then
             echo "Error: binary not found in artifact: $BIN_NAME"
@@ -900,11 +908,14 @@ jobs:
           gh_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
 
       - name: Prepare Cosign artifacts for upload
+        env:
+          ARTIFACT_NAME: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
+          SANITIZED_NAME: ${{ steps.resolve-path.outputs.sanitized_name }}
         shell: bash
         run: |
           mkdir -p ./cosign-artifacts
           mv cosign.* ./cosign-artifacts/
-          echo "ART_NAME=${{ needs.run-repo-pipelines.outputs.artifact_name }}-${{ steps.resolve-path.outputs.sanitized_name }}" >> $GITHUB_ENV
+          echo "ART_NAME=${ARTIFACT_NAME}-${SANITIZED_NAME}" >> $GITHUB_ENV
 
       - name: Upload Cosign artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
