@@ -212,11 +212,17 @@ jobs:
           ignore-unfixed: true
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,secret'
-          output: "trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif"
+          output: "trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif"
       - name: Tag Trivy SARIF results
-        env:
-          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
+          FILE="trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+
+          echo "Checking for $FILE"
+          if [ ! -f "$FILE" ]; then
+            echo "SARIF file not found. Creating empty SARIF."
+            echo '{"version":"2.1.0","runs":[]}' > "$FILE"
+          fi
+
           jq '
             .runs |= map(
               .tool.driver.rules |= (. // [] | map(
@@ -226,9 +232,9 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_fs"] | unique) }
               ))
             )
-          ' trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif \
-          > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+          ' "$FILE" > trivy_tagged.sarif
+
+          mv trivy_tagged.sarif "$FILE"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         env:
@@ -289,10 +295,18 @@ jobs:
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
           trivy-config: ${{ inputs.trivy_config_path }}
           output: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
+
       - name: Tag Trivy SARIF results
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
+          FILE="trivy-config-${SANITIZED_PROJECT_NAME}.sarif"
+
+          if [ ! -f "$FILE" ]; then
+            echo "SARIF file not found. Creating empty SARIF."
+            echo '{"version":"2.1.0","runs":[]}' > "$FILE"
+          fi
+
           jq '
             .runs |= map(
               .tool.driver.rules |= (. // [] | map(
@@ -302,9 +316,8 @@ jobs:
                 .properties |= (. // {} ) + { tags: ((.tags // []) + ["Trivy_config"] | unique) }
               ))
             )
-          ' trivy-config-${SANITIZED_PROJECT_NAME}.sarif \
-          > trivy_tagged.sarif \
-          && mv trivy_tagged.sarif trivy-config-${SANITIZED_PROJECT_NAME}.sarif
+          ' "$FILE" > tmp.sarif
+          mv tmp.sarif "$FILE"
 
       - name: Upload Trivy Config Scan Report (SDL419)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -430,7 +443,7 @@ jobs:
         env:
           TRIVY_VER: ${{ env.TRIVY_VER }}
         with:
-          version: ${TRIVY_VER}
+          version: ${{ env.TRIVY_VER }}
 
       - name: Run Trivy Docker CIS Compliance Scan
         env:
