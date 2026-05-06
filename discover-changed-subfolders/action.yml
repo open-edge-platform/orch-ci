@@ -5,6 +5,7 @@
 # yamllint disable rule:line-length
 
 name: 'Discover Changed Subfolder'
+description: "Discover changed subfolder"
 inputs:
   project_folder:
     description: "Project subfolder where the job will run, defaults to ."
@@ -24,6 +25,7 @@ runs:
       # and the entire history for pull request events.
       with:
         fetch-depth: ${{ github.base_ref == '' && 2 || 0 }}
+        persist-credentials: false
 
     - name: Discover Changed Subfolders
       shell: bash
