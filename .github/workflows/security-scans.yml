@@ -101,10 +101,14 @@ jobs:
         run: |
           # check if inputs.project_folder is set, if not return repository name
           if [ -z "${INPUTS_PROJECT_FOLDER}" ] || [ "${INPUTS_PROJECT_FOLDER}" = "." ]; then
-            SANITIZED_PROJECT_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
+            RAW_NAME="${GITHUB_REPOSITORY#"${GITHUB_REPOSITORY_OWNER}/"}"
           else
-            SANITIZED_PROJECT_NAME=$(echo "${INPUTS_PROJECT_FOLDER}" | tr '/' '-')
+            RAW_NAME="${INPUTS_PROJECT_FOLDER}"
           fi
+
+          SANITIZED_PROJECT_NAME=$(echo "$RAW_NAME" \
+            | tr '/' '-' \
+            | tr -cd '[:alnum:]_-')
           echo "SANITIZED_PROJECT_NAME=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_ENV"
           echo "sanitized_project_name=${SANITIZED_PROJECT_NAME}" >> "$GITHUB_OUTPUT"
   zizmor-scan:
@@ -214,8 +218,10 @@ jobs:
           scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif"
       - name: Tag Trivy SARIF results
+        env:
+          SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
-          FILE="trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
+          FILE="trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif"
 
           echo "Checking for $FILE"
           if [ ! -f "$FILE" ]; then
