@@ -20,7 +20,7 @@ on:  # yamllint disable-line rule:truthy
         default: false
         type: boolean
       run_freeup_ubuntu_space:
-        description: "Freeup space in runner by removing unwanted packages"
+        description: "Free up space in runner by removing unwanted packages"
         required: false
         default: false
         type: boolean
@@ -239,27 +239,27 @@ jobs:
         with:
           scan-type: 'fs'
           format: 'spdx-json'
-          output: "trivy_scan_report-sbom-${SANITIZED_PROJECT_NAME}.json"
+          output: "trivy_scan_report-sbom-${{ env.SANITIZED_PROJECT_NAME }}.json"
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-scan-report-sbom-${SANITIZED_PROJECT_NAME}
-          path: trivy_scan_report-sbom-${SANITIZED_PROJECT_NAME}.json
+          name: trivy-scan-report-sbom-${{ env.SANITIZED_PROJECT_NAME }}
+          path: trivy_scan_report-sbom-${{ env.SANITIZED_PROJECT_NAME }}.json
       - name: Upload Trivy Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-fs-scan-report-fs-${SANITIZED_PROJECT_NAME}
-          path: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
+          name: trivy-fs-scan-report-fs-${{ env.SANITIZED_PROJECT_NAME }}
+          path: trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7  # v3.29.5
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
+          sarif_file: trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif
           category: Trivy_fs
   trivy-config-scan:
     permissions:
@@ -495,13 +495,13 @@ jobs:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
           path: |
-            ${GOCACHE}
-            ${GOMODCACHE}
+            ${{ env.GOCACHE }}
+            ${{ env.GOMODCACHE }}
             ~/.cache/golangci-lint
-          key: ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-${GOLANG_VER}-${{ hashFiles('**/go.mod') }}
+          key: ${{ env.SANITIZED_PROJECT_NAME }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
           restore-keys: |
-            ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-${GOLANG_VER}-
-            ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-
+            ${{ env.SANITIZED_PROJECT_NAME }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-
+            ${{ env.SANITIZED_PROJECT_NAME }}-${{ runner.os }}-go-
 
       - name: Free Ubuntu Disk Space
         if: ${{ inputs.run_freeup_ubuntu_space }}
@@ -589,7 +589,7 @@ jobs:
           BINARIES: ${{ steps.find-binaries.outputs.binaries }}
         run: |
           set -euo pipefail
-          binaries_json='${BINARIES}'
+          binaries_json="${BINARIES}"
           TEMP_DIR=$(mktemp -d)
           echo "Copying binaries to temporary folder: $TEMP_DIR"
           echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
@@ -606,7 +606,7 @@ jobs:
           TEMP_DIR: ${{ env.TEMP_DIR }}
         with:
           name: ${{ steps.artifact-name.outputs.artifact_name }}
-          path: "${TEMP_DIR}"
+          path: ${{ env.TEMP_DIR }}
           if-no-files-found: ignore
 
       - name: Lint Code
@@ -636,7 +636,7 @@ jobs:
             ${GOCACHE}
             ${GOMODCACHE}
             ~/.cache/golangci-lint
-          key: ${SANITIZED_PROJECT_NAME}-${{ runner.os }}-go-${GOLANG_VER}-${{ hashFiles('**/go.mod') }}
+          key: ${{ env.SANITIZED_PROJECT_NAME }}-${{ runner.os }}-go-${{ env.GOLANG_VER }}-${{ hashFiles('**/go.mod') }}
 
       - name: Configure AWS credentials
         if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
@@ -922,7 +922,7 @@ jobs:
         env:
           ART_NAME: ${{ env.ART_NAME }}
         with:
-          name: "${ART_NAME}"
+          name: "${{ env.ART_NAME }}"
           path: ./cosign-artifacts
           if-no-files-found: error
 
@@ -1012,9 +1012,9 @@ jobs:
           image-ref: ${{ matrix.image }}
           format: 'sarif'
           severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL'
-          output: "trivy-${SANITIZED_IMAGE_NAME}.sarif"
+          output: "trivy-${{ env.SANITIZED_IMAGE_NAME }}.sarif"
           ignore-unfixed: true
-          trivy-config: "${TRIVY_CONFIG_PATH}"
+          trivy-config: "${{ env.TRIVY_CONFIG_PATH }}"
       - name: Tag Trivy SARIF results
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
@@ -1039,7 +1039,7 @@ jobs:
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         with:
-          sarif_file: trivy-image-${SANITIZED_IMAGE_NAME}.sarif
+          sarif_file: trivy-image-${{ env.SANITIZED_IMAGE_NAME }}.sarif
           category: Trivy_image
       - name: Upload Trivy Image Vulnerability Scan (SDL514)
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
@@ -1047,8 +1047,8 @@ jobs:
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         with:
-          name: trivy-image-vuln-${SANITIZED_IMAGE_NAME}
-          path: trivy-image-${SANITIZED_IMAGE_NAME}.sarif
+          name: trivy-image-vuln-${{ env.SANITIZED_IMAGE_NAME }}
+          path: trivy-image-${{ env.SANITIZED_IMAGE_NAME }}.sarif
   version-bump:
     permissions:
       contents: read
@@ -1073,7 +1073,8 @@ jobs:
           project_folder: ${{ inputs.project_folder }}
   notify-teams:
     needs: [run-repo-pipelines]
-    if: always() &&
+    if: >-
+      always() &&
       contains(needs.*.result, 'failure')
     uses: open-edge-platform/orch-ci/.github/workflows/notify-teams.yml@a95228137803b756aae327668c115db235802982  # 2026.1.3
     secrets:

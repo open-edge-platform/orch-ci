@@ -114,7 +114,7 @@ jobs:
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          sarif_file: scorecard-results-${SANITIZED_PROJECT_NAME}.sarif
+          sarif_file: scorecard-results-${{ env.SANITIZED_PROJECT_NAME }}.sarif
           wait-for-processing: true
 
       - name: Upload Scorecard Results as Artifact
@@ -122,5 +122,5 @@ jobs:
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: scorecard-results-${SANITIZED_PROJECT_NAME}
-          path: scorecard-results-${SANITIZED_PROJECT_NAME}.sarif
+          name: scorecard-results-${{ env.SANITIZED_PROJECT_NAME }}
+          path: scorecard-results-${{ env.SANITIZED_PROJECT_NAME }}.sarif
