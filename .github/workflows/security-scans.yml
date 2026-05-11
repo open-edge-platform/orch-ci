@@ -246,8 +246,8 @@ jobs:
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-fs-scan-report-${SANITIZED_PROJECT_NAME}
-          path: trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
+          name: trivy-fs-scan-report-${{ env.SANITIZED_PROJECT_NAME }}
+          path: trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif
       - name: Upload Trivy Results
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7  # v3.29.5
         env:
@@ -330,8 +330,8 @@ jobs:
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
-          name: trivy-config-scan-${SANITIZED_PROJECT_NAME}
-          path: trivy-config-${SANITIZED_PROJECT_NAME}.sarif
+          name: trivy-config-scan-${{ env.SANITIZED_PROJECT_NAME }}
+          path: trivy-config-${{ env.SANITIZED_PROJECT_NAME }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
         uses: github/codeql-action/upload-sarif@e46ed2cbd01164d986452f91f178727624ae40d7
