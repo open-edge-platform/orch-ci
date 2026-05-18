@@ -286,7 +286,7 @@ jobs:
       - name: Gitleaks scan
         uses: open-edge-platform/orch-ci/.github/actions/security/gitleaks@a95228137803b756aae327668c115db235802982  # 2026.1.3
         with:
-          scan-scope: changed
+          scan-scope: ${{ startsWith(github.ref, 'refs/tags/') && 'all' || 'changed' }}
           source: ${{ env.INPUTS_PROJECT_FOLDER }}
           config_path: ci/.gitleaks.toml
           baseline_path: ci/gitleaks_baselines/gitleaks-${{ env.SANITIZED_PROJECT_NAME }}.json
@@ -420,7 +420,7 @@ jobs:
       - name: Run Bandit scan
         uses: open-edge-platform/orch-ci/.github/actions/security/bandit@a95228137803b756aae327668c115db235802982  # 2026.1.3
         with:
-          scan-scope: "changed"
+          scan-scope: ${{ startsWith(github.ref, 'refs/tags/') && 'all' || 'changed' }}
           severity-level: "HIGH"
           confidence-level: "HIGH"
           output-format: "txt"
@@ -652,13 +652,23 @@ jobs:
           aws-region: us-west-2
 
       - name: Login to Amazon ECR
-        if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
+        if: |
+          (
+            inputs.run_docker_push ||
+            inputs.run_helm_push
+          ) &&
+          (
+            github.actor != 'dependabot[bot]' ||
+            startsWith(github.ref, 'refs/tags/')
+          )
         uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
         with:
           registries: "080137407410"
 
       - name: Build Docker image
-        if: ${{ inputs.run_docker_build }}
+        if: |
+          inputs.run_docker_build ||
+          startsWith(github.ref, 'refs/tags/')
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
@@ -667,7 +677,12 @@ jobs:
           make docker-build
 
       - name: Push Docker image
-        if: ${{ inputs.run_docker_push && github.actor != 'dependabot[bot]' }}
+        if: |
+          inputs.run_docker_push &&
+          (
+            github.actor != 'dependabot[bot]' ||
+            startsWith(github.ref, 'refs/tags/')
+          )
         working-directory: ${{ inputs.project_folder }}
         env:
           VERSION_SUFFIX: ${{ inputs.version_suffix }}
@@ -692,7 +707,9 @@ jobs:
 
       - name: List & Filter Docker Images
         id: list-images
-        if: ${{ inputs.run_docker_build }}
+        if: |
+          inputs.run_docker_build ||
+          startsWith(github.ref, 'refs/tags/')
         env:
           TRIVY_IMAGE_SKIP: ${{ inputs.trivy_image_skip }}
         run: |
@@ -729,7 +746,9 @@ jobs:
           echo "images=$images" >> "$GITHUB_OUTPUT"
 
       - name: Save Docker Images
-        if: ${{ inputs.run_docker_build }}
+        if: |
+          inputs.run_docker_build ||
+          startsWith(github.ref, 'refs/tags/')
         env:
           IMAGES: ${{ steps.list-images.outputs.images }}
         run: |
@@ -745,7 +764,9 @@ jobs:
           done
 
       - name: Upload Docker Images
-        if: ${{ inputs.run_docker_build }}
+        if: |
+          inputs.run_docker_build ||
+          startsWith(github.ref, 'refs/tags/')
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: docker-images-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
@@ -776,7 +797,12 @@ jobs:
           registries: "080137407410"
 
       - name: Upload artifacts to Release Service Fileserver
-        if: ${{ inputs.run_artifact_push && github.actor != 'dependabot[bot]' }}
+        if: |
+          inputs.run_artifact_push &&
+          (
+            github.actor != 'dependabot[bot]' ||
+            startsWith(github.ref, 'refs/tags/')
+          )
         run: |
           make artifact-publish
 
@@ -793,7 +819,10 @@ jobs:
       contents: read
     needs: [sanitize-project-folder, run-repo-pipelines]
     if: |
-      inputs.run_docker_build &&
+      (
+        inputs.run_docker_build ||
+        startsWith(github.ref, 'refs/tags/')
+      ) &&
       needs.run-repo-pipelines.outputs.images != '[]' &&
       needs.run-repo-pipelines.outputs.images != '[""]'
     runs-on: ubuntu-latest
