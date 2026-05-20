@@ -967,7 +967,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION=$(cat VERSION)
-          PACKAGE_NAME="${REPO_NAME}-${VERSION}.tar.gz"
+          PACKAGE_NAME="v${REPO_NAME}-${VERSION}.tar.gz"
           tar -czvf "${PACKAGE_NAME}" -C ./signed-package .
           if ! aws ecr describe-repositories \
             --region us-west-2 \
