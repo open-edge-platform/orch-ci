@@ -816,36 +816,6 @@ jobs:
         run: |
           make deb-push
 
-      # Configure AWS credentials for ECR
-      - name: Configure AWS credentials for ECR
-        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885  # v6.1.1
-        with:
-          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
-          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
-          aws-region: us-west-2
-
-      # Configure AWS credentials for S3
-      - name: Configure AWS credentials for S3
-        if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885  # v6.1.1
-        with:
-          aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
-          aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
-          aws-region: us-west-2
-
-      - name: Login to Amazon ECR
-        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
-        with:
-          registries: "080137407410"
-
-      - name: Upload artifacts to Release Service
-        if: ${{ inputs.run_artifact_push }}
-        working-directory: ${{ inputs.project_folder }}
-        run: |
-          make artifact-publish
-
       - name: Upload artifacts to ghcr.io
         if: ${{ inputs.run_ghcr_push }}
         working-directory: ${{ inputs.project_folder }}
@@ -925,6 +895,86 @@ jobs:
           name: "${{ env.ART_NAME }}"
           path: ./cosign-artifacts
           if-no-files-found: error
+  
+  publish-signed-artifacts:
+    permissions:
+      contents: read
+    needs:
+      - run-repo-pipelines
+      - sign-binaries
+    if: |
+      always() &&
+      inputs.run_artifact_push &&
+      (
+        needs.sign-binaries.result == 'success' ||
+        needs.run-repo-pipelines.outputs.binaries == '[]'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Download binaries
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
+          path: ./signed-package
+
+      - name: Download cosign artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          path: ./cosign-downloads
+          pattern: "${{ needs.run-repo-pipelines.outputs.artifact_name }}-*"
+          merge-multiple: true
+
+      - name: Merge signatures
+        run: |
+          cp -R ./cosign-downloads/* ./signed-package/ || true
+
+      - name: Configure AWS credentials for ECR
+        if: ${{ !inputs.artifact_to_s3 }}
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Configure AWS credentials for S3
+        if: ${{ inputs.artifact_to_s3 }}
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Login ECR
+        if: ${{ !inputs.artifact_to_s3 }}
+        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419
+        with:
+          registries: "080137407410"
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Publish signed artifacts
+        working-directory: ${{ inputs.project_folder }}
+        env:
+          OCI_REPOSITORY: edge-orch/files/${{ github.event.repository.name }}
+          OCI_REGISTRY: 080137407410.dkr.ecr.us-west-2.amazonaws.com
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          VERSION=$(cat VERSION)
+          PACKAGE_NAME="${REPO_NAME}-${VERSION}.tar.gz"
+          tar -czvf "${PACKAGE_NAME}" -C ../signed-package .
+          aws ecr create-repository \
+            --region us-west-2 \
+            --repository-name "${OCI_REPOSITORY}" || true
+          oras push \
+            "${OCI_REGISTRY}/${OCI_REPOSITORY}:${VERSION}" \
+            "${PACKAGE_NAME}"
 
   sign-images:
     permissions:
