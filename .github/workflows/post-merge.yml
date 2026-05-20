@@ -968,7 +968,7 @@ jobs:
           set -euo pipefail
           VERSION=$(cat VERSION)
           PACKAGE_NAME="${REPO_NAME}-${VERSION}.tar.gz"
-          tar -czvf "${PACKAGE_NAME}" -C ../signed-package .
+          tar -czvf "${PACKAGE_NAME}" -C ./signed-package .
           aws ecr create-repository \
             --region us-west-2 \
             --repository-name "${OCI_REPOSITORY}" || true
