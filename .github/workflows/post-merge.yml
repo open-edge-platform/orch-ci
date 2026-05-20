@@ -969,9 +969,13 @@ jobs:
           VERSION=$(cat VERSION)
           PACKAGE_NAME="${REPO_NAME}-${VERSION}.tar.gz"
           tar -czvf "${PACKAGE_NAME}" -C ./signed-package .
-          aws ecr create-repository \
+          if ! aws ecr describe-repositories \
             --region us-west-2 \
-            --repository-name "${OCI_REPOSITORY}" || true
+            --repository-names "${OCI_REPOSITORY}" >/dev/null 2>&1; then
+            aws ecr create-repository \
+              --region us-west-2 \
+              --repository-name "${OCI_REPOSITORY}"
+          fi
           oras push \
             "${OCI_REGISTRY}/${OCI_REPOSITORY}:${VERSION}" \
             "${PACKAGE_NAME}"
