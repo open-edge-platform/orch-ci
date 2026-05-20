@@ -895,7 +895,7 @@ jobs:
           name: "${{ env.ART_NAME }}"
           path: ./cosign-artifacts
           if-no-files-found: error
-  
+
   publish-signed-artifacts:
     permissions:
       contents: read
