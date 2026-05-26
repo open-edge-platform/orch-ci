@@ -185,7 +185,7 @@ runs:
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
         name: bandit-results-${{ steps.run-bandit.outputs.rand_suffix }}${{ env.suffix }}
-        path: "${REPORT_PATH}"
+        path: "${{ env.REPORT_PATH }}"
         retention-days: 7
 
     - name: Fix SARIF severity levels
