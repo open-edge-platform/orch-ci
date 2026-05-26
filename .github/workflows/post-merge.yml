@@ -9,6 +9,11 @@ name: Post-Merge CI Pipeline
 on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
+      run_repo_pipeline:
+        description: "Run default pipeline checks"
+        required: false
+        default: true
+        type: boolean
       run_version_check:
         description: "Run version check"
         required: false
@@ -381,6 +386,7 @@ jobs:
           scan-scope: "all"
           fail-on-findings: false
   run-repo-pipelines:
+    if: ${{ inputs.run_repo_pipeline }}
     permissions:
       contents: read
     runs-on: ${{ inputs.runs_on }}
