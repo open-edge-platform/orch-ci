@@ -955,31 +955,11 @@ jobs:
         with:
           registries: "080137407410"
 
-      - name: Install ORAS
-        uses: oras-project/setup-oras@38de303aac69abb66f3e6255b7198bff35f323e3  # v2.0
-
-      - name: Publish signed artifacts
+      - name: Upload artifacts to Release Service
+        if: ${{ inputs.run_artifact_push }}
         working-directory: ${{ inputs.project_folder }}
-        env:
-          OCI_REPOSITORY: edge-orch/files/${{ github.event.repository.name }}
-          OCI_REGISTRY: 080137407410.dkr.ecr.us-west-2.amazonaws.com
-          REPO_NAME: ${{ github.event.repository.name }}
         run: |
-          set -euo pipefail
-          VERSION=$(cat VERSION)
-          TAG="v${VERSION}"
-          PACKAGE_NAME="${REPO_NAME}-${VERSION}.tar.gz"
-          tar -czvf "${PACKAGE_NAME}" -C ./signed-package .
-          if ! aws ecr describe-repositories \
-            --region us-west-2 \
-            --repository-names "${OCI_REPOSITORY}" >/dev/null 2>&1; then
-            aws ecr create-repository \
-              --region us-west-2 \
-              --repository-name "${OCI_REPOSITORY}"
-          fi
-          oras push \
-            "${OCI_REGISTRY}/${OCI_REPOSITORY}:${TAG}" \
-            "${PACKAGE_NAME}"
+          make artifact-publish
 
   sign-images:
     permissions:
