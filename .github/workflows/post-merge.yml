@@ -9,6 +9,11 @@ name: Post-Merge CI Pipeline
 on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
+      run_repo_pipeline:
+        description: "Run default pipeline checks"
+        required: false
+        default: true
+        type: boolean
       run_version_check:
         description: "Run version check"
         required: false
@@ -265,7 +270,7 @@ jobs:
           name: trivy-fs-scan-report-fs-${{ env.SANITIZED_PROJECT_NAME }}
           path: trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v3.29.5
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v3.29.5
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
@@ -316,7 +321,7 @@ jobs:
           path: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa
         with:
           sarif_file: trivy-config-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif
           category: Trivy_config
@@ -372,7 +377,7 @@ jobs:
         run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --format sarif > zizmor_scan_report.sarif
 
       - name: Upload Zizmor Results
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v3.29.5
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v3.29.5
         with:
           sarif_file: zizmor_scan_report.sarif
   bandit:
@@ -391,6 +396,7 @@ jobs:
           scan-scope: "all"
           fail-on-findings: false
   run-repo-pipelines:
+    if: ${{ inputs.run_repo_pipeline }}
     permissions:
       contents: read
     runs-on: ${{ inputs.runs_on }}
@@ -650,7 +656,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
-        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885  # v6.1.1
+        uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5  # v6.1.2
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -825,6 +831,36 @@ jobs:
         working-directory: ${{ inputs.project_folder }}
         run: |
           make deb-push
+
+      # Configure AWS credentials for ECR
+      - name: Configure AWS credentials for ECR
+        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
+        uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5  # v6.1.2
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      # Configure AWS credentials for S3
+      - name: Configure AWS credentials for S3
+        if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
+        uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5  # v6.1.2
+        with:
+          aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
+          aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
+          aws-region: us-west-2
+
+      - name: Login to Amazon ECR
+        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
+        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
+        with:
+          registries: "080137407410"
+
+      - name: Upload artifacts to Release Service
+        if: ${{ inputs.run_artifact_push }}
+        working-directory: ${{ inputs.project_folder }}
+        run: |
+          make artifact-publish
 
       - name: Upload artifacts to ghcr.io
         if: ${{ inputs.run_ghcr_push }}
@@ -1002,7 +1038,7 @@ jobs:
           path: orch-ci
           persist-credentials: false
       - name: Configure AWS credentials for ECR
-        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885  # v6.1.1
+        uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5  # v6.1.2
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -1055,6 +1091,57 @@ jobs:
           sanitized_image_name="${sanitized_image_name//[:\/]/_}"
           echo "sanitized_image_name=$sanitized_image_name" >> "$GITHUB_ENV"
 
+      - name: Prepare Trivy CIS artifact name
+        env:
+          IMAGE: ${{ matrix.image }}
+        id: trivy-artifact
+        run: |
+          set -euo pipefail
+          SANITIZED_NAME=$(echo "$IMAGE" | tr ':/.@' '_' | tr -cd '[:alnum:]_-')
+          IMAGE_HASH=$(echo -n "$IMAGE" | sha1sum | awk '{print $1}')
+          ARTIFACT_NAME="trivy-cis-${SANITIZED_NAME}-${IMAGE_HASH:0:8}"
+          echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Load tool versions (safe)
+        shell: bash
+        run: |
+          echo "TRIVY_VER=0.69.3" >> "$GITHUB_ENV"
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514  # v0.2.5
+        with:
+          version: 'v${{ env.TRIVY_VER }}'
+
+      - name: Scan Image for Docker CIS compliance
+        continue-on-error: true
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
+          IMAGE: ${{ matrix.image }}
+        run: |
+          trivy image \
+            --compliance docker-cis-1.6.0 \
+            --format table \
+            --output "trivy_cis-${SANITIZED_IMAGE_NAME}.txt" \
+            "$IMAGE"
+
+          if grep -E '│ *(HIGH|CRITICAL) *│.*│ *FAIL *│' trivy_cis-${SANITIZED_IMAGE_NAME}.txt; then
+            echo "❌ Found HIGH/CRITICAL CIS failures"
+            cat trivy_cis-${SANITIZED_IMAGE_NAME}.txt
+            exit 1
+          else
+            echo "✅ No HIGH/CRITICAL CIS failures"
+          fi
+
+      - name: Upload CIS Scan Report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        env:
+          SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
+        with:
+          name: ${{ steps.trivy-artifact.outputs.artifact_name }}
+          path: trivy_cis-${SANITIZED_IMAGE_NAME}.txt
+          if-no-files-found: warn
+
       - name: Scan Image
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
@@ -1088,7 +1175,7 @@ jobs:
 
       - name: Upload Trivy Image Results
         if: startsWith(matrix.image, '080137407410.dkr.ecr.')
-        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v3.29.5
+        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa  # v3.29.5
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
         with:
