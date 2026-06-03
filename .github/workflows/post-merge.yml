@@ -157,6 +157,16 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      bin_path:
+        description: "Path for binaries to upload to github artifacts"
+        required: false
+        default: ""
+        type: string
+      bin_zip_name:
+        description: "Name for zip file created to upload to github artifacts"
+        required: false
+        default: ""
+        type: string
     secrets:
       SYS_EMF_GH_TOKEN:
         required: false
