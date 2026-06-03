@@ -832,36 +832,6 @@ jobs:
         run: |
           make deb-push
 
-      # Configure AWS credentials for ECR
-      - name: Configure AWS credentials for ECR
-        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5  # v6.1.2
-        with:
-          aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
-          aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
-          aws-region: us-west-2
-
-      # Configure AWS credentials for S3
-      - name: Configure AWS credentials for S3
-        if: ${{ inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/configure-aws-credentials@acca2b1b2070338fb9fd1ca27ecee81d687e58e5  # v6.1.2
-        with:
-          aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
-          aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
-          aws-region: us-west-2
-
-      - name: Login to Amazon ECR
-        if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
-        with:
-          registries: "080137407410"
-
-      - name: Upload artifacts to Release Service
-        if: ${{ inputs.run_artifact_push }}
-        working-directory: ${{ inputs.project_folder }}
-        run: |
-          make artifact-publish
-
       - name: Upload artifacts to ghcr.io
         if: ${{ inputs.run_ghcr_push }}
         working-directory: ${{ inputs.project_folder }}
