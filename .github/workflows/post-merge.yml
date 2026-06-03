@@ -972,9 +972,11 @@ jobs:
           make artifact-publish
 
       - name: Upload tar to artifacts
+        if: ${{ inputs.bin_path }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          path: ./orch-cli-package.tar.gz
+          name: ${{ inputs.bin_zip_name }}
+          path: ${{ inputs.bin_path }}
           if-no-files-found: ignore
 
   sign-images:
