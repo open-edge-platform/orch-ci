@@ -838,7 +838,7 @@ jobs:
           echo "TRIVY_VER=0.69.3" >> "$GITHUB_ENV"
 
       - name: Install Trivy
-        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567  # v0.2.5
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567  # v0.3.0
         with:
           version: 'v${{ env.TRIVY_VER }}'
 
