@@ -249,7 +249,7 @@ jobs:
           name: trivy-fs-scan-report-${{ env.SANITIZED_PROJECT_NAME }}
           path: trivy_scan_report-${{ env.SANITIZED_PROJECT_NAME }}.sarif
       - name: Upload Trivy Results
-        uses: github/codeql-action/upload-sarif@87557b9c84dde89fdd9b10e88954ac2f4248e463  # v3.29.5
+        uses: github/codeql-action/upload-sarif@87557b9c84dde89fdd9b10e88954ac2f4248e463  # v4.36.1
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
@@ -334,7 +334,7 @@ jobs:
           path: trivy-config-${{ env.SANITIZED_PROJECT_NAME }}.sarif
 
       - name: Upload Trivy Config Results to Security Tab
-        uses: github/codeql-action/upload-sarif@87557b9c84dde89fdd9b10e88954ac2f4248e463
+        uses: github/codeql-action/upload-sarif@87557b9c84dde89fdd9b10e88954ac2f4248e463  # v4.36.1
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         with:
@@ -384,7 +384,7 @@ jobs:
           output: trivy-image-${{ steps.img.outputs.sanitized_name }}.sarif
 
       - name: Upload Trivy Image Results
-        uses: github/codeql-action/upload-sarif@87557b9c84dde89fdd9b10e88954ac2f4248e463
+        uses: github/codeql-action/upload-sarif@87557b9c84dde89fdd9b10e88954ac2f4248e463  # v4.36.1
         with:
           sarif_file: trivy-image-${{ steps.img.outputs.sanitized_name }}.sarif
           category: Trivy_image
