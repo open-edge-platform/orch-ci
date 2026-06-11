@@ -21,7 +21,7 @@ jobs:
     permissions:
       security-events: write   # only this job can write security events
       contents: read           # minimal additional permission
-    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@d17180cb7af62dc10bea371bd0cfdc2ba5bc1f02  # 2026.1.3
+    uses: open-edge-platform/orch-ci/.github/workflows/security-scans.yml@5f1e996beaca1f6101937aa5d7b5b8ed01c91f8f  # 2026.1.3
     with:
       run_lint: true
       trivy_config_path: trivy.yaml
