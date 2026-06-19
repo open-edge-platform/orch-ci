@@ -664,7 +664,7 @@ jobs:
 
       - name: Login to Amazon ECR
         if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
-        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64  # v2.1.6
         with:
           registries: "080137407410"
 
@@ -967,7 +967,7 @@ jobs:
 
       - name: Login ECR
         if: ${{ !inputs.artifact_to_s3 }}
-        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64
         with:
           registries: "080137407410"
 
@@ -1014,7 +1014,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
           aws-region: us-west-2
       - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@fa648b43de3d4d023bcb3f89ed6940096949c419  # v2.1.5
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64  # v2.1.6
         with:
           registries: "080137407410"
       - name: Sign image
