@@ -17,7 +17,7 @@ jobs:
       contents: read
       actions: read
       security-events: write
-    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@ab680413345b732f43914e66f78e0677cc02e025
+    uses: open-edge-platform/orch-ci/.github/workflows/pre-merge.yml@d9ed8a807b93697c1454b82e86a0c510a97520f8
     with:
       run_version_check: true
       run_dep_version_check: false
