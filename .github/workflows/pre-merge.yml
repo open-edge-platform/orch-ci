@@ -268,7 +268,7 @@ jobs:
       - name: Run CodeQL Scan
         uses: open-edge-platform/orch-ci/.github/actions/security/codeql@587c67a41629ce30ddbc6e5f06c0990b13c4118c
         with:
-          languages: "auto"
+          languages: "go,python,javascript"
           queries: "security-and-quality"
           build-mode: "none"
           upload-sarif: "false"   # usually pre-merge = no Security tab upload
