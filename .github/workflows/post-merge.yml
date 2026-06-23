@@ -397,7 +397,7 @@ jobs:
           persist-credentials: false
 
       - name: Run CodeQL Security Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/codeql@a95228137803b756aae327668c115db235802982  # v2026.1.3
+        uses: open-edge-platform/orch-ci/.github/actions/security/codeql@587c67a41629ce30ddbc6e5f06c0990b13c4118c
         with:
           languages: auto
           build-mode: none
