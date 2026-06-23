@@ -253,25 +253,43 @@ jobs:
           path: zizmor_scan_report.txt
   codeql-scan:
     name: CodeQL Security Scan
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       actions: read
       security-events: write
-    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v6
 
-      - name: Run CodeQL Scan
+      - name: Detect code languages
+        id: detect
+        run: |
+          echo "Checking repo content..."
+
+          LANGS=""
+
+          if find . -name "*.go" | grep -q .; then LANGS="${LANGS},go"; fi
+          if find . -name "*.py" | grep -q .; then LANGS="${LANGS},python"; fi
+          if find . -name "*.js" -o -name "*.ts" | grep -q .; then LANGS="${LANGS},javascript-typescript"; fi
+
+          LANGS="${LANGS#,}"
+
+          if [ -z "$LANGS" ]; then
+            echo "has_code=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_code=true" >> $GITHUB_OUTPUT
+            echo "languages=$LANGS" >> $GITHUB_OUTPUT
+          fi
+      - name: Run CodeQL Init
+        if: steps.detect.outputs.has_code == 'true'
         uses: open-edge-platform/orch-ci/.github/actions/security/codeql@587c67a41629ce30ddbc6e5f06c0990b13c4118c
         with:
-          languages: none
-          queries: "security-extended"
-          build-mode: "none"
-          upload-sarif: "false"   # usually pre-merge = no Security tab upload
+          languages: ${{ steps.detect.outputs.languages }}
+          queries: security-extended
+          build-mode: none
+          upload-sarif: "false"
           report_suffix: "-premerge"
   license-compliance-check:
     permissions:

@@ -380,31 +380,6 @@ jobs:
         uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e  # v4.36.2
         with:
           sarif_file: zizmor_scan_report.sarif
-  codeql-scan:
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-
-    runs-on: ubuntu-latest
-    needs: sanitize-project-folder
-    if: github.actor != 'dependabot[bot]'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6.0.3
-        with:
-          persist-credentials: false
-
-      - name: Run CodeQL Security Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/codeql@587c67a41629ce30ddbc6e5f06c0990b13c4118c
-        with:
-          languages: none
-          build-mode: none
-          queries: security-extended
-          upload-sarif: false
-          report_suffix: "-post-merge"
-          category: "/security/codeql/post-merge"
   bandit:
     permissions:
       security-events: write
