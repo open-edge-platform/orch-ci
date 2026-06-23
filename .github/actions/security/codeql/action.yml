@@ -1,0 +1,139 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# CodeQL Scanner Action
+#
+# This composite action executes CodeQL security analysis
+# for all supported languages detected in the repository.
+#
+# Key Features:
+# - Automatic language detection
+# - Optional autobuild support
+# - Custom query suites
+# - SARIF artifact upload
+# - Optional upload to GitHub Security tab
+#
+# Required permissions:
+#
+# permissions:
+#   contents: read
+#   actions: read
+#   security-events: write
+#
+# Example Usage:
+#
+# steps:
+#   - uses: ./.github/actions/security/codeql
+#
+#   - uses: ./.github/actions/security/codeql
+#     with:
+#       build-mode: autobuild
+#       upload-sarif: false
+#
+#   - uses: ./.github/actions/security/codeql
+#     with:
+#       queries: security-extended
+#       report_suffix: "-linux"
+
+name: "CodeQL Security Scan"
+description: "Runs CodeQL analysis with configurable options"
+
+inputs:
+  languages:
+    description: >
+      Languages to analyze.
+      Use 'auto' to detect all supported languages present
+      in the repository.
+    required: false
+    default: "auto"
+
+  queries:
+    description: >
+      Query suite to execute.
+      Examples:
+        security-and-quality
+        security-extended
+    required: false
+    default: "security-and-quality"
+
+  build-mode:
+    description: "Build mode (none/autobuild)"
+    required: false
+    default: "none"
+
+  upload-sarif:
+    description: "Upload SARIF results to GitHub Security tab"
+    required: false
+    default: "true"
+
+  report_suffix:
+    description: >
+      Suffix appended to artifact names.
+      Useful for matrix jobs.
+    required: false
+    default: ""
+
+  retention-days:
+    description: "Artifact retention period"
+    required: false
+    default: "7"
+
+  category:
+    description: "Category associated with uploaded SARIF"
+    required: false
+    default: "/security/codeql"
+
+outputs:
+  report_path:
+    description: "Path to generated SARIF report"
+    value: ${{ steps.find-sarif.outputs.report_path }}
+
+runs:
+  using: composite
+
+  steps:
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v4.33.0
+      with:
+        languages: ${{ inputs.languages }}
+        queries: ${{ inputs.queries }}
+
+    - name: Autobuild
+      if: inputs.build-mode == 'autobuild'
+      uses: github/codeql-action/autobuild@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v4.33.0
+
+    - name: Analyze
+      uses: github/codeql-action/analyze@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v4.33.0
+      with:
+        output: codeql-results
+
+    - name: Locate SARIF report
+      id: find-sarif
+      shell: bash
+      run: |
+        SARIF_FILE=$(find codeql-results -type f -name "*.sarif" | head -n1)
+
+        if [[ -z "${SARIF_FILE}" ]]; then
+          echo "No SARIF report generated."
+          exit 1
+        fi
+
+        echo "Found report: ${SARIF_FILE}"
+
+        echo "report_path=${SARIF_FILE}" >> "${GITHUB_OUTPUT}"
+
+    - name: Upload reports
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v4.6.2
+      with:
+        name: codeql-results${{ inputs.report_suffix }}
+        path: ${{ steps.find-sarif.outputs.report_path }}
+        retention-days: ${{ inputs.retention-days }}
+
+    - name: Upload SARIF
+      if: inputs.upload-sarif == 'true'
+      uses: github/codeql-action/upload-sarif@b1bff81932f5cdfc8695c7752dcee935dcd061c8 # v4.33.0
+      with:
+        sarif_file: ${{ steps.find-sarif.outputs.report_path }}
+        category: ${{ inputs.category }}
