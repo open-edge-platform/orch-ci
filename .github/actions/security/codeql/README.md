@@ -223,7 +223,7 @@ Example:
 
 When `upload-sarif` is enabled, findings appear under:
 
-**GitHub → Security → Code scanning**
+### GitHub → Security → Code scanning
 
 When disabled:
 
@@ -235,9 +235,9 @@ When disabled:
 
 ## References
 
-- https://codeql.github.com/docs/
-- https://docs.github.com/en/code-security/code-scanning
-- https://github.com/github/codeql-action
+- [CodeQL Documentation](https://codeql.github.com/docs/)
+- [GitHub Code Scanning Documentation](https://docs.github.com/en/code-security/code-scanning)
+- [CodeQL GitHub Action Repository](https://github.com/github/codeql-action)
 
 ---
 
