@@ -94,6 +94,10 @@ inputs:
     description: "In case of matrix jobs pass a suffix with the job name with a -"
     required: false
     default: ""
+  semgrep-extra-args:
+    description: "Extra arguments passed directly to semgrep CLI"
+    required: false
+    default: ""
   upload-sarif:
     description: "Whether to upload SARIF results to the GitHub Security tab"
     required: false
@@ -124,6 +128,7 @@ runs:
       # Set the SEMGREP_RULES environment variable to specify which rules Semgrep should use.
       env:
         SEMGREP_RULES: ${{ inputs.config }}
+        INPUTS_SEMGREP_EXTRA_ARGS: ${{ inputs.semgrep-extra-args }}
         INPUTS_SCAN_SCOPE: ${{ inputs.scan-scope }}
         INPUTS_PATHS: ${{ inputs.paths }}
         INPUTS_SEVERITY: ${{ inputs.severity }}
@@ -175,6 +180,7 @@ runs:
           ${SEMGREP_SEVERITY} \
           --error \
           --metrics=off \
+          $INPUTS_SEMGREP_EXTRA_ARGS \
           --timeout "$INPUTS_TIMEOUT" \
           --"$INPUTS_OUTPUT_FORMAT" \
           -o "${REPORT_FILE}" \
