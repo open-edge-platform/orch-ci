@@ -656,7 +656,7 @@ jobs:
 
       - name: Configure AWS credentials
         if: inputs.run_docker_push || inputs.run_helm_push || inputs.run_deb_push
-        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b  # v6.2.0
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b  # v6.2.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -951,7 +951,7 @@ jobs:
 
       - name: Configure AWS credentials for ECR
         if: ${{ !inputs.artifact_to_s3 }}
-        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
@@ -959,7 +959,7 @@ jobs:
 
       - name: Configure AWS credentials for S3
         if: ${{ inputs.artifact_to_s3 }}
-        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_S3_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_S3_PUSH_PASSWD }}
@@ -1008,7 +1008,7 @@ jobs:
           path: orch-ci
           persist-credentials: false
       - name: Configure AWS credentials for ECR
-        uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b  # v6.2.0
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b  # v6.2.1
         with:
           aws-access-key-id: ${{ secrets.NO_AUTH_ECR_PUSH_USERNAME }}
           aws-secret-access-key: ${{ secrets.NO_AUTH_ECR_PUSH_PASSWD }}
