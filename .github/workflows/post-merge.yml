@@ -1177,7 +1177,7 @@ jobs:
           ref: ${{ inputs.orch_ci_repo_ref }}
           persist-credentials: false
       - name: Run Version Update Action
-        uses: open-edge-platform/orch-ci/dev-version-update@a95228137803b756aae327668c115db235802982  # 2026.1.3
+        uses: open-edge-platform/orch-ci/dev-version-update@547a9b246177a30455df6b332eded93577a6d5ca  # 2026.1.4
         with:
           github_token: ${{ secrets.SYS_EMF_GH_TOKEN }}
           project_folder: ${{ inputs.project_folder }}
