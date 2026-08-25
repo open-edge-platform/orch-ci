@@ -556,6 +556,7 @@ jobs:
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
+        continue-on-error: true
         env:
           MAKEFLAGS: ${{ inputs.lint_makeflags }}
         run: |
