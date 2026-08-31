@@ -14,6 +14,14 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: true
         type: boolean
+      security_scans_advisory:
+        description: >-
+          Run security scans in advisory mode (non-blocking). Default false = scans block.
+          Consumers with active vulnerability backlogs may set true temporarily; expected to
+          be removed in a future release.
+        required: false
+        default: false
+        type: boolean
       run_version_check:
         description: "Run version check"
         required: false
@@ -356,7 +364,7 @@ jobs:
           redact: "true"
           report_suffix: "-${{ env.SANITIZED_PROJECT_NAME }}"
           upload-sarif: "true"
-          exit_code_on_leak: "0"
+          exit_code_on_leak: "1"
   zizmor-scan:
     permissions:
       security-events: write
@@ -628,7 +636,7 @@ jobs:
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         run: |
           make lint
 
@@ -1084,7 +1092,7 @@ jobs:
           version: 'v${{ env.TRIVY_VER }}'
 
       - name: Scan Image for Docker CIS compliance
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
           IMAGE: ${{ matrix.image }}
