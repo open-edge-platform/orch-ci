@@ -15,6 +15,24 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      run_govulncheck:
+        description: "Run govulncheck against the Go module for reachable vulnerable dependencies"
+        required: false
+        default: false
+        type: boolean
+      go_version:
+        description: "Go version passed to govulncheck (e.g. '1.25', 'stable')"
+        required: false
+        default: "stable"
+        type: string
+      security_scans_advisory:
+        description: >-
+          Run security scans in advisory mode (non-blocking). Default false = scans block PRs.
+          Consumers with active vulnerability backlogs may set true temporarily; expected to
+          be removed in a future release.
+        required: false
+        default: false
+        type: boolean
       run_version_check:
         description: "Run version check"
         required: false
@@ -245,9 +263,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       - name: Run zizmor
-        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
+        continue-on-error: ${{ inputs.security_scans_advisory }}
+        run: |
+          set -o pipefail
+          uvx zizmor=="$ZIZMOR_VERSION" --min-severity=high "$GITHUB_WORKSPACE" \
+            | tee zizmor_scan_report.txt
       - name: Upload Zizmor Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
@@ -307,13 +330,13 @@ jobs:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         with:
           scan-type: 'fs'
           scan-ref: ${{ inputs.project_folder }}
           format: 'sarif'
           severity: 'HIGH,CRITICAL'
-          ignore-unfixed: true
+          ignore-unfixed: false
           trivy-config: ${{ inputs.trivy_config_path }}
           scanners: 'vuln,secret'
           output: "trivy_scan_report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}.sarif"
@@ -335,7 +358,7 @@ jobs:
           && mv trivy_tagged.sarif trivy_scan_report-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Trivy FS Verdict
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
@@ -364,7 +387,7 @@ jobs:
 
       - name: Run Trivy Config Scan (Dockerfile / IaC)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # 0.36.0
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         with:
           scan-type: 'config'
           scan-ref: ${{ inputs.project_folder }}
@@ -390,7 +413,7 @@ jobs:
           && mv trivy_tagged.sarif trivy-config-${SANITIZED_PROJECT_NAME}.sarif
 
       - name: Trivy Config Verdict
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         env:
           SANITIZED_PROJECT_NAME: ${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
         run: |
@@ -425,6 +448,24 @@ jobs:
           confidence-level: "HIGH"
           output-format: "txt"
           upload-sarif: "false"
+
+  govulncheck:
+    if: ${{ inputs.run_security_scans && inputs.run_govulncheck }}
+    permissions:
+      contents: read
+    runs-on: ${{ inputs.runs_on }}
+    needs: sanitize-project-folder
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run govulncheck
+        continue-on-error: ${{ inputs.security_scans_advisory }}
+        uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee  # v1.0.4
+        with:
+          go-version-input: ${{ inputs.go_version }}
+          work-dir: ${{ inputs.project_folder }}
   run-repo-pipelines:
     permissions:
       contents: read
@@ -556,6 +597,7 @@ jobs:
       - name: Lint Code
         if: ${{ inputs.run_lint }}
         working-directory: ${{ inputs.project_folder }}
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         env:
           MAKEFLAGS: ${{ inputs.lint_makeflags }}
         run: |
@@ -843,7 +885,7 @@ jobs:
           version: 'v${{ env.TRIVY_VER }}'
 
       - name: Scan Image for Docker CIS compliance
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         env:
           SANITIZED_IMAGE_NAME: ${{ env.sanitized_image_name }}
           IMAGE: ${{ matrix.image }}
@@ -878,7 +920,7 @@ jobs:
           persist-credentials: false
 
       - name: Scan Image for High/Critical Issues (Trivy)
-        continue-on-error: true
+        continue-on-error: ${{ inputs.security_scans_advisory }}
         env:
           TRIVY_CONFIG: ${{ inputs.trivy_config_path }}
           IMAGE: ${{ matrix.image }}
