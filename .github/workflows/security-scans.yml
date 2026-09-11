@@ -14,6 +14,14 @@ on:  # yamllint disable-line rule:truthy
         required: false
         default: false
         type: boolean
+      security_scans_advisory:
+        description: >-
+          Run security scans in advisory mode (non-blocking). Default false = scans block PRs.
+          Consumers with active vulnerability backlogs may set true temporarily; expected to
+          be removed in a future release.
+        required: false
+        default: false
+        type: boolean
       pre_merge_scan:
         description: "Run security scans for pre-merge workflows"
         required: false
@@ -127,9 +135,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
       - name: Run zizmor
-        run: uvx zizmor=="$ZIZMOR_VERSION" "$GITHUB_WORKSPACE" --no-exit-codes > zizmor_scan_report.txt
+        continue-on-error: ${{ inputs.security_scans_advisory }}
+        run: |
+          set -o pipefail
+          uvx zizmor=="$ZIZMOR_VERSION" --min-severity=high "$GITHUB_WORKSPACE" \
+            | tee zizmor_scan_report.txt
       - name: Upload Zizmor Scan Report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        if: always()
         with:
           name: zizmor-scan-report-${{ needs.sanitize-project-folder.outputs.sanitized_project_name }}
           path: zizmor_scan_report.txt
