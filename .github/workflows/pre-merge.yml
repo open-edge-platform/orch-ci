@@ -591,7 +591,10 @@ jobs:
       - name: Install TFLint
         if: ${{ inputs.run_lint }}
         run: |
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          curl -Lo /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VER}/tflint_linux_amd64.zip"
+          unzip -d /tmp/tflint /tmp/tflint.zip
+          sudo install -m 0755 /tmp/tflint/tflint /usr/local/bin/tflint
+          rm -rf /tmp/tflint*
           tflint --version
 
       - name: Lint Code
