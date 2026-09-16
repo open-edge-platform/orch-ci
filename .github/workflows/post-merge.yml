@@ -997,7 +997,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Download binaries
+      - name: Checkout orch-ci
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: open-edge-platform/orch-ci
+          ref: ${{ inputs.orch_ci_repo_ref }}
+          path: ci
+          persist-credentials: false
+
+      - name: Bootstrap CI environment
+        uses: ./ci/.github/actions/bootstrap
+        with:
+          bootstrap_tools: "oras"
+
+      - name: Download build artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
