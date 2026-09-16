@@ -414,6 +414,7 @@ jobs:
       ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
       release_packages: ${{ steps.find-release-packages.outputs.release_packages }}
+      has_build_artifacts: ${{ steps.build-artifacts.outputs.has_build_artifacts }}
       artifact_name: ${{ steps.artifact-name.outputs.artifact_name }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
@@ -648,12 +649,26 @@ jobs:
           artifact_name="built-binaries-$artifact_hash"
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
 
+      - name: Detect build artifacts
+        id: build-artifacts
+        env:
+          BINARIES: ${{ steps.find-binaries.outputs.binaries }}
+          RELEASE_PACKAGES: ${{ steps.find-release-packages.outputs.release_packages }}
+        run: |
+          if [[ (
+            "$BINARIES" != '[]' &&
+            "$BINARIES" != '[""]'
+          ) || (
+            "$RELEASE_PACKAGES" != '[]' &&
+            "$RELEASE_PACKAGES" != '[""]'
+          ) ]]; then
+            echo "has_build_artifacts=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_build_artifacts=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Copy build artifacts to temp folder
-        if: |
-          steps.find-binaries.outputs.binaries != '[]' &&
-          steps.find-binaries.outputs.binaries != '[""]' ||
-          steps.find-release-packages.outputs.release_packages != '[]' &&
-          steps.find-release-packages.outputs.release_packages != '[""]'
+        if: ${{ steps.build-artifacts.outputs.has_build_artifacts == 'true' }}
         env:
           BINARIES: ${{ steps.find-binaries.outputs.binaries }}
           RELEASE_PACKAGES: ${{ steps.find-release-packages.outputs.release_packages }}
@@ -673,11 +688,7 @@ jobs:
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
 
       - name: Upload build artifacts
-        if: |
-          steps.find-binaries.outputs.binaries != '[]' &&
-          steps.find-binaries.outputs.binaries != '[""]' ||
-          steps.find-release-packages.outputs.release_packages != '[]' &&
-          steps.find-release-packages.outputs.release_packages != '[""]'
+        if: ${{ steps.build-artifacts.outputs.has_build_artifacts == 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         env:
           TEMP_DIR: ${{ env.TEMP_DIR }}
@@ -1008,11 +1019,7 @@ jobs:
           bootstrap_tools: "oras"
 
       - name: Download build artifacts
-        if: |
-          needs.run-repo-pipelines.outputs.binaries != '[]' &&
-          needs.run-repo-pipelines.outputs.binaries != '[""]' ||
-          needs.run-repo-pipelines.outputs.release_packages != '[]' &&
-          needs.run-repo-pipelines.outputs.release_packages != '[""]'
+        if: ${{ needs.run-repo-pipelines.outputs.has_build_artifacts == 'true' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
