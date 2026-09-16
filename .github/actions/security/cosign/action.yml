@@ -131,19 +131,20 @@ runs:
 
     - name: Prepare Cosign artifacts
       if: ${{ inputs.target == 'binary' || inputs.target == 'image' }}
+      id: prepare-artifacts
       shell: bash
       env:
         TARGET: ${{ inputs.target }}
       run: |
         SAFE_TARGET=$(printf '%s' "$TARGET" | tr -cd 'a-zA-Z0-9._-')
         SUFFIX=$(head /dev/urandom | tr -dc a-f0-9 | head -c6)
-        echo "ART_NAME=cosign-${SAFE_TARGET}-${SUFFIX}" >> "$GITHUB_ENV"
+        echo "art_name=cosign-${SAFE_TARGET}-${SUFFIX}" >> "$GITHUB_OUTPUT"
 
     - name: Upload Cosign artifacts
       if: ${{ inputs.target == 'binary' || inputs.target == 'image' }}
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
       with:
-        name: ${{ env.ART_NAME }}
+        name: ${{ steps.prepare-artifacts.outputs.art_name }}
         path: |
           cosign.sig
           cosign.cert
