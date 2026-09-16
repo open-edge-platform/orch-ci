@@ -225,7 +225,7 @@ jobs:
     needs: sanitize-project-folder
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
       - name: Run Trivy Filesystem Scan
@@ -1006,7 +1006,7 @@ jobs:
           persist-credentials: false
 
       - name: Checkout orch-ci
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: open-edge-platform/orch-ci
           ref: ${{ inputs.orch_ci_repo_ref }}
@@ -1034,7 +1034,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Restoring release packages..."
-          echo "$RELEASE_PACKAGES" | jq -r '.[]?' | while IFS= read -r file; do
+          while IFS= read -r file; do
             downloaded="./signed-package/$file"
             if [ ! -f "$downloaded" ]; then
               echo "ERROR: Release package not found after artifact download: $downloaded"
@@ -1043,7 +1043,7 @@ jobs:
             mkdir -p "$(dirname "$file")"
             cp -a "$downloaded" "$file"
             echo "Restored: $file"
-          done
+          done < <(echo "$RELEASE_PACKAGES" | jq -r '.[]?')
 
       - name: Download cosign artifacts
         if: needs.sign-binaries.result == 'success'
