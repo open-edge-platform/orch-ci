@@ -1027,6 +1027,7 @@ jobs:
 
       - name: Restore release packages
         if: |
+          needs.run-repo-pipelines.outputs.has_build_artifacts == 'true' &&
           needs.run-repo-pipelines.outputs.release_packages != '[]' &&
           needs.run-repo-pipelines.outputs.release_packages != '[""]'
         env:
