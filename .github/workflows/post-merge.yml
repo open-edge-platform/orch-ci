@@ -413,6 +413,7 @@ jobs:
       images: ${{ steps.list-images.outputs.images }}
       ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
+      release_packages: ${{ steps.find-release-packages.outputs.release_packages }}
       artifact_name: ${{ steps.artifact-name.outputs.artifact_name }}
     env:
       GIT_SHORT_URL: ${{ github.repository }}
@@ -597,41 +598,93 @@ jobs:
             echo "binaries=${binaries_json}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Find release packages
+        id: find-release-packages
+        shell: bash
+        env:
+          PROJECT_FOLDER: ${{ inputs.project_folder }}
+        run: |
+          set -euo pipefail
+
+          packages=()
+
+          while IFS= read -r file; do
+            packages+=("$file")
+          done < <(
+            find "${PROJECT_FOLDER}/out" -type f \
+              \( -name '*.tgz' -o -name '*.tar.gz' \) \
+              ! -path '*/.git/*' || true
+          )
+
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No release packages found."
+            echo "release_packages=[]" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found release packages:"
+            printf '%s\n' "${packages[@]}"
+
+            packages_json=$(printf '%s\n' "${packages[@]}" |
+              jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+            echo "release_packages=${packages_json}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Prepare artifact name
         id: artifact-name
         env:
           BINARIES: ${{ steps.find-binaries.outputs.binaries }}
-        run: |
-          binaries_json="${BINARIES}"
-          artifact_hash=$(echo "$binaries_json" | sha1sum | awk '{print $1}')
-          artifact_name="built-binaries-$artifact_hash"
-          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
-
-      - name: Copy binaries to temp folder
-        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
-        env:
-          BINARIES: ${{ steps.find-binaries.outputs.binaries }}
+          RELEASE_PACKAGES: ${{ steps.find-release-packages.outputs.release_packages }}
         run: |
           set -euo pipefail
           binaries_json="${BINARIES}"
+          release_packages_json="${RELEASE_PACKAGES}"
+          artifact_hash=$(
+            printf '%s\n%s\n' \
+              "$binaries_json" \
+              "$release_packages_json" |
+            sha1sum |
+            awk '{print $1}'
+          )
+          artifact_name="built-binaries-$artifact_hash"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+
+      - name: Copy build artifacts to temp folder
+        if: |
+          steps.find-binaries.outputs.binaries != '[]' &&
+          steps.find-binaries.outputs.binaries != '[""]' ||
+          steps.find-release-packages.outputs.release_packages != '[]' &&
+          steps.find-release-packages.outputs.release_packages != '[""]'
+        env:
+          BINARIES: ${{ steps.find-binaries.outputs.binaries }}
+          RELEASE_PACKAGES: ${{ steps.find-release-packages.outputs.release_packages }}
+        run: |
+          set -euo pipefail
           TEMP_DIR=$(mktemp -d)
-          echo "Copying binaries to temporary folder: $TEMP_DIR"
-          echo "$binaries_json" | jq -r '.[]' | while IFS= read -r bin; do
-            mkdir -p "$TEMP_DIR/$(dirname "$bin")"
-            cp -a "$bin" "$TEMP_DIR/$bin"
+          echo "Copying build artifacts to temporary folder: $TEMP_DIR"
+          echo "$BINARIES" | jq -r '.[]?' | while IFS= read -r file; do
+            mkdir -p "$TEMP_DIR/$(dirname "$file")"
+            cp -a "$file" "$TEMP_DIR/$file"
           done
-          echo "All binaries copied to $TEMP_DIR"
+          echo "$RELEASE_PACKAGES" | jq -r '.[]?' | while IFS= read -r file; do
+            mkdir -p "$TEMP_DIR/$(dirname "$file")"
+            cp -a "$file" "$TEMP_DIR/$file"
+          done
+          echo "All build artifacts copied to $TEMP_DIR"
           echo "TEMP_DIR=$TEMP_DIR" >> "$GITHUB_ENV"
 
-      - name: Upload binaries artifact
-        if: ${{ steps.find-binaries.outputs.binaries != '[]' && steps.find-binaries.outputs.binaries != '[""]' }}
+      - name: Upload build artifacts
+        if: |
+          steps.find-binaries.outputs.binaries != '[]' &&
+          steps.find-binaries.outputs.binaries != '[""]' ||
+          steps.find-release-packages.outputs.release_packages != '[]' &&
+          steps.find-release-packages.outputs.release_packages != '[""]'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         env:
           TEMP_DIR: ${{ env.TEMP_DIR }}
         with:
           name: ${{ steps.artifact-name.outputs.artifact_name }}
           path: ${{ env.TEMP_DIR }}
-          if-no-files-found: ignore
+          if-no-files-found: error
 
       - name: Lint Code
         if: ${{ inputs.run_lint }}
@@ -932,7 +985,10 @@ jobs:
       inputs.run_artifact_push &&
       (
         needs.sign-binaries.result == 'success' ||
-        needs.run-repo-pipelines.outputs.binaries == '[]'
+        (
+          needs.run-repo-pipelines.outputs.binaries == '[]' &&
+          needs.run-repo-pipelines.outputs.release_packages != '[]'
+        )
       )
     runs-on: ubuntu-latest
     steps:
@@ -947,7 +1003,26 @@ jobs:
           name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
           path: ./signed-package
 
+      - name: Restore release packages
+        if: needs.run-repo-pipelines.outputs.release_packages != '[]'
+        env:
+          RELEASE_PACKAGES: ${{ needs.run-repo-pipelines.outputs.release_packages }}
+        run: |
+          set -euo pipefail
+          echo "Restoring release packages..."
+          echo "$RELEASE_PACKAGES" | jq -r '.[]?' | while IFS= read -r file; do
+            downloaded="./signed-package/$file"
+            if [ ! -f "$downloaded" ]; then
+              echo "ERROR: Release package not found after artifact download: $downloaded"
+              exit 1
+            fi
+            mkdir -p "$(dirname "$file")"
+            cp -a "$downloaded" "$file"
+            echo "Restored: $file"
+          done
+
       - name: Download cosign artifacts
+        if: needs.sign-binaries.result == 'success'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           path: ./cosign-downloads
@@ -955,6 +1030,7 @@ jobs:
           merge-multiple: true
 
       - name: Merge signatures
+        if: needs.sign-binaries.result == 'success'
         run: |
           cp -R ./cosign-downloads/* ./signed-package/ || true
 
