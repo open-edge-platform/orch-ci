@@ -985,15 +985,12 @@ jobs:
       inputs.run_artifact_push &&
       (
         needs.sign-binaries.result == 'success' ||
-        needs.run-repo-pipelines.outputs.binaries == '[]' ||
-        needs.run-repo-pipelines.outputs.binaries == '[""]' ||
-        needs.run-repo-pipelines.outputs.release_packages != '[]' &&
-        needs.run-repo-pipelines.outputs.release_packages != '[""]'
+        needs.sign-binaries.result == 'skipped'
       )
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
 
