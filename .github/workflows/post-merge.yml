@@ -985,6 +985,8 @@ jobs:
       inputs.run_artifact_push &&
       (
         needs.sign-binaries.result == 'success' ||
+        needs.run-repo-pipelines.outputs.binaries == '[]' ||
+        needs.run-repo-pipelines.outputs.binaries == '[""]' ||
         needs.run-repo-pipelines.outputs.release_packages != '[]'
       )
     runs-on: ubuntu-latest
@@ -1008,6 +1010,11 @@ jobs:
           bootstrap_tools: "oras"
 
       - name: Download build artifacts
+        if: |
+          needs.run-repo-pipelines.outputs.binaries != '[]' &&
+          needs.run-repo-pipelines.outputs.binaries != '[""]' ||
+          needs.run-repo-pipelines.outputs.release_packages != '[]' &&
+          needs.run-repo-pipelines.outputs.release_packages != '[""]'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           name: ${{ needs.run-repo-pipelines.outputs.artifact_name }}
