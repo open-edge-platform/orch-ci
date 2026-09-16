@@ -1012,7 +1012,10 @@ jobs:
         needs.sign-binaries.result == 'success' ||
         (
           needs.sign-binaries.result == 'skipped' &&
-          needs.run-repo-pipelines.outputs.has_binaries != 'true'
+          (
+            needs.run-repo-pipelines.outputs.has_release_packages == 'true' ||
+            needs.run-repo-pipelines.outputs.has_build_artifacts != 'true'
+          )
         )
       )
     runs-on: ubuntu-latest
