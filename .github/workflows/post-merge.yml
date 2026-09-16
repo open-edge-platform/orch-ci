@@ -414,6 +414,8 @@ jobs:
       ecr_images: ${{ steps.find-images.outputs.ecr_images }}
       binaries: ${{ steps.find-binaries.outputs.binaries }}
       release_packages: ${{ steps.find-release-packages.outputs.release_packages }}
+      has_binaries: ${{ steps.build-artifacts.outputs.has_binaries }}
+      has_release_packages: ${{ steps.build-artifacts.outputs.has_release_packages }}
       has_build_artifacts: ${{ steps.build-artifacts.outputs.has_build_artifacts }}
       artifact_name: ${{ steps.artifact-name.outputs.artifact_name }}
     env:
@@ -655,6 +657,18 @@ jobs:
           BINARIES: ${{ steps.find-binaries.outputs.binaries }}
           RELEASE_PACKAGES: ${{ steps.find-release-packages.outputs.release_packages }}
         run: |
+          if [[ "$BINARIES" != '[]' && "$BINARIES" != '[""]' ]]; then
+            echo "has_binaries=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_binaries=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if [[ "$RELEASE_PACKAGES" != '[]' && "$RELEASE_PACKAGES" != '[""]' ]]; then
+            echo "has_release_packages=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_release_packages=false" >> "$GITHUB_OUTPUT"
+          fi
+
           if [[ (
             "$BINARIES" != '[]' &&
             "$BINARIES" != '[""]'
@@ -996,7 +1010,10 @@ jobs:
       inputs.run_artifact_push &&
       (
         needs.sign-binaries.result == 'success' ||
-        needs.sign-binaries.result == 'skipped'
+        (
+          needs.sign-binaries.result == 'skipped' &&
+          needs.run-repo-pipelines.outputs.has_binaries != 'true'
+        )
       )
     runs-on: ubuntu-latest
     steps:
@@ -1026,10 +1043,7 @@ jobs:
           path: ./signed-package
 
       - name: Restore release packages
-        if: |
-          needs.run-repo-pipelines.outputs.has_build_artifacts == 'true' &&
-          needs.run-repo-pipelines.outputs.release_packages != '[]' &&
-          needs.run-repo-pipelines.outputs.release_packages != '[""]'
+        if: ${{ needs.run-repo-pipelines.outputs.has_release_packages == 'true' }}
         env:
           RELEASE_PACKAGES: ${{ needs.run-repo-pipelines.outputs.release_packages }}
         run: |
