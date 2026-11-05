@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify Microsoft Teams
-        uses: skitionek/notify-microsoft-teams@2cf0b0df520f148c192026ebfdc25fdfa85c1687  # v1.3.2
+        uses: skitionek/notify-microsoft-teams@944af5529de00d798bc68b8d1c15d8da66c1a4d7  # v1.3.5
         if: always()
         with:
           webhook_url: ${{ secrets.MSTEAMS_WEBHOOK }}
