@@ -698,7 +698,7 @@ jobs:
 
       - name: Login to Amazon ECR
         if: (inputs.run_docker_push || inputs.run_helm_push) && github.actor != 'dependabot[bot]'
-        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd  # v2.1.7
+        uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783  # v2.2.0
         with:
           registries: "080137407410"
 
@@ -816,7 +816,7 @@ jobs:
 
       - name: Login to Amazon ECR
         if: ${{ !inputs.artifact_to_s3 && inputs.run_artifact_push }}
-        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd  # v2.1.7
+        uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783  # v2.2.0
         with:
           registries: "080137407410"
 
